@@ -1,0 +1,378 @@
+############
+## Fit model
+############
+
+#' @title fit_IM()
+#' 
+## Model configuration
+#' @param Estimation_model_i index of the estimation model (scientific only, commercial only, integrated)
+#' @param Samp_process If 1 : the sampling process contribute to the likelihood, else it doesn't
+#' @param EM if "est_b" : b is estimated, if "fix_b" : b is fixed to 0
+#' @param weights_com weight related to the commercial data in the likelihood
+#' @param commercial_obs if 1 : commercial data contribute to likelihood
+#' 
+#' # models and SPDE objects configuration
+#' @param Spatial_model (DEPRECATED) Spatial model estimation could be "SPDE_GMRF" or "ICAR"
+#' @param Use_REML (DEPRECATED) Use restricted (or residual) maximum likelihood method (TRUE/FALSE)
+#' @param Alpha parameter related to the smoothness of the gaussian fields (default == 2)
+#' @param b_constraint constraint on b (if b==1 : b is positive, b==2 : b is free)
+#' 
+#' # TMB model version = "com_data"
+#' @param Version estimation model version
+#' @param TmbFile file for the C++ template
+#' @param ignore.uncertainty if TRUE, ignore uncertainty in estimation
+#' 
+#' # Data/model Inputs
+#' @param c_com_x number of sample in each cell (line) for each fleet (column)
+#' @param y_com_i catch data
+#' @param index_com_i sampled cell for commercial observation
+#' @param b_com_i fleet related to each observation
+#' @param VE_i vessel index
+#' @param catchability_random if T, catchability are considered as random effects
+#' 
+#' @param y_sci_i scientific observation
+#' @param index_sci_i sampled cell for scientific observation
+#' 
+#' @param nb_par_zinfl number of parameter in the zero-inflated model
+#' 
+#' @param Cov_x covariate for species distribution
+#' @param xfb_x covariates for sampling process
+#' 
+#' @param mesh mesh
+#' @param spde spde objects
+#' 
+#' @return  SD 
+#' @return Opt 
+#' @return Report
+#' @return Converge
+#' @return Data
+#' @return Params
+#' @return Random
+#' @return Map = Map
+
+fit_IM <- function(Estimation_model_i = 1,
+                   Samp_process = 1,
+                   EM = "est_b",
+                   weights_com = 1,
+                   commercial_obs = 1,
+                   Spatial_model = "SPDE_GMRF",
+                   Use_REML = F,
+                   Alpha = 2,
+                   b_constraint = 2,
+                   Version,
+                   TmbFile,
+                   ignore.uncertainty,
+                   c_com_x,
+                   y_com_i,
+                   index_com_i,
+                   b_com_i,
+                   VE_i,
+                   catchability_random=0,
+                   y_sci_i,
+                   index_sci_i,
+                   nb_par_zinfl,
+                   Cov_x,
+                   xfb_x,
+                   mesh,
+                   spde){
+  print(Estimation_model_i)
+  
+  #----------------------
+  ## Shape models outputs
+  #----------------------
+  # Option_vec : model configuration
+  # Data : list of data (catch data, covariates, Option_vec, spde objects, etc.)
+  # Params : list of parameters
+  # Map : parameters that are fixed to a specific value
+  
+  Options_vec = c( 'Prior'=switch(Spatial_model,"ICAR"=1,"SPDE_GMRF"=0),
+                   'Alpha'=Alpha,
+                   'IncludeDelta'=1,
+                   'IncludeEta'=1,
+                   'SE'=1,
+                   'DataSource' = Estimation_model_i,
+                   'DataObs' = DataObs,  # 1 : zinfgamma, 2 : zinflognormal
+                   'SamplingProcess' = Samp_process , # 1 : sampling process is activated, else : it is ignored
+                   'zero.infl_model' = zero.infl_model, # type of Delta model : default is 2
+                   'commercial_obs' = commercial_obs, # 1 : commercial observations are considered in the likelihood
+                   'b_constraint' = b_constraint, # 1 : b > 0 | 2 : b is free
+                   'catchability_random' = ifelse(catchability_random == T,1,0))
+  
+  if( Options_vec['Prior']==0 ) etainput_x = deltainput_x = rep(0,mesh$n) # when SPDE approach
+  ## Data & Params
+  Map = list()
+  if(Estimation_model_i == 1){   # Integrated model (scientific_commercial)
+    Data = list( "Options_vec"=Options_vec,
+                 "c_com_x"=c_com_x,
+                 # "c_sci_x"=c_sci_x,
+                 "y_com_i"=y_com_i,
+                 "y_sci_i"=y_sci_i,
+                 "index_com_i"=index_com_i-1,
+                 "index_sci_i"=index_sci_i-1,
+                 "b_com_i" = as.numeric(b_com_i)-1,
+                 "VE_i" = as.numeric(VE_i)-1,
+                 "n_eta" = length(levels(b_com_i)),
+                 "weights_com" = weights_com,
+                 "Cov_xj"=cbind(1,Cov_x),
+                 "Cov_xk"=if(is.null(xfb_x)){cbind(rep(1,nrow(Cov_x)))}else{cbind(1,xfb_x)},
+                 # "Cov_xb"=matrix(1,n_cells,1),
+                 "q2_sci" =  1,
+                 "q2_com" = rep(1,length(levels(VE_i))),
+                 "spde"=spde)
+    
+    Params = list("beta_j"=rep(0,ncol(Data$Cov_xj)), # linear predictor for abundance 
+                  "beta_k"=matrix(0,nrow = ncol(Data$Cov_xk), ncol = length(levels(b_com_i))), # additionnal linear predictor for sampling intensity 
+                  "par_b"=rep(0,length(levels(b_com_i))), # link between abundance and sampling intensity
+                  "logtau_S"=rep(0,1+length(levels(b_com_i))), # parameters of SPDE object (see below)
+                  "logkappa_S"=rep(0,1+length(levels(b_com_i))), 
+                  "deltainput_x"=deltainput_x, # input for random noise
+                  "etainput_x"=matrix(0,nrow = length(etainput_x),ncol = length(levels(b_com_i))),
+                  "logSigma_com"=rep(log(1),length(levels(VE_i))),
+                  "logSigma_sci"=log(1),
+                  "q1_sci"=rep(0,nb_par_zinfl),
+                  "q1_com"=matrix(0,nrow = length(levels(VE_i)),ncol = nb_par_zinfl),
+                  "k_com" = rep(1,length(levels(VE_i))),
+                  "logSigma_catch" = 0,
+                  "logMean_catch" = 0,
+                  "k_sci" = 1)
+    
+    
+    if(commercial_obs == 1){
+      Map[["k_com"]] <- seq(1:(length(Params$k_com))) # first k is for scientific data
+      Map[["k_com"]][1] <- NA # reference level is the first fleet
+      Map[["k_com"]] <- factor(Map[["k_com"]])
+    }else{
+      Map[["k_com"]] <- factor(rep(NA, (length(Params$k_com))))
+      Map[["logSigma_com"]] <- factor(rep(NA,length(Params$logSigma_com)))
+      Map[["q1_com"]] <- factor(matrix(NA,nrow = length(levels(VE_i)),ncol = nb_par_zinfl))
+    }
+    
+  }else if(Estimation_model_i == 2){ # scientific model (scientific_only)
+    
+    Data = list( "Options_vec"=Options_vec,
+                 # "c_sci_x"=c_sci_x,
+                 "y_sci_i"=y_sci_i,
+                 "index_sci_i"=index_sci_i-1,
+                 "Cov_xj"=cbind(1,Cov_x[,if(T %in% colnames(Cov_x)=="substr_Rock"){-which(colnames(Cov_x)=="substr_Rock")}else{1:ncol(Cov_x)}]),
+                 "q2_sci" = 1,
+                 "spde"=spde)
+    
+    Params = list("beta_j"=rep(0,ncol(Data$Cov_xj)), # linear predictor for abundance 
+                  "logtau_S"=rep(0,1), # parameters of SPDE object (see below)
+                  "logkappa_S"=rep(0,1),
+                  "deltainput_x"=deltainput_x, # input for random noise
+                  "logSigma_sci"=log(1),
+                  "q1_sci"=rep(0,nb_par_zinfl),
+                  "k_sci" = 1)
+    
+    Map[["k_sci"]] <- factor(NA)
+    
+    
+  }else if(Estimation_model_i == 3){ # commercial model (commercial_only)
+    
+    Data = list( "Options_vec"=Options_vec,
+                 "c_com_x"=c_com_x,
+                 # "c_sci_x"=c_sci_x,
+                 "y_com_i"=y_com_i,
+                 "index_com_i"=index_com_i-1,
+                 "b_com_i" = as.numeric(b_com_i)-1,
+                 "VE_i" = as.numeric(VE_i)-1,
+                 "n_eta" = length(levels(b_com_i)),
+                 "weights_com" = weights_com,
+                 "Cov_xj"=cbind(1,Cov_x),
+                 "Cov_xk"=if(is.null(xfb_x)){cbind(rep(1,nrow(Cov_x)))}else{cbind(1,xfb_x)},
+                 # "Cov_xb"=matrix(1,n_cells,1),
+                 "q2_sci" =  1,
+                 "q2_com" = rep(1,length(levels(VE_i))),
+                 "spde"=spde)
+    
+    Params = list("beta_j"=rep(0,ncol(Data$Cov_xj)), # linear predictor for abundance 
+                  "beta_k"=matrix(0,nrow = ncol(Data$Cov_xk), ncol = length(levels(b_com_i))), # additionnal linear predictor for sampling intensity 
+                  "par_b"=rep(0,length(levels(b_com_i))), # link between abundance and sampling intensity
+                  "logtau_S"=rep(0,1+length(levels(b_com_i))), # parameters of SPDE object (see below)
+                  "logkappa_S"=rep(0,1+length(levels(b_com_i))), 
+                  "deltainput_x"=deltainput_x, # input for random noise
+                  "etainput_x"=matrix(0,nrow = length(etainput_x),ncol = length(levels(b_com_i))),
+                  "logSigma_com"=rep(log(1),length(levels(VE_i))),
+                  "q1_com"=matrix(0,nrow = length(levels(VE_i)),ncol = nb_par_zinfl),
+                  "k_com" = rep(1,length(levels(VE_i))),
+                  "logSigma_catch" = 0,
+                  "logMean_catch" = 0)
+    
+    if(commercial_obs == 1){
+      Map[["k_com"]] <- seq(1:(length(Params$k_com))) # first k is for scientific data
+      Map[["k_com"]][1] <- NA
+      Map[["k_com"]] <- factor(Map[["k_com"]])
+    }else{
+      Map[["k_com"]] <- factor(rep(NA, (length(Params$k_com))))
+      Map[["logSigma_com"]] <- factor(rep(NA,length(Params$logSigma_com)))
+      Map[["q1_com"]] <- factor(matrix(NA,nrow = length(levels(b_com_i)),ncol = nb_par_zinfl))
+    }
+  }
+  
+  # fix reference level for latent field covariate
+  map_beta_j <- seq(1:ncol(Data$Cov_xj))
+  if(exists("ref_level")) map_beta_j[which(colnames(Data$Cov_xj) %in% ref_level)] <- NA
+  if(Estimation_model_i == 2) map_beta_j[which(colnames(Data$Cov_xj) == "substr_Rock")] <- NA
+  Map[["beta_j"]] = factor(map_beta_j)
+  
+  # both random effect share the same kappa (model stability)
+  Map[["logkappa_S"]] <- factor(rep(1,length(Params$logkappa_S)))
+  
+  # Map[["logtau_S"]] <- factor(rep(1,length(Params$logkappa_S)))
+  # # if 'commercial_only' : fix reference level for catchability when several fleets 
+  # if(Estimation_model_i == 3){
+  #   map_k <- seq(1:length(levels(factor(Data$b_com_i))))
+  #   map_k[1] <- NA
+  #   Map[["k"]] <- factor(map_k)
+  # }
+  
+  if(Estimation_model_i != 2){
+    # # fixed effect for sampling intensity (commercial data)
+    # Params$beta_k[1] = 0 
+    # if(ncol(Data$Cov_xk)>1) Params$beta_k[2] = 0
+    
+    # Random
+    if(str_detect(Version,"com_x_sci_data")) Random = c("deltainput_x", "etainput_x" )
+    if(Use_REML==TRUE) Random = c(Random,"beta_j","beta_k")
+    if(Use_REML==TRUE & str_detect(Version,"com_x_sci_data")) Random = c( Random, "b" )
+    
+    if(catchability_random == T){
+      Random = c( Random, "k_com")
+    }else{
+      Map[["logSigma_catch"]] = factor(rep(NA,length(Params$logSigma_catch)))
+      Map[["logMean_catch"]] = factor(rep(NA,length(Params$logMean_catch)))
+      
+    }
+    # Eliminate linkeage of density and sampling intensity
+    if( EM=="fix_b" ) Map[["par_b"]] = factor(rep(NA,length(Params$par_b)))
+    if( Options_vec[["IncludeEta"]] != 1 ) Map[["etainput_x"]] = factor(matrix(NA,nrow = length(etainput_x),ncol = length(levels(b_com_i))))
+    
+    # # fix param for fishing behavior covariate
+    # if(length(levels(b_com_i))>1){
+    #   map_b <- seq(1:length(levels(b_com_i)))
+    #   map_b[ref_level_fb] <- NA
+    #   Map[["b"]] = factor(map_b)
+    # }
+    
+  }else if(Estimation_model_i == 2){
+    if(str_detect(Version,"com_x_sci_data")) Random = c("deltainput_x")
+    if(Use_REML==TRUE) Random = c(Random,"beta_j")
+  }
+  
+  if(Samp_process == 0 & "etainput_x" %in% Random == T){
+    Params[["etainput_x"]] = NULL 
+    Random = Random[-which(Random == "etainput_x")]
+  }
+  
+  
+  #-----------
+  ## Run model
+  #-----------
+  
+  Start_time = Sys.time()
+  # library(TMB)
+  # TMB::compile(paste0(TmbFile,"inst/executables/",Version,"_scientific_commercial.cpp"),"-O1 -g",DLLFLAGS="")
+  Obj = MakeADFun( data=Data, parameters=Params,  random=Random, map = Map, silent = TRUE,hessian = T)
+  Obj$fn( Obj$par )
+  
+  # ## Likelihood profile
+  # prof <- tmbprofile(Obj,"logSigma_sci")
+  # plot(prof)
+  # confint(prof)
+
+  # # For debugging
+  # fixwinpath <- function() {
+  #   PATH <- Sys.getenv("PATH")
+  #   PATH <- paste0(R.home(), "/bin/x64;", PATH)
+  #   PATH <- paste0("c:/Rtools/mingw_64/bin;", PATH)
+  #   Sys.setenv(PATH=PATH)
+  # }
+  # fixwinpath()
+  # shell("where g++")
+  # shell("where gdb")
+  # shell("where Rterm")
+  # source("Scripts/function/MakeADFun_windows_debug.R")
+  # library(TMB)
+  # TMB::compile(paste0(TmbFile,"inst/executables/",Version,"_scientific_commercial.cpp"),"-O1 -g",DLLFLAGS="")
+  # dyn.load( dynlib(paste0(TmbFile,"inst/executables/",Version,"_scientific_commercial") ) )
+  # MakeADFun_windows_debug(cpp_name = paste0(TmbFile,"inst/executables/",Version,"_scientific_commercial"),  data=Data, parameters=Params,  random=Random)
+  # TMB::gdbsource(paste0(TmbFile,"inst/executables/",Version,"_scientific_commercial.R"),interactive = T) ## Non-interactive
+  # dyn.unload( dynlib(paste0(TmbFile,"inst/executables/",Version,"_scientific_commercial") ) )
+
+  # # Hessian
+  #   hessian.fixed <- optimHess(Obj$par,Obj$fn,Obj$gr)
+  # chol(hessian.fixed)
+  # which(diag(hessian.fixed)[which(names(diag(hessian.fixed)) == "k_com")]<0)
+  
+  # Run
+  #Lower = -Inf
+  #Upper = Inf
+  Lower = -50  #getting a few cases where -Inf,Inf bounds result in nlminb failure (NaN gradient)
+  Upper = 50
+  Opt = nlminb( start=Obj$par, objective=Obj$fn, gradient=Obj$gr, lower=Lower, upper=Upper, control=list(trace=1, maxit=1000))         #
+  Opt[["diagnostics"]] = data.frame( "Param"=names(Obj$par), "Lower"=-Inf, "Est"=Opt$par, "Upper"=Inf, "gradient"=Obj$gr(Opt$par) )
+  Report = Obj$report()
+  # https://www.stats.bris.ac.uk/R/web/packages/glmmTMB/vignettes/troubleshooting.html
+  
+  # # If one random effect can be neglected --> rerun the model without this random effect
+  # if( any(Report$MargSD_S<0.001) & Opt$convergence == 0){
+  #   Which = which(Report$MargSD_S<0.001)
+  #   
+  #   # fix negligible random effect
+  #   Map[["logtau_S"]] <- c(1:length(Report$MargSD_S))
+  #   Map[["logtau_S"]][Which] <- NA
+  #   Map[["logtau_S"]] <- factor(Map[["logtau_S"]])
+  #   
+  #   # Map[["logkappa_S"]] <- c(1:length(Report$MargSD_S))
+  #   # Map[["logkappa_S"]][Which] <- NA
+  #   # Map[["logkappa_S"]] <- factor(Map[["logkappa_S"]])
+  #   if(length(Which)==2){
+  #     Map[["logkappa_S"]] = factor( c(NA,NA) )
+  #   }
+  #   
+  #   if( any(Which==1) ){
+  #     Map[["deltainput_x"]] = factor( rep(NA,length(Params[["deltainput_x"]])) )
+  #     Params[["deltainput_x"]][] = 0
+  #   }
+  #   
+  #   if( any(Which==2) & Estimation_model_i != "scientific_only" ){
+  #     Map[["etainput_x"]] = factor( rep(NA,length(Params[["etainput_x"]])) )
+  #     Params[["etainput_x"]][] = 0
+  #   }
+  #   
+  #   Data$Options_vec[Which+2] = 0
+  #   
+  #   print(c("Map ",names(Map)))
+  #   print(c("Params ",names(Params)))
+  #   
+  #   # Re-run
+  #   if( length(Which)!=2 ) Obj = MakeADFun( data=Data, parameters=Params, random=Random, map=Map, silent=TRUE)
+  #   if( length(Which)==2 ) Obj = MakeADFun( data=Data, parameters=Params, random=NULL, map=Map, silent=TRUE)
+  #   Opt = nlminb( start=Obj$par, objective=Obj$fn, gradient=Obj$gr, lower=Lower, upper=Upper, control=list(trace=1, maxit=1000))         #
+  #   Opt[["diagnostics"]] = data.frame( "Param"=names(Obj$par), "Lower"=-Inf, "Est"=Opt$par, "Upper"=Inf, "gradient"=Obj$gr(Opt$par) )
+  #   
+  # }
+  
+  Converge=Opt$convergence
+  
+  
+  #-------------------------
+  ## Compute standard errors
+  #-------------------------
+  
+  # SD  --> very long with catchability and I got NANs
+  if(Converge==0){
+    Report = Obj$report()
+    if( (Estimation_model_i != 2 & all(c("etainput_x","deltainput_x")%in%names(Map))) | (Estimation_model_i == 2 & c("deltainput_x")%in%names(Map))){
+      SD = sdreport( Obj, bias.correct=FALSE ,ignore.parm.uncertainty = ignore.uncertainty)
+      SD$unbiased$value = c("total_abundance"=Report$total_abundance)
+    }else{
+      SD = sdreport( Obj, bias.correct=TRUE, ignore.parm.uncertainty = ignore.uncertainty) # bias.correct=TRUE ,
+    }
+  }else{SD = NULL}
+  Opt[["run_time"]] = Sys.time()-Start_time
+  
+  res <- list(SD = SD, Opt = Opt, Report = Report,  Converge = Converge,Data = Data, Params = Params, Random = Random, Map = Map)
+  return(res)
+}

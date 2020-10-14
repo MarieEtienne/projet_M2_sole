@@ -1,0 +1,24 @@
+{
+    "id": "0620681B",
+    "path": "~/GitHub/projet_M2_stats/Scripts/function/fit_IM.R",
+    "project_path": "Scripts/function/fit_IM.R",
+    "type": "r_source",
+    "hash": "3127341222",
+    "contents": "",
+    "dirty": false,
+    "created": 1602708954785.0,
+    "source_on_save": false,
+    "relative_order": 3,
+    "properties": {
+        "cursorPosition": "300,14",
+        "scrollLine": "285"
+    },
+    "folds": "",
+    "lastKnownWriteTime": 1602709015,
+    "encoding": "UTF-8",
+    "collab_server": "",
+    "source_window": "",
+    "last_content_update": 1602709015994,
+    "read_only": false,
+    "read_only_alternatives": []
+}

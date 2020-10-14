@@ -1,0 +1,24 @@
+{
+    "id": "EF1931E3",
+    "path": "~/GitHub/projet_M2_stats/Scripts/simu_main_script.R",
+    "project_path": "Scripts/simu_main_script.R",
+    "type": "r_source",
+    "hash": "0",
+    "contents": "",
+    "dirty": false,
+    "created": 1602708437216.0,
+    "source_on_save": false,
+    "relative_order": 1,
+    "properties": {
+        "cursorPosition": "271,4",
+        "scrollLine": "255"
+    },
+    "folds": "",
+    "lastKnownWriteTime": 1602708725,
+    "encoding": "UTF-8",
+    "collab_server": "",
+    "source_window": "",
+    "last_content_update": 1602708725047,
+    "read_only": false,
+    "read_only_alternatives": []
+}
