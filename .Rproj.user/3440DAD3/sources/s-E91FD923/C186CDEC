@@ -1,0 +1,24 @@
+{
+    "id": "C186CDEC",
+    "path": "~/GitHub/projet_M2_stats/scripts/function/load_packages.R",
+    "project_path": "scripts/function/load_packages.R",
+    "type": "r_source",
+    "hash": "0",
+    "contents": "",
+    "dirty": false,
+    "created": 1602828831051.0,
+    "source_on_save": false,
+    "relative_order": 3,
+    "properties": {
+        "cursorPosition": "8,22",
+        "scrollLine": "0"
+    },
+    "folds": "",
+    "lastKnownWriteTime": 1599947398,
+    "encoding": "UTF-8",
+    "collab_server": "",
+    "source_window": "",
+    "last_content_update": 1599947398,
+    "read_only": false,
+    "read_only_alternatives": []
+}

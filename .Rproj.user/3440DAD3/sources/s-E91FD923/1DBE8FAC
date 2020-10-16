@@ -3,15 +3,15 @@
     "path": "~/GitHub/projet_M2_stats/scripts/simu_main_script.R",
     "project_path": "scripts/simu_main_script.R",
     "type": "r_source",
-    "hash": "3008653999",
+    "hash": "0",
     "contents": "",
     "dirty": false,
     "created": 1602792525915.0,
     "source_on_save": false,
     "relative_order": 1,
     "properties": {
-        "cursorPosition": "98,25",
-        "scrollLine": "89"
+        "cursorPosition": "5,19",
+        "scrollLine": "0"
     },
     "folds": "",
     "lastKnownWriteTime": 1602792983,
