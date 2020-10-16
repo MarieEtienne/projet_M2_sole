@@ -1,0 +1,317 @@
+// Space time 
+#include <TMB.hpp>
+//#include <atomic_math.hpp>  //for D_lgamma
+
+
+template<class Type>
+bool isNA(Type x){
+  return R_IsNA(asDouble(x));
+}
+
+template<class Type>
+Type plogis(Type x){
+  return 1.0 / (1.0 + exp(-x));
+}
+
+template<class Type>
+Type dbern(Type x, Type prob, int give_log=1){
+  Type logres;
+  if( x==0 ) logres = log( 1-prob );
+  if( x==1 ) logres = log( prob );
+  if(give_log) return logres; else return exp(logres);
+}
+
+
+// dlognorm
+
+template<class Type>
+
+Type dlognorm(Type x, Type meanlog, Type sdlog, int give_log=false){
+  Type Return;
+  if(give_log==false) Return = dnorm( log(x), meanlog, sdlog, false) / x;
+  if(give_log==true) Return = dnorm( log(x), meanlog, sdlog, true) - log(x);
+  return Return;
+}
+
+
+// dzinflognorm
+
+template<class Type>
+
+Type dzinflognorm(Type x, Type meanlog, Type encounter_prob, Type log_notencounter_prob, Type sdlog, int give_log=false){
+  Type Return;
+  if(x==0){
+    if(give_log==false) Return = 1.0 - encounter_prob;
+    if(give_log==true){
+      if( isNA(log_notencounter_prob) ) Return = log(1.0 - encounter_prob);
+      if( !isNA(log_notencounter_prob) ) Return = log_notencounter_prob;
+    }
+  }else{
+    if(give_log==false) Return = encounter_prob * dlognorm( x, meanlog, sdlog, false );
+    if(give_log==true) Return = log(encounter_prob) + dlognorm( x, meanlog, sdlog, true );
+  } 
+  return Return;
+}
+
+
+
+template<class Type>
+Type objective_function<Type>::operator() (){
+  using namespace Eigen;
+  using namespace density;
+  
+  ///////////////////////////////////////////////////////////////////
+  // Inputs definition 
+  /////////////////////
+  
+//// A changer 
+  
+  // options vec
+  DATA_FACTOR( Options_vec );
+  // Slot 0: prior on random effects (0=SPDE_GMRF; 1=ICAR_GMRF)
+  // Slot 4: Output S_x in ADREPORT (0=no, 1=yes); needed for unbiased map estimates using bias.correct
+  // Slot 5: Estimation model (1 : scientific_commercial, 1 : scientific_only, 3 : commercial_only)
+  
+  
+  //////////////////////////////////// Global /////////////////////////////////////////
+  
+  ////////
+  // Data
+  ////////
+  
+  DATA_MATRIX( Cov_xj );  
+
+  //////////////
+  // Parameters 
+  //////////////
+
+  PARAMETER_VECTOR(beta_j);
+  
+  /////////////////
+  // derived values
+  /////////////////
+  
+  int n_j = Cov_xj.row(0).size();
+  // int n_k = Cov_xk.row(0).size();
+  int n_x = Cov_xj.col(0).size();
+
+  // global stuff
+  vector<Type> jnll_comp(5);
+  jnll_comp.setZero();
+
+
+  ////////////////
+  // Latent field
+  ///////////////
+
+    // Predicted densities
+  vector<Type> S_x(n_x);
+  vector<Type> debug_j(n_j);
+  vector<Type> linpredS_x = Cov_xj * beta_j;
+  for(int s=0; s<n_x; s++){
+    S_x(s) = exp(linpredS_x(s));
+  }
+  
+  //////////////////////////////////// Commercial /////////////////////////////////////////
+  
+  
+//   if(Options_vec(5) == 3 | Options_vec(5) == 1){
+//     
+//     ////////
+//     // Data
+//     ////////
+//     
+//     DATA_MATRIX( c_com_x );       	// Response (count) for each observation i (commercial data)
+//     // DATA_VECTOR( P_i );      // Proportion of survey unit that is surveyed for each observation i
+//     // DATA_VECTOR( A_x );      // Relative area of each survey unit s (can set = 1.0 if all the same size)
+//     //DATA_VECTOR( c_sci_x );       	// Response (count) for each observation i (scientific data)
+//     DATA_VECTOR( y_com_i );       	// Response (0:not surveyed, 1:surveyed) for each site (commercial data)
+//     DATA_FACTOR( index_com_i );
+//    	DATA_FACTOR( b_com_i );
+// 	  DATA_FACTOR( VE_i );
+// 	  DATA_VECTOR( q2_com ); 
+//     DATA_MATRIX( Cov_xk );  //design matrix for sampling of commercial data
+//     
+//     
+//     //////////////
+//     // Parameters 
+//     //////////////
+// 	
+//     PARAMETER_MATRIX(q1_com);
+//     PARAMETER_VECTOR(logSigma_com);
+// 	  PARAMETER_VECTOR( k_com );
+// 	  PARAMETER_VECTOR( logSigma_catch );
+// 	  PARAMETER_VECTOR( logMean_catch );
+//     /////////////////
+//     // derived values
+//     /////////////////
+//     
+//     int n_com_i = y_com_i.size();
+// 
+// 
+// 	/////////////////////
+// 	// Observation model
+// 	////////////////////
+// 	    
+//     if( Options_vec(9) == 1){
+// 		
+// 		vector<Type> Sigma_com = exp(logSigma_com);
+//     vector<Type> Sigma_catch = exp(logSigma_catch);
+// 
+// 		vector<Type> E_com(n_com_i);
+// 		vector<Type> encounterprob_com(n_com_i);
+// 		vector<Type> log_notencounterprob_com(n_com_i);
+// 		
+// 		// Zero-inflated gamma distribution
+// 		for(int i=0; i<n_com_i; i++){
+// 		  if( !isNA(y_com_i(i)) ){
+// 		    
+// 			if(VE_i(i) == 0) E_com(i) = q2_com(0) * 1 * S_x(index_com_i(i));
+// 			if(VE_i(i) != 0) E_com(i) = q2_com(VE_i(i)) * k_com(VE_i(i)) * S_x(index_com_i(i));
+// 			
+// 			// proba of encountering
+// 			  encounterprob_com(i) = ( 1.0 - exp(-1 * E_com(i) * exp(q1_com(VE_i(i),0))) );
+// 			  log_notencounterprob_com(i) = -1 * E_com(i) * exp(q1_com(VE_i(i),0));
+// 			
+// 			//if(y_com_i(i) > 0) jnll_comp(0) -= dgamma( y_com_i(i), 1 / pow(Sigma_com,2) , E_com(i) * pow(Sigma_com,2), true ); // prob_encount_sci(i) * 
+// 			
+// 			jnll_comp(0) -= weights_com(0) * dzinflognorm(y_com_i(i), log(E_com(i))-log(encounterprob_com(i)), encounterprob_com(i), log_notencounterprob_com(i), Sigma_com(VE_i(i)), true);
+// 		  }
+// 		}
+// 		
+// 		REPORT( q1_com );
+// 		REPORT( Sigma_com );
+// 
+// 	}
+//     
+//     //////////////////////////////////////
+//     // Sampling process of commercial data
+//     /////////////////////////////////////
+//     if( Options_vec(7) == 1){
+//       
+//       // Parameter
+//       PARAMETER_MATRIX(beta_k);
+//       PARAMETER_VECTOR( par_b );
+//       
+//       // Derived values
+//       Type b;
+//       vector<Type> linpredR_x(n_x);
+//       vector<Type> lambda_x(n_x);
+//       // matrix<Type> lambda_ref_x(n_x , n_eta );
+//       vector<Type> fact_S(n_x);
+//       
+//       
+//       // Poisson point process
+// 		 for(int s=0; s<n_x; s++){
+// 		   linpredR_x = Cov_xk * beta_k;
+// 		   fact_S = par_b(l)*(log(S_x(s)));
+// 		   lambda_x(s,l) = exp( linpredR_x(s,l) + fact_S(s) );
+// 			if(!isNA(c_com_x(s,l)) & lambda_x(s,l) > 0)   jnll_comp(1)-= (Type(1)-lambda_x(s,l) + c_com_x(s,l)*log(lambda_x(s,l))); // log density of poisson process (see Diggle (2013))
+// 		 }
+// 		 b(l)=par_b(l);
+// 	 
+//       // Outputs
+//       REPORT( lambda_x );
+//       REPORT( beta_k );
+//       REPORT( b );
+//       REPORT( linpredR_x );
+//       
+//       //ADREPORT(eta_x);
+//       ADREPORT(lambda_x);
+//       //ADREPORT(lambda_ref_x);
+// 	}
+//   }
+
+  //////////////////////////////////// Scientific /////////////////////////////////////////
+  
+  if(Options_vec(5) != 3){
+    
+    ////////
+    // Data
+    ////////
+    
+    DATA_VECTOR( y_sci_i );       	// Response (0:not surveyed, 1:surveyed) for each site (scientific data)
+    DATA_FACTOR( index_sci_i );
+    DATA_VECTOR( q2_sci );
+    
+    //////////////
+    // Parameters 
+    //////////////
+    
+    PARAMETER(logSigma_sci);
+    PARAMETER_VECTOR(q1_sci);
+   	PARAMETER_VECTOR( k_sci );
+
+    /////////////////
+    // derived values
+    /////////////////
+    
+    Type Sigma_sci = exp(logSigma_sci);
+    int n_sci_i = y_sci_i.size();
+
+    /////////////////////
+    // Observation model
+    ////////////////////
+    
+    vector<Type> E_sci(n_sci_i);
+    vector<Type> encounterprob_sci(n_sci_i);
+    vector<Type> log_notencounterprob_sci(n_sci_i);
+    
+    // // Zero-inflated  distribution
+    // for(int i=0; i<n_sci_i; i++){
+    //   if( !isNA(y_sci_i(i)) ){
+    //     E_sci(i) = k_sci(0) * q2_sci(0) * S_x(index_sci_i(i));
+    //     encounterprob_sci(i) = ( 1.0 - exp(-1 * E_sci(i) * exp(q1_sci(0)) ));
+    //     log_notencounterprob_sci(i) = -1 * E_sci(i) * exp(q1_sci(0));
+    //     
+    //     jnll_comp(0) -= dzinflognorm(y_sci_i(i), log(E_sci(i))-log(encounterprob_sci(i)), encounterprob_sci(i), log_notencounterprob_sci(i), Sigma_sci, true);
+    //       
+    //   }
+    // }
+    // 
+    //////////
+    // Outputs
+    //////////
+    
+    REPORT( Sigma_sci );
+    REPORT( q1_sci );
+    
+  }
+
+  Type total_abundance = S_x.sum();
+
+  // Total objective
+  // parallel_accumulator<Type> jnll(this);
+  Type jnll;
+  
+  int n_jnll = jnll_comp.size();
+  for(int i=0; i<n_jnll; i++){
+    jnll += jnll_comp(i);
+  }
+  
+  
+  // Reporting
+  REPORT( S_x );
+
+  REPORT( total_abundance );
+  REPORT( beta_j );
+  REPORT( linpredS_x );
+  
+  // REPORT( Unsampled_x );
+  REPORT( jnll_comp );
+  // REPORT( jnll );
+
+  // Bias correction output
+  //ADREPORT( beta_abs_j );
+  //ADREPORT( beta_pos_j );
+  ADREPORT( total_abundance );
+
+  if(Options_vec(4)==1){
+    ADREPORT(S_x);
+    // ADREPORT(delta_x);
+  }
+  
+  
+  return jnll;
+}
+

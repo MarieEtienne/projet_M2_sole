@@ -212,7 +212,7 @@ if(restart_after_crash == T){
 
 # load TMB model
 dyn.load( dynlib(paste0(TmbFile,"inst/executables/",Version,"_scientific_commercial") ) )
-
+#dyn.unload( dynlib(paste0(TmbFile,"inst/executables/",Version,"_scientific_commercial") ) )
 ## loop
 for(i in i0:n_sim){
 
