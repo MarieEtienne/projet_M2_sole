@@ -3,7 +3,7 @@
 ####################
 # B. Alglave based on Conn et al. (2017)
 
-source("scripts/function/load_packages.R")
+source("Scripts/function/load_packages.R")
 
 #-----------------------------------------------------------
 #-------------- Simulation/estimation settings -------------
@@ -127,7 +127,7 @@ RandomSeed = 123456
 
 # TMB model version
 Version = "com_x_sci_data_14"
-TmbFile = "scripts/"
+TmbFile = "Scripts/"
 ignore.uncertainty = T
 
 ## Loop indices
@@ -177,20 +177,20 @@ TMB::compile(paste0(TmbFile,"inst/executables/",Version,"_scientific_commercial.
 #-------------------------------------------------------------
 
 ################
-# source scripts
+# source Scripts
 ################
 ## Simulation loop function : simu_commercial_scientific()
-source("scripts/function/commercial_scientific_14.R")
+source("Scripts/function/commercial_scientific_14.R")
 ## Simulate Matérn field : sim_GF_Matern()
-source("scripts/function/sim_GF_Matern.R")
+source("Scripts/function/sim_GF_Matern.R")
 ## Fit model : fit_IM()
-source("scripts/function/fit_IM.R")
+source("Scripts/function/fit_IM.R")
 ## Simulate latent field : simu_latent_field()
-source("scripts/function/simu_latent_field.R")
+source("Scripts/function/simu_latent_field.R")
 ## Simulate scientific data : simu_scientific_data()
-source("scripts/function/simu_scientific_data.R")
+source("Scripts/function/simu_scientific_data.R")
 ## Simulate commercial data : simu_commercial_data()
-source("scripts/function/simu_commercial_data.R")
+source("Scripts/function/simu_commercial_data.R")
 
 # file name for savinf outputs
 Start_time.tot = Sys.time()
@@ -280,7 +280,7 @@ dyn.unload( dynlib(paste0(TmbFile,"inst/executables/",Version,"_scientific_comme
 #-------------------------------------------------------------
 
 ## Function for plotting elative bias of abundance, of b and MSPE : Plot_Results()
-source("scripts/function/plot_simu.R")
+source("Scripts/function/plot_simu.R")
 
 # Results <- Results_loop$Results
 # Strue_df <- Results_loop$Strue_df
@@ -293,7 +293,7 @@ grid.arrange(Plot_results_list[[1]],Plot_results_list[[2]],Plot_results_list[[3]
 
 # ## (DEPRECATED) Plot parameters estimate (relative) bias
 # ## See "in_progress" folder
-# source("scripts/rel_bias_param.R")
+# source("Scripts/rel_bias_param.R")
 # # Results_loop file
 # file <- ""
 # load(file)
