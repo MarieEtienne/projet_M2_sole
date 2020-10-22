@@ -36,53 +36,24 @@ simu_latent_field <- function(loc_x,
                               beta0,
                               beta,
                               simu_tool,
-                              SpatialScale,
                               range,
                               nu,
-                              SD_x,
-                              SD_delta,
-                              SD_xfb,
-                              SD_eta){
+                              SD_x){
   
   # 1st param : continuous variable, 4 nexts : strata_1, strata_2, strata_3, strata_4
   beta[1] = runif(1,-.5,.5)
-  
-  if(simu_tool == "RandomFields"){
-    
-    model_delta <- RMgauss(var=SD_delta^2, scale=SpatialScale)
-    model_x <- RMgauss(var=SD_x^2, scale=SpatialScale)
-    model_xfb <- RMgauss(var=SD_xfb^2, scale=SpatialScale)
-    model_eta <- RMgauss(var=SD_eta^2, scale=SpatialScale) # var=SD_eta^2, scale=SpatialScale
-    # # plot randomfield
-    # x11();plot(RFsimulate(model=model_eta, x=loc_x[,'x'], y=loc_x[,'y']))
-    
-    # Realization from GRF
-    delta_x = RFsimulate(model=model_delta, x=loc_x[,'x'], y=loc_x[,'y'])@data[,1]
-    Cov_x = RFsimulate(model=model_x, x=loc_x[,'x'], y=loc_x[,'y'])@data[,1]
-    xfb_x = RFsimulate(model=model_xfb, x=loc_x[,'x'], y=loc_x[,'y'])@data[,1]
-    eta_x = RFsimulate(model=model_eta, x=loc_x[,'x'], y=loc_x[,'y'])@data[,1]
-    
-  }else if(simu_tool == "MaternCov"){
-    
-    # Simulate using Matérn covariance
-    delta_x = sim_GF_Matern(loc_x, nu, range, SD_delta^2)[[1]]$y
-    Cov_x = sim_GF_Matern(loc_x, nu, range, SD_x^2)[[1]]$y
-    xfb_x = sim_GF_Matern(loc_x, nu, range, SD_xfb^2)[[1]]$y
-    eta_x = sim_GF_Matern(loc_x, nu, range, SD_eta^2)[[1]]$y
-    
-  }
-  
+
+  # Simulate using Matérn covariance
+  Cov_x = sim_GF_Matern(loc_x, nu, range, SD_x^2)[[1]]$y
+
   # Create design matrix for covariates
   Cov_x <- as.matrix(cbind(Cov_x,loc_x[,which(str_detect(colnames(loc_x),"strata"))]))
   
   # Total abundance
-  Strue_x = exp(beta0 + as.matrix(Cov_x) %*% beta + delta_x)
+  Strue_x = exp(beta0 + as.matrix(Cov_x) %*% beta)
   res <- list(Cov_x = Cov_x,
               Strue_x = Strue_x,
-              beta = beta,
-              delta_x = delta_x,
-              xfb_x = xfb_x,
-              eta_x = eta_x)
+              beta = beta)
   return(res)
 }
 

@@ -11,57 +11,30 @@
 #' # Latent field
 #' @param grid_dim grid dimension
 #' @param n_cells cell number
-#' @param latent_fields_simu if == "simulate" : simulate data, if == "load_from_RData" : load already simulated data, to have the same data between different simulation loops (here `latent_field` and `scientific_data`)
-#' @param latent_field already simulated data for the abundance distribution equation
-#' @param scientific_data already simulated data for the scientific data
 #' @param beta0 intercept of the abundance distribution equation
 #' @param beta  fixed parameters of the abundance distribution equation
-#' @param simu_tool simulation functions ("RandomFields" or "MaternCov")
-#' @param SpatialScale spatial scale parameter. Must be provided for the `RandomFields` package
 #' @param range range parameter. Must be provided for the "MaternCov" package.
 #' @param nu nu parameter. Must be provided for the "MaternCov" package.
 #' @param SD_x Standard deviation for the simulation of covariate related to the abundance distribution equation.
-#' @param SD_delta Standard deviation for the random effect delta (abundance distribution).
-#' @param SD_xfb Standard deviation for the simulation of covariate related to the sampling process.
-#' @param SD_eta Standard deviation for the random effect eta (sampling process).
 #' 
-#' 
-#' # Commercial sampling
-#' @param beta0_fb intercept of the sampling process
-#' @param beta_fb fixed parameters of the sampling process
 #' 
 #' # Observations
-#' @param DataObs Observation model (1 : zero-inflated gamma, 2 : zero-inflated lognormal, 3 : lognormal)
-#' @param zero.infl_model Zero-inflated model parametrisation
 #' # Scientific
 #' @param n_samp_sci number number of scientific samples
 #' @param logSigma_sci observation error for the scientific data (log scale)
 #' @param q1_sci parameter related to the zero-inflation for scientific data
 #' @param q2_sci relative catchability of the scientific data
-#' @param sci_sampling type of sampling plan for scientific data ("random_stratified";"fixed")
-#' @param n_strate parameter for the size of the strata (n=9)
 #' # Commercial
 #' @param n_samp_com number of commercial samples
 #' @param logSigma_com observation error for the scientific data (log scale)
 #' @param q1_com parameter related to the zero-inflation for commercial data
 #' @param q2_com relative catchability of the commercial data
 #' @param b_set preferential sampling parameter levels
-#' @param zone_without_fishing if TRUE, part of the fishing area is not sampled, if FALSE, part of the fishing area is sampled
 #' 
 ## Model configuration
 #' @param Data_source Alternative for the estimation model ("scientific_commercial" : both data are fitted to the model, "scientific_only" : only scientific data is fitted to the model, "commercial_only" : only commercial data is fitted to the model)
 #' @param Samp_process If 1 : the sampling process contribute to the likelihood, else it doesn't
 #' @param EM if "est_b" : b is estimated, if "fix_b" : b is fixed to 0
-#' @param weights_com weight related to the commercial data in the likelihood
-#' @param commercial_obs if 1 : commercial data contribute to likelihood
-#' @param catchability_random if T, catchability are considered as random effects
-#' @param b_constraint constraint on b (if b==1 : b is positive, b==2 : b is free)
-#' 
-#' # models and SPDE objects configuration
-#' @param Spatial_model (DEPRECATED) Spatial model estimation could be "SPDE_GMRF" or "ICAR"
-#' @param Use_REML (DEPRECATED) Use restricted (or residual) maximum likelihood method (TRUE/FALSE)
-#' @param Alpha parameter related to the smoothness of the gaussian fields (default == 2)
-#' @param RandomSeed 
 #' 
 #' # TMB model version = "com_data"
 #' @param Version estimation model version
@@ -76,6 +49,8 @@
 #' @return Results : summary dataframe of simulation/estimation
 #' @return List_param : List of model outputs
 #' @return counter : index to browse Results and List_param
+#' 
+#' @param RandomSeed 
 #' 
 #' @author B. Alglave
 
@@ -92,46 +67,24 @@ simu_commercial_scientific <- function(Results,
                                        simu_file,
                                        grid_dim,
                                        n_cells,
-                                       latent_fields_simu,
-                                       latent_field,
-                                       scientific_data,
                                        beta0,
                                        beta,
-                                       simu_tool,
-                                       SpatialScale,
                                        range,
                                        nu,
                                        SD_x,
-                                       SD_delta,
-                                       SD_xfb,
-                                       SD_eta,
-                                       beta0_fb,
-                                       beta_fb,
-                                       DataObs,
-                                       zero.infl_model,
-                                       nb_par_zinfl,
                                        n_samp_sci,
                                        logSigma_sci,
                                        q1_sci,
                                        q2_sci,
-                                       sci_sampling,
                                        n_strate,
                                        n_samp_com,
                                        logSigma_com,
                                        q1_com,
                                        q2_com,
                                        b_set,
-                                       zone_without_fishing,
                                        Data_source,
                                        Samp_process,
                                        EM,
-                                       weights_com,
-                                       commercial_obs,
-                                       catchability_random,
-                                       b_constraint,
-                                       Spatial_model,
-                                       Use_REML,
-                                       Alpha,
                                        RandomSeed,
                                        Version,
                                        TmbFile,
@@ -176,77 +129,44 @@ simu_commercial_scientific <- function(Results,
   #---------------
   # simulate or load data for abundance distribution
   
-  if(latent_fields_simu == "simulate"){
-    
-    simu_latent_field_outputs <- simu_latent_field(loc_x,
-                                                   latent_fields_simu,
-                                                   latent_field,
-                                                   scientific_data,
-                                                   beta0,
-                                                   beta,
-                                                   simu_tool,
-                                                   SpatialScale,
-                                                   range,
-                                                   nu,
-                                                   SD_x,
-                                                   SD_delta,
-                                                   SD_xfb,
-                                                   SD_eta)
-    
-    Cov_x <- simu_latent_field_outputs$Cov_x
-    Strue_x <- simu_latent_field_outputs$Strue_x
-    beta <- simu_latent_field_outputs$beta
-    delta_x <- simu_latent_field_outputs$delta_x
-    xfb_x <- simu_latent_field_outputs$xfb_x
-    eta_x <- simu_latent_field_outputs$eta_x
-    
-  }else if(latent_fields_simu == "load_from_RData"){
-    
-    Cov_x <- latent_field[[i]]$Cov_x
-    Strue_x <- latent_field[[i]]$Strue_x
-    beta <- latent_field[[i]]$beta
-    delta_x <- latent_field[[i]]$delta_x
-    xfb_x <- latent_field[[i]]$xfb_x
-    eta_x <- latent_field[[i]]$eta_x
-    
-  }
+  simu_latent_field_outputs <- simu_latent_field(loc_x,
+                                                 latent_fields_simu,
+                                                 latent_field,
+                                                 scientific_data,
+                                                 beta0,
+                                                 beta,
+                                                 simu_tool,
+                                                 range,
+                                                 nu,
+                                                 SD_x)
+  
+  Cov_x <- simu_latent_field_outputs$Cov_x
+  Strue_x <- simu_latent_field_outputs$Strue_x
+  beta <- simu_latent_field_outputs$beta
   
   #-----------------
   #  Scientific data
   #-----------------
   # simulate or load data for scientific data
+  simu_scientific_data_outputs <- simu_scientific_data(loc_x,
+                                                       grid_dim,
+                                                       Strue_x,
+                                                       DataObs,
+                                                       zero.infl_model,
+                                                       n_samp_sci,
+                                                       logSigma_sci,
+                                                       q1_sci,
+                                                       q2_sci,
+                                                       sci_sampling,
+                                                       n_strate,
+                                                       scientific_data)
   
-  if(latent_fields_simu == "simulate"){
-    
-    simu_scientific_data_outputs <- simu_scientific_data(loc_x,
-                                                         grid_dim,
-                                                         Strue_x,
-                                                         DataObs,
-                                                         zero.infl_model,
-                                                         n_samp_sci,
-                                                         logSigma_sci,
-                                                         q1_sci,
-                                                         q2_sci,
-                                                         sci_sampling,
-                                                         n_strate,
-                                                         scientific_data)
-    
-    index_sci_i <- simu_scientific_data_outputs$index_sci_i
-    c_sci_x <- simu_scientific_data_outputs$c_sci_x
-    y_sci_i <- simu_scientific_data_outputs$y_sci_i
-    
-  }else if(latent_fields_simu == "load_from_RData"){
-    
-    index_sci_i <- scientific_data[[i]]$index_sci_i
-    c_sci_x <- scientific_data[[i]]$c_sci_x
-    y_sci_i <- scientific_data[[i]]$y_sci_i
-    
-  }
+  index_sci_i <- simu_scientific_data_outputs$index_sci_i
+  c_sci_x <- simu_scientific_data_outputs$c_sci_x
+  y_sci_i <- simu_scientific_data_outputs$y_sci_i
   
   # loop on preferential sampling levels
   for(b in b_set){
-    
-    cat(paste("counter ",counter,"Simulation ",i, "b ",b ,"\n"))
     
     #-----------------
     #  Commercial data
@@ -266,23 +186,18 @@ simu_commercial_scientific <- function(Results,
                                                          logSigma_com,
                                                          q1_com,
                                                          q2_com,
-                                                         b_fl = b,
+                                                         b,
                                                          zone_without_fishing)
     
     index_com_i <-  simu_commercial_data_outputs$index_com_i
     y_com_i <- simu_commercial_data_outputs$y_com_i
-    b_com_i <- simu_commercial_data_outputs$b_com_i
-    VE_i <- simu_commercial_data_outputs$b_com_i
     c_com_x <- simu_commercial_data_outputs$c_com_x
     
-    print(paste0("% of pos. values : ",length((y_com_i[which(y_com_i > 0)]))/length(y_com_i)))
+    # print(paste0("% of pos. values : ",length((y_com_i[which(y_com_i > 0)]))/length(y_com_i)))
     
     ############
     ## Fit model
     ############
-    # Create the SPDE/GMRF model, (kappa^2-Delta)(tau x) = W:
-    mesh = inla.mesh.create( loc_x[,c('x','y')] )
-    spde <- (inla.spde2.matern(mesh, alpha=Alpha)$param.inla)[c("M0","M1","M2")]  # define sparse matrices for parametrisation of precision matrix
     
     # Loop on alternative configuration models
     for(Estimation_model in Data_source){
@@ -292,31 +207,17 @@ simu_commercial_scientific <- function(Results,
       ############
       ## Fit Model
       ############
-      fit_IM_res <- fit_IM(Estimation_model_i,
-                           Samp_process,
-                           EM,
-                           weights_com,
-                           commercial_obs,
-                           Spatial_model,
-                           Use_REML,
-                           Alpha,
-                           b_constraint,
-                           Version,
+      fit_IM_res <- fit_IM(Estimation_model_i = 1,
+                           Samp_process = 1,
+                           EM = "est_b",
                            TmbFile,
                            ignore.uncertainty,
                            c_com_x,
                            y_com_i,
                            index_com_i,
-                           b_com_i,
-                           VE_i,
-                           catchability_random,
                            y_sci_i,
                            index_sci_i,
-                           nb_par_zinfl,
-                           as.matrix(Cov_x[,1]), # 
-                           xfb_x,
-                           mesh,
-                           spde)
+                           Cov_x)
       
       SD <- fit_IM_res$SD
       Report <- fit_IM_res$Report
@@ -342,47 +243,26 @@ simu_commercial_scientific <- function(Results,
                                   latent_fields_simu=latent_fields_simu,
                                   beta0=beta0,
                                   beta=beta,
-                                  simu_tool=simu_tool,
-                                  SpatialScale=SpatialScale,
                                   range=range,nu=nu,
                                   SD_x=SD_x,
-                                  SD_delta=SD_delta,
-                                  SD_xfb=SD_xfb,
-                                  SD_eta=SD_eta,
-                                  beta0_fb=beta0_fb,
-                                  beta_fb=beta_fb,
-                                  DataObs=DataObs,
-                                  zero.infl_model=zero.infl_model,
                                   n_samp_sci=n_samp_sci,
                                   logSigma_sci=logSigma_sci,
                                   q1_sci=q1_sci,
                                   q2_sci=q2_sci,
-                                  sci_sampling=sci_sampling,
                                   n_strate=n_strate,
                                   n_samp_com=n_samp_com,
                                   logSigma_com=logSigma_com,
                                   q1_com=q1_com,
                                   q2_com=q2_com,
                                   b_set=b_set,
-                                  zone_without_fishing=zone_without_fishing,
                                   Data_source=Data_source,
                                   Samp_process=Samp_process,
                                   EM=EM,
-                                  weights_com=weights_com,
-                                  commercial_obs=commercial_obs,
-                                  b_constraint=b_constraint,
-                                  Spatial_model=Spatial_model,
-                                  Use_REML=Use_REML,
-                                  Alpha=Alpha,
                                   RandomSeed=RandomSeed,
-                                  Version=Version,
                                   counter=counter,
                                   i=i,
                                   n_sim=n_sim,
                                   Strue_x=Strue_x,
-                                  delta_x=delta_x,
-                                  xfb_x=xfb_x,
-                                  eta_x=eta_x,
                                   index_sci_i=index_sci_i,
                                   c_sci_x=c_sci_x,
                                   y_sci_i=y_sci_i,
@@ -422,7 +302,7 @@ simu_commercial_scientific <- function(Results,
       
       if(Samp_process == 1 & Estimation_model != "scientific_only"){
         Results[counter,"type_b"]=EM
-        Results[counter,"b_est"]=Report$b
+        Results[counter,"b_est"]=Report$par_b
       }
       
       if(Estimation_model == "scientific_commercial" | Estimation_model == "scientific_commercial_q_est"){
@@ -465,7 +345,7 @@ simu_commercial_scientific <- function(Results,
       }
       
       # save data
-      if(!file.exists(simu_file)) dir.create(simu_file)
+      if(! dir.exists(simu_file)) dir.create(simu_file)
       save(List_param, file = paste0(simu_file,"/List_param_",counter,".RData"))
       save(Results, file = paste0(simu_file,"/Results.RData"))
 

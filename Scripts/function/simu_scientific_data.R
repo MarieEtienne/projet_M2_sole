@@ -43,20 +43,15 @@ simu_scientific_data <- function(loc_x,
   loc_x %>%
     tidyr::pivot_longer(cols = starts_with("strata"),names_to = "strata") %>%
     data.frame() %>% filter(value > 0) -> loc_x_2
+  # nb of samples in each strata
   
-  if(sci_sampling == "random_stratified"){
-    # nb of samples in each strata
-    
-    loc_x_2 %>% group_by(strata) %>%
-      dplyr::summarise(value = sum(value)) %>%
-      mutate(hauls = round(value/n_cells*n_samp_sci)) -> nb_hauls_strata
-    
-    index_sci_i <- do.call(c,lapply(1:nrow(nb_hauls_strata),function(j){
-      index_sci_i <- c(index_sci_i,sample(loc_x_2$cell[which(loc_x_2$strata == nb_hauls_strata$strata[j])], size=nb_hauls_strata$hauls[which(nb_hauls_strata$strata == nb_hauls_strata$strata[j])],replace=FALSE))
-    }))
-  }else if(sci_sampling == "fixed"){
-    index_sci_i <- loc_x$cell[which((loc_x$x %% 5 == 3 & loc_x$y %% 3 == 2))]
-  }
+  loc_x_2 %>% group_by(strata) %>%
+    dplyr::summarise(value = sum(value)) %>%
+    mutate(hauls = round(value/n_cells*n_samp_sci)) -> nb_hauls_strata
+  
+  index_sci_i <- do.call(c,lapply(1:nrow(nb_hauls_strata),function(j){
+    index_sci_i <- c(index_sci_i,sample(loc_x_2$cell[which(loc_x_2$strata == nb_hauls_strata$strata[j])], size=nb_hauls_strata$hauls[which(nb_hauls_strata$strata == nb_hauls_strata$strata[j])],replace=FALSE))
+  }))
   
   c_sci_x = ifelse(1:prod(grid_dim) %in% index_sci_i, 1, 0) # shots for scientific data
   
@@ -74,17 +69,11 @@ simu_scientific_data <- function(loc_x,
   y_sci_i <- do.call(c,lapply(1:length(index_sci_i), function(j){
     exp_catch <- q2_sci * Strue_x[index_sci_i[j]] # expected catch
     # proba of encounter
-    if(zero.infl_model == 0) prob_encount <- plogis( q1_sci[1] + q1_sci[2]*log(exp_catch))
-    if(zero.infl_model == 1) prob_encount <- plogis( q1_sci[2] * ( 1.0 - exp(-1 * exp_catch * exp(q1_sci[1] ))))
-    if(zero.infl_model == 2) prob_encount <- 1-exp(- exp(q1_sci[1]) * exp_catch)
-    if(zero.infl_model == 3) prob_encount <- plogis( q1_sci[1] )
+    prob_encount <- 1-exp(- exp(q1_sci[1]) * exp_catch)
     
     abs_sci_i <- rbinom(1,1,prob_encount)
-    
     if(abs_sci_i>0){
-      shape <- exp(logSigma_sci)^-2
-      if(DataObs == "zinfgamma" | DataObs == "gamma") y_sci_i <-  rgamma(1,shape=shape,scale= exp_catch * exp(logSigma_sci)^2)
-      if(DataObs == "zinflognormal" | DataObs == "lognormal") y_sci_i <-  rlnorm(1,meanlog = log(exp_catch), sdlog = exp(logSigma_sci))
+      y_sci_i <-  rlnorm(1,meanlog = log(exp_catch), sdlog = exp(logSigma_sci))
     }else{
       y_sci_i <- 0 
     }

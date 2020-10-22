@@ -48,7 +48,7 @@ simu_commercial_data <- function(loc_x,
                                  logSigma_com,
                                  q1_com,
                                  q2_com,
-                                 b_fl,
+                                 b,
                                  zone_without_fishing){
   
   index_com_i_2 = c()
@@ -58,128 +58,117 @@ simu_commercial_data <- function(loc_x,
   
   Strue_fb <- log(Strue_x) # covariate related to abundance in the sampling intensity process
   
-  loc_x <- cbind(loc_x,Strue_fb) # add log-scaled abundance
+  loc_x <- cbind(loc_x,Strue_fb) # add log-scaled abundance to design matrix
   
-  # loop on fleets
-  for(i in 1:length(b_fl)){
-    b <- as.numeric(b_fl[i])
-
-    Int_ps <- matrix(ncol = grid_dim['x'],nrow = grid_dim['y'])
-    
-    # sampling intensity in each cell
-    for(k in 1:n_cells){
-      # Int_ps[loc_x$y[i],loc_x$x[i]] <- exp(beta0_fb + runif(1,b-0.5,b+0.5)*Strue_fb[i] + beta_fb*xfb_x[i] + rnorm(1,mean = 0, sd = SD_xfb)) # + eta_x[i] when eta --> other covariates that affect sampling
-      Int_ps[loc_x$y[k],loc_x$x[k]] <- exp(beta0_fb + b*Strue_fb[k] + beta_fb*xfb_x[k]) # + eta_x[i] when eta --> other covariates that affect sampling  # add noise to sampling intensity :  + rnorm(1,mean = 0, sd = SD_xfb)
-    }
-    
-    if(zone_without_fishing == T) Int_ps[loc_x$y[which(loc_x$x < 9 & loc_x$y < 9)],loc_x$x[which(loc_x$x < 9 & loc_x$y < 9)]] <- 0
-    win_df <- owin(xrange=c(0.5,grid_dim['x'] + 0.5), yrange=c(0.5,grid_dim['y'] + 0.5),ystep  = 1,xstep=1) # parameter of the window to simulate point process (fishing shoots)
-    X <- rpoint(n_samp_com,as.im(Int_ps,win_df)) # simulate point process
-    
-    # plot(X)
-    
-    ## Aggregate data / discretise (use Raster, same as VMS data)
-    #------------------------------------------------------------
-    
-    grid <- raster(extent(c(0.5,grid_dim['x']+0.5,0.5,grid_dim['y']+0.5))) # create grid
-    res(grid) <- 1 # resolution of the grid
-    # Transform this raster into a polygon 
-    gridpolygon <- rasterToPolygons(grid)
-    coord_grid <- as.data.frame(coordinates(gridpolygon))
-    colnames(coord_grid)[1] <- "x"
-    colnames(coord_grid)[2] <- "y"
-    
-    # # check that loc_x and gridpolygon have same coordinate system
-    # library(ggrepel)
-    # ggplot(loc_x)+geom_point(aes(x,y))+geom_text(aes(x,y,label = cell), size = 3.5)
-    
-    coord_grid <- inner_join(coord_grid,loc_x[,c("x","y","cell")],by = c("x","y"))
-    gridpolygon$layer <- coord_grid$cell
-    X_1 <- SpatialPoints(coords=cbind(X$x,X$y))
-    # intersect of grid and VMS data
-    X_2 <- over(X_1, gridpolygon)
-    colnames(X_2)[1] <- "layer"
-    X_2 %>%
-      dplyr::count(layer) %>%
-      arrange(layer) %>%
-      data.frame()  -> X_3
-    gridpolygon@data <- full_join(gridpolygon@data,X_3,by=c("layer"))
-    gridpolygon@data %>%
-      arrange(layer) %>%
-      mutate(n = ifelse(is.na(n), 0,n)) %>%
-      dplyr::select(n) %>%
-      c() %>% unlist() %>% as.matrix() -> c_com_x
-    
-    # # Check point
-    # gridpolygon@data <- full_join(gridpolygon@data,loc_x,by=c("layer" = "cell"))
-    # gridpolygon@data$c_Strue_x <- exp(gridpolygon@data$Strue_fb)
-    # my.palette <- rev(prevR.colors.blue.inverse(50))[1:25] # rev(grep("^grey", colours(), value = TRUE))
-    # simu_plot_2 <- spplot(gridpolygon, "c_Strue_x",col = "transparent", col.regions = my.palette) +
-    #   layer(lpoints(X$x, X$y,col="black",cex = 0.1,pch=20))
-    # plot(simu_plot_2)
-    # trellis.device(device="png", filename=paste0("images/Simu/preferential_sampling_map_b_",b,".png"),height=300, width=300)
-    # print(simu_plot_2)
-    # dev.off()
-    # 
-    # grid.text("S(x)", x=unit(0.85, "npc"), y=unit(0.50, "npc"),
-    #           gp = gpar(fontsize = 10, fontface = "bold"),
-    #           rot=-90)
-    
-    ## For each shot simulate data (presence/absence and positive values)
-    #--------------------------------------------------------------------
-    
-    # Generate a vector where number of cell are repeated as many times as the cell was sampled by fishers
-    index_com_i <- do.call(c,lapply(1:length(c_com_x),function(k){
-      n<-c_com_x[k]   # not clean --> call fishing_shots which is outside the function
-      titi <- rep(k,n)
-    }))
-    
-    
-    # presence/absence data for commercial data
-    q2_com <- 1 * q2_sci   ## commercial catchability
-    y_com_i <- do.call(c,lapply(1:length(index_com_i), function(j){
-      exp_catch <- q2_com * Strue_x[index_com_i[j]] # expected catch
-      # proba of encounter
-      if(zero.infl_model == 0) prob_encount <- plogis( q1_com[1] + q1_com[2]*log(exp_catch))
-      if(zero.infl_model == 1) prob_encount <- plogis( q1_com[2] * ( 1.0 - exp(-1 * exp_catch * exp(q1_com[1] ))))
-      if(zero.infl_model == 2) prob_encount <- 1-exp(- exp(q1_com[1]) * exp_catch)
-      if(zero.infl_model == 3) prob_encount <- plogis( q1_com[1] )
-      
-      abs_com_i <- rbinom(1,1,prob_encount)
-      
-      if(abs_com_i>0){
-        shape <- exp(logSigma_com)^-2
-        if(DataObs == 1) y_com_i <- rgamma(1,shape=shape,scale= exp_catch * exp(logSigma_com)^2)
-        if(DataObs == 2) y_com_i <- rlnorm(1,meanlog = log(exp_catch), sdlog = exp(logSigma_com))
-      }else{
-        y_com_i <- 0
-      }
-    })) # q2_com * Strue_x : expected catch     |      q1_com : parameter linking number of zero and density for scientific data
-    
-    
-    # fleet target factor
-    b_com_i <- rep(i,length(y_com_i))
-    
-    # length((y_com_i[which(y_com_i > 0)]))/length(y_com_i)
-    
-    
-    # # Plot stuff
-    # verif_df_obs <- data.frame(cell = index_com_i,observation = y_com_i)
-    # verif_df_S <- data.frame(cell = 1:n_cells,biom = Strue_x, counts = c_com_x)
-    # verif_df <- inner_join(verif_df_obs,verif_df_S,by = "cell")
-    # ggplot(data.frame(Abondance = Strue_x[index_sci_i],Captures_sci = y_sci_i),aes(x = Abondance,y = y_sci_i))+geom_point()
-    # verif_1 <- ggplot(data.frame(Abondance = Strue_x,Nb_coups_peche = c_com_x),aes(x = log(Abondance),y = Nb_coups_peche))+geom_point()+theme_bw()
-    # verif_2 <- ggplot(data.frame(Abondance = verif_df$biom,Captures_com = verif_df$observation),aes(x = Abondance,y = Captures_com))+geom_point()+theme_bw()
-    # grid.arrange(verif_1,verif_2,ncol=2)
-    # ggplot(verif_df,aes(x=observation)) +
-    #   geom_histogram(aes(y=..density..),color="black", fill="white")
-    
-    index_com_i_2 = c(index_com_i_2,index_com_i) 
-    y_com_i_2 = c(y_com_i_2,y_com_i)
-    b_com_i_2 = c(b_com_i_2,b_com_i)
-    c_com_x_2 = cbind(c_com_x_2,c_com_x)
-    
+  # grid to simulate point process  
+  Int_ps <- matrix(ncol = grid_dim['x'],nrow = grid_dim['y'])
+  
+  # sampling intensity in each cell
+  for(k in 1:n_cells){
+    Int_ps[loc_x$y[k],loc_x$x[k]] <- exp(beta0_fb + b*Strue_fb[k])
   }
+  
+  win_df <- owin(xrange=c(0.5,grid_dim['x'] + 0.5), yrange=c(0.5,grid_dim['y'] + 0.5),ystep  = 1,xstep=1) # parameter of the window to simulate point process (fishing shoots)
+  X <- rpoint(n_samp_com,as.im(Int_ps,win_df)) # simulate point process
+  
+  # plot(X)
+  
+  ## Aggregate data / discretise (use Raster, same as VMS data)
+  #------------------------------------------------------------
+  
+  grid <- raster(extent(c(0.5,grid_dim['x']+0.5,0.5,grid_dim['y']+0.5))) # create grid
+  res(grid) <- 1 # resolution of the grid
+  # Transform this raster into a polygon 
+  gridpolygon <- rasterToPolygons(grid)
+  coord_grid <- as.data.frame(coordinates(gridpolygon))
+  colnames(coord_grid)[1] <- "x"
+  colnames(coord_grid)[2] <- "y"
+  
+  # # check that loc_x and gridpolygon have same coordinate system
+  # library(ggrepel)
+  # ggplot(loc_x)+geom_point(aes(x,y))+geom_text(aes(x,y,label = cell), size = 3.5)
+  
+  coord_grid <- inner_join(coord_grid,loc_x[,c("x","y","cell")],by = c("x","y"))
+  gridpolygon$layer <- coord_grid$cell
+  X_1 <- SpatialPoints(coords=cbind(X$x,X$y))
+  # intersect of grid and VMS data
+  X_2 <- over(X_1, gridpolygon)
+  colnames(X_2)[1] <- "layer"
+  X_2 %>%
+    dplyr::count(layer) %>%
+    arrange(layer) %>%
+    data.frame()  -> X_3
+  gridpolygon@data <- full_join(gridpolygon@data,X_3,by=c("layer"))
+  gridpolygon@data %>%
+    arrange(layer) %>%
+    mutate(n = ifelse(is.na(n), 0,n)) %>%
+    dplyr::select(n) %>%
+    c() %>% unlist() %>% as.matrix() -> c_com_x
+  
+  # # Check point
+  # library(prevR)
+  # gridpolygon@data <- full_join(gridpolygon@data,loc_x,by=c("layer" = "cell"))
+  # gridpolygon@data$c_Strue_x <- exp(gridpolygon@data$Strue_fb)
+  # my.palette <- rev(prevR.colors.blue.inverse(50))[1:25] # rev(grep("^grey", colours(), value = TRUE))
+  # simu_plot_2 <- spplot(gridpolygon, "c_Strue_x",col = "transparent", col.regions = my.palette) +
+  #   layer(lpoints(X$x, X$y,col="black",cex = 0.1,pch=20))
+  # plot(simu_plot_2)
+  # trellis.device(device="png", filename=paste0("images/Simu/preferential_sampling_map_b_",b,".png"),height=300, width=300)
+  # print(simu_plot_2)
+  # dev.off()
+
+  grid.text("S(x)", x=unit(0.85, "npc"), y=unit(0.50, "npc"),
+            gp = gpar(fontsize = 10, fontface = "bold"),
+            rot=-90)
+  
+  ## For each shot simulate data (presence/absence and positive values)
+  #--------------------------------------------------------------------
+  
+  # Generate a vector where number of cell are repeated as many times as the cell was sampled by fishers
+  index_com_i <- do.call(c,lapply(1:length(c_com_x),function(k){
+    n<-c_com_x[k]   # not clean --> call fishing_shots which is outside the function
+    titi <- rep(k,n)
+  }))
+  
+  
+  # presence/absence data for commercial data
+  q2_com <- 1 * q2_sci   ## commercial catchability
+  y_com_i <- do.call(c,lapply(1:length(index_com_i), function(j){
+    exp_catch <- q2_com * Strue_x[index_com_i[j]] # expected catch
+    # proba of encounter
+    prob_encount <- 1-exp(- exp(q1_com[1]) * exp_catch)
+    abs_com_i <- rbinom(1,1,prob_encount)
+    
+    if(abs_com_i>0){
+      y_com_i <- rlnorm(1,meanlog = log(exp_catch), sdlog = exp(logSigma_com))
+    }else{
+      y_com_i <- 0
+    }
+  })) # q2_com * Strue_x : expected catch     |      q1_com : parameter linking number of zero and density for scientific data
+  
+  
+  # fleet target factor
+  b_com_i <- rep(i,length(y_com_i))
+  
+  # length((y_com_i[which(y_com_i > 0)]))/length(y_com_i)
+  
+  
+  # # Plot stuff
+  # verif_df_obs <- data.frame(cell = index_com_i,observation = y_com_i)
+  # verif_df_S <- data.frame(cell = 1:n_cells,biom = Strue_x, counts = c_com_x)
+  # verif_df <- inner_join(verif_df_obs,verif_df_S,by = "cell")
+  # ggplot(data.frame(Abondance = Strue_x[index_sci_i],Captures_sci = y_sci_i),aes(x = Abondance,y = y_sci_i))+geom_point()
+  # verif_1 <- ggplot(data.frame(Abondance = Strue_x,Nb_coups_peche = c_com_x),aes(x = log(Abondance),y = Nb_coups_peche))+geom_point()+theme_bw()
+  # verif_2 <- ggplot(data.frame(Abondance = verif_df$biom,Captures_com = verif_df$observation),aes(x = Abondance,y = Captures_com))+geom_point()+theme_bw()
+  # grid.arrange(verif_1,verif_2,ncol=2)
+  # ggplot(verif_df,aes(x=observation)) +
+  #   geom_histogram(aes(y=..density..),color="black", fill="white")
+  
+  index_com_i_2 = c(index_com_i_2,index_com_i) 
+  y_com_i_2 = c(y_com_i_2,y_com_i)
+  b_com_i_2 = c(b_com_i_2,b_com_i)
+  c_com_x_2 = cbind(c_com_x_2,c_com_x)
+  
   b_com_i_2 <- factor(b_com_i_2)
   
   res <- list(index_com_i = index_com_i_2, y_com_i = y_com_i_2, b_com_i = b_com_i_2, c_com_x = c_com_x_2)

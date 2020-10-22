@@ -10,7 +10,7 @@ source("Scripts/function/load_packages.R")
 #-----------------------------------------------------------
 
 # Simulation name
-simu_name = "Lognormal_0Effect"
+simu_name = "test"
 
 #---------------------
 # Simulation scenarios
@@ -26,22 +26,16 @@ grid_side_y <- 25
 grid_dim = c("x"=grid_side_x, "y"=grid_side_y)
 n_cells = grid_dim[1]*grid_dim[2]
 
-# latent field simulation
-latent_fields_simu = "load_from_RData" # "load_from_RData" or "simulate"
-load("results/simulated_data/scientific_data.RData")
-load("results/simulated_data/latent_field.RData")
-
-# Intercepts and covariates
+# Intercepts and covariates of the latent field
 beta0 = 2 # intercept
 beta = c(0,0,0,0,0) # covariates
 # parameters covariates vector : 1st param : continuous variable, 4 nexts : strata_1, strata_2, strata_3, strata_4
 
-# Correlation structure of the latent fied
+# Correlation structure of the covariate
 simu_tool <- "MaternCov" # 2 way to simulate latent fields : "RandomFields", "MaternCov"
-SpatialScale = sqrt(prod(grid_dim))/5  # Range ~ 2*Scale  --> RandomField
 range = sqrt(prod(grid_dim))/(5)*2 # --> MaternCov
 nu = 1 
-SD_eta = SD_x = SD_xfb = SD_delta = 1
+SD_x = 1
 
 ###
 ## Commercial sampling process
@@ -50,25 +44,10 @@ SD_eta = SD_x = SD_xfb = SD_delta = 1
 # intercept
 beta0_fb = 2
 
-# covariate parameter (continuous)
-beta_fb <- 0
-
-# constraint on b 
-# (b = 1 : b is positive, b = 2 : b is free)
-b_constraint <- 2
-
 ###
 ## Observation process
 ###
 
-## Model for the observation process (it is the same for simulating scientific and commercial data and in estimations)
-DataObs <- 2 # 1 : zeroinflated gamma, 2 : zeroinflated lognormal, 3 : lognormal
-zero.infl_model <- 2
-# 0 : plogis( q1_com(0) + q1_com(1)*log(exp_catch))
-# 1 : plogis( q1_com(1) * ( 1.0 - exp(-1 * exp_catch * exp(q1_com(0) )));
-# 2 : 1-exp(- exp(q1_com(0)) * exp_catch)
-# 3 : plogis( q1_com(0) )
-nb_par_zinfl <- 1
 ## Scientific data
 # Number of scientific data
 n_samp_sci = 50
@@ -78,9 +57,6 @@ logSigma_sci = log(1)
 q1_sci <- 0
 # Relative catchability
 q2_sci <- 1
-# Sampling scheme of the scientific data
-sci_sampling_lev = c("fixed","random_stratified") 
-sci_sampling <- sci_sampling_lev[2]
 # parameter controling size of the strata
 n_strate <- 9 
 
@@ -95,8 +71,8 @@ q1_com <- -1
 q2_com <- 1
 # Levels of preferential sampling
 b_set = c(0,1,3) 
-# b_set <- data.frame(fleet_0 = c(0,1,3),fleet_1 = c(0,0,0)) # in the case we would like to simulate several fleets
-zone_without_fishing <- F
+
+
 
 #--------------------
 # Model configuration
@@ -104,30 +80,18 @@ zone_without_fishing <- F
 
 # Data sources feeding the model
 Data_source = c("scientific_commercial","scientific_only","commercial_only")
-Samp_process = 1 # 1 : sampling process contribute to likelihood, 0 : doesn't
 
 # b estimated or b fixed to 0 in estimation
 EM_set = c("fix_b","est_b")
 EM = EM_set[2]
 
-# weight related to commercial dataset
-weights_com = 1 # n_samp_sci/n_samp_com
-
-# Commercial observations constrivute to likelihood
-commercial_obs = 1 
-
-# Catchability are random
-catchability_random = F # T: catchability parameters are considered as random effects
-
-# models and SPDE objects configuration
-Spatial_model <- "SPDE_GMRF"
-Use_REML = FALSE  
-Alpha = 2  # Smoothness for GMRF, 1 or 2 (1 is faster)
-RandomSeed = 123456
+# if 1, sampling process is accounted for in estimation
+Samp_process = 1
 
 # TMB model version
-Version = "com_x_sci_data_14"
 TmbFile = "Scripts/"
+
+# if F, compute uncertainty for parameters estimates
 ignore.uncertainty = T
 
 ## Loop indices
@@ -137,6 +101,8 @@ counter <- 1
 i0 <- 1
 # Number of simulation
 n_sim = 100
+
+RandomSeed = 123456
 
 
 #-------------------------------------------------------------
@@ -157,16 +123,13 @@ colnames(Results)=colnames_Results
 ## list for simulated parameters and parameters estimates
 List_param <- list()
 
-## Other dataframes or lists (Strue, SPE, SD_S, )
-cell_nb <- as.character(paste0("cell_",c(1:n_cells)))
-colnames_othRes <- c("metrics","counter","sim","b_true","Data_source",cell_nb)
 
 ####### Compile TMB model ########
 
 # https://kaskr.github.io/adcomp/Introduction.html : for TMB details
 # https://cran.r-project.org/web/packages/glmmTMB/vignettes/troubleshooting.html 
 
-TMB::compile(paste0(TmbFile,"inst/executables/",Version,"_scientific_commercial.cpp"),"-O1 -g",DLLFLAGS="")
+TMB::compile(paste0(TmbFile,"inst/executables/com_x_sci_data_14_scientific_commercial_simple.cpp"),"-O1 -g",DLLFLAGS="")
 
 # If problems with the PATH
 # Sys.setenv(PATH = paste("C:/Rtools/bin", Sys.getenv("PATH"), sep=";")) # if "C:/Rtools/bin" is not in the PATH
@@ -211,7 +174,7 @@ if(restart_after_crash == T){
 }
 
 # load TMB model
-dyn.load( dynlib(paste0(TmbFile,"inst/executables/",Version,"_scientific_commercial") ) )
+dyn.load( dynlib(paste0(TmbFile,"inst/executables/com_x_sci_data_14_scientific_commercial_simple") ) )
 #dyn.unload( dynlib(paste0(TmbFile,"inst/executables/",Version,"_scientific_commercial") ) )
 ## loop
 for(i in i0:n_sim){
@@ -220,46 +183,24 @@ for(i in i0:n_sim){
                                       simu_file,
                                       grid_dim,
                                       n_cells,
-                                      latent_fields_simu,
-                                      latent_field,
-                                      scientific_data,
                                       beta0,
                                       beta,
-                                      simu_tool,
-                                      SpatialScale,
                                       range,
                                       nu,
                                       SD_x,
-                                      SD_delta,
-                                      SD_xfb,
-                                      SD_eta,
-                                      beta0_fb,
-                                      beta_fb,
-                                      DataObs,
-                                      zero.infl_model,
-                                      nb_par_zinfl,
                                       n_samp_sci,
                                       logSigma_sci,
                                       q1_sci,
                                       q2_sci,
-                                      sci_sampling,
                                       n_strate,
                                       n_samp_com,
                                       logSigma_com,
                                       q1_com,
                                       q2_com,
                                       b_set,
-                                      zone_without_fishing,
                                       Data_source,
                                       Samp_process,
                                       EM,
-                                      weights_com,
-                                      commercial_obs,
-                                      catchability_random,
-                                      b_constraint,
-                                      Spatial_model,
-                                      Use_REML,
-                                      Alpha,
                                       RandomSeed,
                                       Version,
                                       TmbFile,
