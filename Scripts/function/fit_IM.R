@@ -249,7 +249,7 @@ fit_IM <- function(Estimation_model_i = 1,
   # SD  --> very long with catchability and I got NANs
   if(Converge==0){
     Report = Obj$report()
-    SD = sdreport( Obj, ignore.parm.uncertainty = ignore.uncertainty)
+    SD = sdreport( Obj,bias.correct = T, ignore.parm.uncertainty = ignore.uncertainty)
     SD$unbiased$value = c("total_abundance"=Report$total_abundance)
 
   }else{SD = NULL}

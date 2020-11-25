@@ -28,13 +28,11 @@
 simu_scientific_data <- function(loc_x,
                                  grid_dim,
                                  Strue_x,
-                                 DataObs,
                                  zero.infl_model,
                                  n_samp_sci,
                                  logSigma_sci,
                                  q1_sci,
                                  q2_sci,
-                                 sci_sampling,
                                  n_strate,
                                  scientific_data){
 

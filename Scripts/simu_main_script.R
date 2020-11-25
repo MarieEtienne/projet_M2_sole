@@ -54,7 +54,7 @@ n_samp_sci = 50
 # observation error 
 logSigma_sci = log(1)
 # zero-inflation parameter
-q1_sci <- 0
+q1_sci <- 1
 # Relative catchability
 q2_sci <- 1
 # parameter controling size of the strata
@@ -66,7 +66,7 @@ n_samp_com = 3000
 # observation error 
 logSigma_com = log(1)
 # zero-inflation parameter
-q1_com <- -1
+q1_com <- 1
 # Relative catchability
 q2_com <- 1
 # Levels of preferential sampling
@@ -111,7 +111,7 @@ RandomSeed = 123456
 
 ## Results dataframe
 n_cov = 5
-colnames_Results <- c("counter","sim","b_true","Data_source","type_b","Alpha","b_est","ObsMod","Sigma_com_true","Sigma_sci_true","Sigma_com","Sigma_sci","n_samp_com","n_samp_sci","sci_sampling","N_true","N_est","SD_N","Convergence","LogLik","MSPE_S","k")
+colnames_Results <- c("counter","sim","b_true","Data_source","type_b","Alpha","b_est","ObsMod","Sigma_com_true","Sigma_sci_true","Sigma_com","Sigma_sci","n_samp_com","n_samp_sci","N_true","N_est","SD_N","Convergence","LogLik","MSPE_S","k")
 
 # add_cov_abs <- paste0("BiasBetaj_abs_",c(1:n_cov+1))
 # add_cov_pos <- paste0("BiasBetaj_pos_",c(1:n_cov+1))
