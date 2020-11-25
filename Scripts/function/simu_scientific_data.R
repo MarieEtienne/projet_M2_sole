@@ -73,7 +73,7 @@ simu_scientific_data <- function(loc_x,
     
     abs_sci_i <- rbinom(1,1,prob_encount)
     if(abs_sci_i>0){
-      y_sci_i <-  rlnorm(1,meanlog = log(exp_catch), sdlog = exp(logSigma_sci))
+      y_sci_i <-  exp(rnorm(1,mean = log(exp_catch)-exp(logSigma_sci)^2/2, sd = exp(logSigma_sci)))
     }else{
       y_sci_i <- 0 
     }

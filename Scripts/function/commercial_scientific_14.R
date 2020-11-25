@@ -72,6 +72,7 @@ simu_commercial_scientific <- function(Results,
                                        range,
                                        nu,
                                        SD_x,
+                                       SD_delta,
                                        n_samp_sci,
                                        logSigma_sci,
                                        q1_sci,
@@ -138,11 +139,13 @@ simu_commercial_scientific <- function(Results,
                                                  simu_tool,
                                                  range,
                                                  nu,
-                                                 SD_x)
+                                                 SD_x,
+                                                 SD_delta)
   
   Cov_x <- simu_latent_field_outputs$Cov_x
   Strue_x <- simu_latent_field_outputs$Strue_x
   beta <- simu_latent_field_outputs$beta
+  delta_x <- simu_latent_field_outputs$delta_x
   
   #-----------------
   #  Scientific data
@@ -178,7 +181,6 @@ simu_commercial_scientific <- function(Results,
                                                          Strue_x,
                                                          beta0_fb,
                                                          beta_fb,
-                                                         b_constraint,
                                                          xfb_x,
                                                          DataObs,
                                                          zero.infl_model,
@@ -186,8 +188,7 @@ simu_commercial_scientific <- function(Results,
                                                          logSigma_com,
                                                          q1_com,
                                                          q2_com,
-                                                         b,
-                                                         zone_without_fishing)
+                                                         b)
     
     index_com_i <-  simu_commercial_data_outputs$index_com_i
     y_com_i <- simu_commercial_data_outputs$y_com_i
@@ -202,14 +203,14 @@ simu_commercial_scientific <- function(Results,
     # Loop on alternative configuration models
     for(Estimation_model in Data_source){
       Estimation_model_i <- which(Data_source == Estimation_model)
-      cat(paste("counter ",counter," | Simulation ",i, " | b ",b ," | zone_without_fishing ",zone_without_fishing," | EM ",EM," | Estimation_model ",Estimation_model," | n_samp_com ",n_samp_com," | b_constraint ",b_constraint,"\n"))
+      cat(paste("counter ",counter," | Simulation ",i, " | b ",b ," | EM ",EM," | Estimation_model ",Estimation_model," | n_samp_com ",n_samp_com,"\n"))
       
       ############
       ## Fit Model
       ############
-      fit_IM_res <- fit_IM(Estimation_model_i = 1,
-                           Samp_process = 1,
-                           EM = "est_b",
+      fit_IM_res <- fit_IM(Estimation_model_i,
+                           Samp_process,
+                           EM,
                            TmbFile,
                            ignore.uncertainty,
                            c_com_x,
@@ -217,7 +218,7 @@ simu_commercial_scientific <- function(Results,
                            index_com_i,
                            y_sci_i,
                            index_sci_i,
-                           Cov_x)
+                           as.matrix(Cov_x[,1]))
       
       SD <- fit_IM_res$SD
       Report <- fit_IM_res$Report
@@ -240,11 +241,12 @@ simu_commercial_scientific <- function(Results,
       
       # All data and info
       list_simu.data.info <- list(grid_dim=grid_dim,
-                                  latent_fields_simu=latent_fields_simu,
+                                  # latent_fields_simu=latent_fields_simu,
                                   beta0=beta0,
                                   beta=beta,
                                   range=range,nu=nu,
                                   SD_x=SD_x,
+                                  SD_delta=SD_delta,
                                   n_samp_sci=n_samp_sci,
                                   logSigma_sci=logSigma_sci,
                                   q1_sci=q1_sci,
@@ -262,6 +264,7 @@ simu_commercial_scientific <- function(Results,
                                   counter=counter,
                                   i=i,
                                   n_sim=n_sim,
+                                  delta_x=delta_x,
                                   Strue_x=Strue_x,
                                   index_sci_i=index_sci_i,
                                   c_sci_x=c_sci_x,
@@ -269,7 +272,7 @@ simu_commercial_scientific <- function(Results,
                                   b=b,
                                   index_com_i=index_com_i,
                                   y_com_i=y_com_i,
-                                  b_com_i=b_com_i,
+                                  # b_com_i=b_com_i,
                                   c_com_x=c_com_x)
       
       
@@ -284,7 +287,7 @@ simu_commercial_scientific <- function(Results,
       Results[counter,"counter"]=counter
       Results[counter,"sim"]=i
       Results[counter,"Data_source"]=Estimation_model
-      Results[counter,"ObsMod"]=DataObs
+      # Results[counter,"ObsMod"]=DataObs
       
       Results[counter,"N_true"]=sum(Strue_x)
       Results[counter,"Convergence"]=Converge
@@ -298,7 +301,7 @@ simu_commercial_scientific <- function(Results,
 
       Results[counter,"MSPE_S_2"] <- sum((MSPE_S_2_df$Strue_x - MSPE_S_2_df$S_x)^2)/(6*6)
 
-      Results[counter,"Alpha"]=Alpha
+      # Results[counter,"Alpha"]=Alpha
       
       if(Samp_process == 1 & Estimation_model != "scientific_only"){
         Results[counter,"type_b"]=EM
@@ -313,18 +316,16 @@ simu_commercial_scientific <- function(Results,
         Results[counter,"Bias_Sigma_sci"]=Report$Sigma_sci - exp(logSigma_sci)
         Results[counter,"Sigma_com_true"]=exp(logSigma_com)
         Results[counter,"Sigma_sci_true"]=exp(logSigma_sci)
-        Results[counter,"sci_sampling"]=sci_sampling
+        # Results[counter,"sci_sampling"]=sci_sampling
         Results[counter,"n_samp_com"]=n_samp_com
         Results[counter,"n_samp_sci"]=n_samp_sci
-        Results[counter,"b_constraint"]=b_constraint
-        Results[counter,"zone_without_fishing"]=zone_without_fishing
-        
+
         
       }else if(Estimation_model == "scientific_only"){
         Results[counter,"Sigma_sci"]=Report$Sigma_sci
         Results[counter,"Bias_Sigma_sci"]=Report$Sigma_sci - exp(logSigma_sci)
         Results[counter,"Sigma_sci_true"]=exp(logSigma_sci)
-        Results[counter,"sci_sampling"]=sci_sampling
+        # Results[counter,"sci_sampling"]=sci_sampling
         Results[counter,"n_samp_sci"]=n_samp_sci
         
         
@@ -334,9 +335,7 @@ simu_commercial_scientific <- function(Results,
         Results[counter,"Bias_Sigma_com"]=Report$Sigma_com - exp(logSigma_com)
         Results[counter,"Sigma_com_true"]=exp(logSigma_com)
         Results[counter,"n_samp_com"]=n_samp_com
-        Results[counter,"b_constraint"]=b_constraint
-        Results[counter,"zone_without_fishing"]=zone_without_fishing
-        
+
       }
       
       if (Estimation_model == "scientific_commercial_q_est"){

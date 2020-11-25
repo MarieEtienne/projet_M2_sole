@@ -35,7 +35,7 @@ beta = c(0,0,0,0,0) # covariates
 simu_tool <- "MaternCov" # 2 way to simulate latent fields : "RandomFields", "MaternCov"
 range = sqrt(prod(grid_dim))/(5)*2 # --> MaternCov
 nu = 1 
-SD_x = 1
+SD_x = SD_delta = 1
 
 ###
 ## Commercial sampling process
@@ -111,7 +111,7 @@ RandomSeed = 123456
 
 ## Results dataframe
 n_cov = 5
-colnames_Results <- c("counter","sim","b_true","Data_source","type_b","Alpha","b_est","ObsMod","Sigma_com_true","Sigma_sci_true","Sigma_com","Sigma_sci","n_samp_com","n_samp_sci","sci_sampling","N_true","N_est","SD_N","Convergence","LogLik","MSPE_S","k","zone_without_fishing","b_constraint")
+colnames_Results <- c("counter","sim","b_true","Data_source","type_b","Alpha","b_est","ObsMod","Sigma_com_true","Sigma_sci_true","Sigma_com","Sigma_sci","n_samp_com","n_samp_sci","sci_sampling","N_true","N_est","SD_N","Convergence","LogLik","MSPE_S","k")
 
 # add_cov_abs <- paste0("BiasBetaj_abs_",c(1:n_cov+1))
 # add_cov_pos <- paste0("BiasBetaj_pos_",c(1:n_cov+1))
@@ -159,7 +159,7 @@ source("Scripts/function/simu_commercial_data.R")
 Start_time.tot = Sys.time()
 Start_time.tot_2 <- str_replace_all(Start_time.tot, " ", "_")
 Start_time.tot_2 <- str_replace_all(Start_time.tot_2, ":", "_")
-simu_file <- paste0("results/",Version,"/",Version,"-",Start_time.tot_2,"_",simu_name,"/")
+simu_file <- paste0("results/com_x_sci_data_14_scientific_commercial_simple-",Start_time.tot_2,"_",simu_name,"/")
 
 # When simu crashes --> param to re-run the loop.
 # Before re-runing the loop load the last Results_loop list (Results/Simu/)
@@ -188,6 +188,7 @@ for(i in i0:n_sim){
                                       range,
                                       nu,
                                       SD_x,
+                                      SD_delta,
                                       n_samp_sci,
                                       logSigma_sci,
                                       q1_sci,
@@ -214,7 +215,7 @@ for(i in i0:n_sim){
     counter <- res[[3]]
 
 }
-dyn.unload( dynlib(paste0(TmbFile,"inst/executables/",Version,"_scientific_commercial") ) )
+dyn.unload( dynlib(paste0(TmbFile,"inst/executables/com_x_sci_data_14_scientific_commercial_simple") ) )
 
 #-------------------------------------------------------------
 #------------------------ Plot results -----------------------
@@ -229,7 +230,7 @@ source("Scripts/function/plot_simu.R")
 # SD.S_df <- Results_loop$SD.S_df
 
 Plot_results_list <- Plot_Results(Results,b_set)
-grid.arrange(Plot_results_list[[1]],Plot_results_list[[2]],Plot_results_list[[3]]+ylim(0,2000),ncol=3)
+grid.arrange(Plot_results_list[[1]],Plot_results_list[[2]],Plot_results_list[[3]],ncol=3)
 
 
 # ## (DEPRECATED) Plot parameters estimate (relative) bias

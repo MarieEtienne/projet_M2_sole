@@ -40,7 +40,6 @@ simu_commercial_data <- function(loc_x,
                                  Strue_x,
                                  beta0_fb,
                                  beta_fb,
-                                 b_constraint,
                                  xfb_x,
                                  DataObs,
                                  zero.infl_model,
@@ -48,8 +47,7 @@ simu_commercial_data <- function(loc_x,
                                  logSigma_com,
                                  q1_com,
                                  q2_com,
-                                 b,
-                                 zone_without_fishing){
+                                 b){
   
   index_com_i_2 = c()
   y_com_i_2 = c()
@@ -117,9 +115,9 @@ simu_commercial_data <- function(loc_x,
   # print(simu_plot_2)
   # dev.off()
 
-  grid.text("S(x)", x=unit(0.85, "npc"), y=unit(0.50, "npc"),
-            gp = gpar(fontsize = 10, fontface = "bold"),
-            rot=-90)
+  # grid.text("S(x)", x=unit(0.85, "npc"), y=unit(0.50, "npc"),
+  #           gp = gpar(fontsize = 10, fontface = "bold"),
+  #           rot=-90)
   
   ## For each shot simulate data (presence/absence and positive values)
   #--------------------------------------------------------------------
@@ -140,7 +138,7 @@ simu_commercial_data <- function(loc_x,
     abs_com_i <- rbinom(1,1,prob_encount)
     
     if(abs_com_i>0){
-      y_com_i <- rlnorm(1,meanlog = log(exp_catch), sdlog = exp(logSigma_com))
+      y_com_i <- exp(rnorm(1,mean = log(exp_catch) - exp(logSigma_com)^2/2, sd = exp(logSigma_com)))
     }else{
       y_com_i <- 0
     }

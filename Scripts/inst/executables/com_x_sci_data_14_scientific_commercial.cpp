@@ -109,6 +109,12 @@ Type dlognorm(Type x, Type meanlog, Type sdlog, int give_log=false){
   return Return;
 }
 
+// square
+
+template<class Type>
+Type square(Type x){
+  return pow(x,2.0);
+}
 
 // dzinflognorm
 
@@ -123,8 +129,8 @@ Type dzinflognorm(Type x, Type meanlog, Type encounter_prob, Type log_notencount
       if( !isNA(log_notencounter_prob) ) Return = log_notencounter_prob;
     }
   }else{
-    if(give_log==false) Return = encounter_prob * dlognorm( x, meanlog, sdlog, false );
-    if(give_log==true) Return = log(encounter_prob) + dlognorm( x, meanlog, sdlog, true );
+    if(give_log==false) Return = encounter_prob * dlognorm( x, meanlog - square(sdlog)/2, sdlog, false );
+    if(give_log==true) Return = log(encounter_prob) + dlognorm( x, meanlog - square(sdlog)/2, sdlog, true );
   } 
   return Return;
 }

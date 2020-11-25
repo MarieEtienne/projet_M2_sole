@@ -38,7 +38,8 @@ simu_latent_field <- function(loc_x,
                               simu_tool,
                               range,
                               nu,
-                              SD_x){
+                              SD_x,
+                              SD_delta){
   
   # 1st param : continuous variable, 4 nexts : strata_1, strata_2, strata_3, strata_4
   beta[1] = runif(1,-.5,.5)
@@ -49,11 +50,15 @@ simu_latent_field <- function(loc_x,
   # Create design matrix for covariates
   Cov_x <- as.matrix(cbind(Cov_x,loc_x[,which(str_detect(colnames(loc_x),"strata"))]))
   
+  # Create random noise
+  delta_x <- rnorm(nrow(Cov_x),mean = 0, sd = SD_delta)
+  
   # Total abundance
-  Strue_x = exp(beta0 + as.matrix(Cov_x) %*% beta)
+  Strue_x = exp(beta0 + as.matrix(Cov_x) %*% beta + delta_x)
   res <- list(Cov_x = Cov_x,
               Strue_x = Strue_x,
-              beta = beta)
+              beta = beta,
+              delta_x = delta_x)
   return(res)
 }
 
