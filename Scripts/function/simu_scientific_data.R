@@ -38,15 +38,19 @@ simu_scientific_data <- function(loc_x,
 
   index_sci_i <- c()
   
+  # ## Uniform sampling
+  # index_sci_i <- sample(loc_x$cell,size=n_samp_sci)
+
+  ## Random stratified sampling
   loc_x %>%
     tidyr::pivot_longer(cols = starts_with("strata"),names_to = "strata") %>%
     data.frame() %>% filter(value > 0) -> loc_x_2
   # nb of samples in each strata
-  
+
   loc_x_2 %>% group_by(strata) %>%
     dplyr::summarise(value = sum(value)) %>%
     mutate(hauls = round(value/n_cells*n_samp_sci)) -> nb_hauls_strata
-  
+
   index_sci_i <- do.call(c,lapply(1:nrow(nb_hauls_strata),function(j){
     index_sci_i <- c(index_sci_i,sample(loc_x_2$cell[which(loc_x_2$strata == nb_hauls_strata$strata[j])], size=nb_hauls_strata$hauls[which(nb_hauls_strata$strata == nb_hauls_strata$strata[j])],replace=FALSE))
   }))
@@ -71,6 +75,9 @@ simu_scientific_data <- function(loc_x,
     
     abs_sci_i <- rbinom(1,1,prob_encount)
     if(abs_sci_i>0){
+      # y_sci_i <- rlnorm(1,meanlog = log(exp_catch), sdlog = exp(logSigma_sci))
+      # shape <- exp(logSigma_sci)^-2
+      # y_sci_i <-  rgamma(1,shape=shape,scale= exp_catch * exp(logSigma_sci)^2)
       y_sci_i <-  exp(rnorm(1,mean = log(exp_catch)-exp(logSigma_sci)^2/2, sd = exp(logSigma_sci)))
     }else{
       y_sci_i <- 0 

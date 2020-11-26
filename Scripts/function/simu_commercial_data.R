@@ -41,6 +41,7 @@ simu_commercial_data <- function(loc_x,
                                  beta0_fb,
                                  beta_fb,
                                  xfb_x,
+                                 eta_x,
                                  zero.infl_model,
                                  n_samp_com,
                                  logSigma_com,
@@ -62,7 +63,7 @@ simu_commercial_data <- function(loc_x,
   
   # sampling intensity in each cell
   for(k in 1:n_cells){
-    Int_ps[loc_x$y[k],loc_x$x[k]] <- exp(beta0_fb + b*Strue_fb[k])
+    Int_ps[loc_x$y[k],loc_x$x[k]] <- exp(beta0_fb + b*Strue_fb[k] + eta_x[k])
   }
   
   win_df <- owin(xrange=c(0.5,grid_dim['x'] + 0.5), yrange=c(0.5,grid_dim['y'] + 0.5),ystep  = 1,xstep=1) # parameter of the window to simulate point process (fishing shoots)
@@ -137,6 +138,9 @@ simu_commercial_data <- function(loc_x,
     abs_com_i <- rbinom(1,1,prob_encount)
     
     if(abs_com_i>0){
+      # y_com_i <- rlnorm(1,meanlog = log(exp_catch), sdlog = exp(logSigma_com))
+      # shape <- exp(logSigma_com)^-2
+      # y_com_i <-  rgamma(1,shape=shape,scale= exp_catch * exp(logSigma_com)^2)
       y_com_i <- exp(rnorm(1,mean = log(exp_catch) - exp(logSigma_com)^2/2, sd = exp(logSigma_com)))
     }else{
       y_com_i <- 0

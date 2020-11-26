@@ -88,9 +88,7 @@ fit_IM <- function(Estimation_model_i = 1,
                   "q1_sci"=0,
                   "q1_com"=0,
                   "k_com" = 1,
-                  "k_sci" = 1,
-                  "logSigma_delta" = 0,
-                  "delta_x"=rep(0,nrow(Data$Cov_xj)))
+                  "k_sci" = 1)
     
     Map[["k_com"]] <- seq(1:(length(Params$k_com))) # first k is for scientific data
     Map[["k_com"]][1] <- NA # reference level is the first fleet
@@ -107,9 +105,7 @@ fit_IM <- function(Estimation_model_i = 1,
     Params = list("beta_j"=rep(0,ncol(Data$Cov_xj)), # linear predictor for abundance 
                   "logSigma_sci"=log(1),
                   "q1_sci"=0,
-                  "k_sci" = 1,
-                  "logSigma_delta" = 0,
-                  "delta_x"=rep(0,nrow(Data$Cov_xj)))
+                  "k_sci" = 1)
     
     Map[["k_sci"]] <- factor(NA)
     
@@ -130,9 +126,7 @@ fit_IM <- function(Estimation_model_i = 1,
                   "par_b"=0, # link between abundance and sampling intensity
                   "logSigma_com"=log(1),
                   "q1_com"=0,
-                  "k_com" = 1,
-                  "logSigma_delta" = 0,
-                  "delta_x"=rep(0,nrow(Data$Cov_xj)))
+                  "k_com" = 1)
     
     Map[["k_com"]] <- seq(1:(length(Params$k_com))) # first k is for scientific data
     Map[["k_com"]][1] <- NA
@@ -145,10 +139,8 @@ fit_IM <- function(Estimation_model_i = 1,
   if(exists("ref_level")) map_beta_j[which(colnames(Data$Cov_xj) %in% ref_level)] <- NA
   Map[["beta_j"]] = factor(map_beta_j)
   
-  Random = "delta_x"
-  
   # no linkeage between sampling process and biomass field
-  if( EM=="fix_b" ) Map[["par_b"]] = factor(rep(NA,length(Params$par_b)))
+  if( EM=="fix_b" ) Map[["par_b"]] <- factor(rep(NA,length(Params$par_b)))
   
   #-----------
   ## Run model
@@ -157,7 +149,7 @@ fit_IM <- function(Estimation_model_i = 1,
   Start_time = Sys.time()
   # library(TMB)
   # TMB::compile(paste0(TmbFile,"inst/executables/",Version,"_scientific_commercial.cpp"),"-O1 -g",DLLFLAGS="")
-  Obj = MakeADFun( data=Data, parameters=Params, random = Random, map = Map, silent = TRUE,hessian = T)
+  Obj = MakeADFun( data=Data, parameters=Params, map = Map, silent = TRUE,hessian = T)
   Obj$fn( Obj$par )
   
   # ## Likelihood profile
@@ -249,7 +241,7 @@ fit_IM <- function(Estimation_model_i = 1,
   # SD  --> very long with catchability and I got NANs
   if(Converge==0){
     Report = Obj$report()
-    SD = sdreport( Obj,bias.correct = T, ignore.parm.uncertainty = ignore.uncertainty)
+    SD = sdreport( Obj,ignore.parm.uncertainty = F)
     SD$unbiased$value = c("total_abundance"=Report$total_abundance)
 
   }else{SD = NULL}

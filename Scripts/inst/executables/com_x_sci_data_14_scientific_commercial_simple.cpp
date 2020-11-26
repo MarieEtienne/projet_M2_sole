@@ -39,6 +39,26 @@ Type square(Type x){
   return pow(x,2.0);
 }
 
+// dzinfgamma, shape = 1/CV^2, scale = mean*CV^2
+
+template<class Type>
+
+Type dzinfgamma(Type x, Type posmean, Type encounter_prob, Type log_notencounter_prob, Type cv, int give_log=false){
+  Type Return;
+  if(x==0){
+    if(give_log==false) Return = 1.0 - encounter_prob;
+    if(give_log==true){
+      if( isNA(log_notencounter_prob) ) Return = log(1.0 - encounter_prob);
+      if( !isNA(log_notencounter_prob) ) Return = log_notencounter_prob;
+    }
+  }else{
+    if(give_log==false) Return = encounter_prob * dgamma( x, pow(cv,-2), posmean*pow(cv,2), false );
+    if(give_log==true) Return = log(encounter_prob) + dgamma( x, pow(cv,-2), posmean*pow(cv,2), true );
+  } 
+  return Return;
+}
+
+
 // dzinflognorm
 
 template<class Type>
@@ -52,7 +72,7 @@ Type dzinflognorm(Type x, Type meanlog, Type encounter_prob, Type log_notencount
       if( !isNA(log_notencounter_prob) ) Return = log_notencounter_prob;
     }
   }else{
-    if(give_log==false) Return = encounter_prob * dlognorm( x, meanlog - square(sdlog)/2, sdlog, false );
+    if(give_log==false) Return = encounter_prob * dlognorm( x, meanlog - square(sdlog)/2, sdlog, false ); // 
     if(give_log==true) Return = log(encounter_prob) + dlognorm( x, meanlog - square(sdlog)/2, sdlog, true );
   } 
   return Return;
@@ -91,9 +111,7 @@ Type objective_function<Type>::operator() (){
   //////////////
 
   PARAMETER_VECTOR(beta_j);
-  PARAMETER_VECTOR(delta_x);
-  PARAMETER(logSigma_delta);
-  
+
   /////////////////
   // derived values
   /////////////////
@@ -116,10 +134,9 @@ Type objective_function<Type>::operator() (){
   vector<Type> debug_j(n_j);
   vector<Type> linpredS_x = Cov_xj * beta_j;
   for(int s=0; s<n_x; s++){
-    S_x(s) = exp(linpredS_x(s) + delta_x(s));
+    S_x(s) = exp(linpredS_x(s) );
   }
-  jnll_comp(2) -= dnorm(delta_x,Type(0),exp(logSigma_delta),true).sum();
-  
+
   
   //////////////////////////////////// Commercial /////////////////////////////////////////
   
@@ -144,7 +161,7 @@ Type objective_function<Type>::operator() (){
     PARAMETER_VECTOR(q1_com);
     PARAMETER_VECTOR(logSigma_com);
 	  PARAMETER_VECTOR( k_com );
-	  
+
 	  /////////////////
     // derived values
     /////////////////
@@ -174,6 +191,9 @@ Type objective_function<Type>::operator() (){
           log_notencounterprob_com(i) = -1 * E_com(i) * exp(q1_com(0));
           
           jnll_comp(0) -= dzinflognorm(y_com_i(i), log(E_com(i))-log(encounterprob_com(i)), encounterprob_com(i), log_notencounterprob_com(i), Sigma_com(0), true);
+          // jnll_comp(0) -= dzinfgamma(y_com_i(i), E_com(i)/encounterprob_com(i), encounterprob_com(i), log_notencounterprob_com(i), Sigma_com(0), true);
+          
+          // if(y_com_i(i)>0) jnll_comp(0) -= dlognorm(y_com_i(i), log(E_com(i)) - square(Sigma_com(0))/2, Sigma_com(0), true);
         }
       }
       
@@ -191,6 +211,7 @@ Type objective_function<Type>::operator() (){
       // Parameter
       PARAMETER_VECTOR(beta_k);
       PARAMETER_VECTOR( par_b );
+
       
       // Derived values
       Type b;
@@ -204,7 +225,7 @@ Type objective_function<Type>::operator() (){
       for(int s=0; s<n_x; s++){
         linpredR_x = Cov_xk * beta_k;
         fact_S = par_b(0)*(log(S_x(s)));
-        lambda_x(s) = exp( linpredR_x(s) + fact_S(s) );
+        lambda_x(s) = exp( linpredR_x(s) + fact_S(s));
         if(!isNA(c_com_x(s)))   jnll_comp(1)-= (Type(1)-lambda_x(s) + c_com_x(s)*log(lambda_x(s))); // log density of poisson process (see Diggle (2013))
       }
 
@@ -214,9 +235,7 @@ Type objective_function<Type>::operator() (){
       REPORT( par_b );
       REPORT( linpredR_x );
       
-      //ADREPORT(eta_x);
       ADREPORT(lambda_x);
-      //ADREPORT(lambda_ref_x);
     }
   }
 
@@ -263,7 +282,9 @@ Type objective_function<Type>::operator() (){
         log_notencounterprob_sci(i) = -1 * E_sci(i) * exp(q1_sci(0));
 
         jnll_comp(0) -= dzinflognorm(y_sci_i(i), log(E_sci(i))-log(encounterprob_sci(i)), encounterprob_sci(i), log_notencounterprob_sci(i), Sigma_sci, true);
-
+        // if(y_sci_i(i) > 0) jnll_comp(0) -= dlognorm(y_sci_i(i), log(E_sci(i)) - square(Sigma_sci)/2, Sigma_sci, true);
+        // jnll_comp(0) -= dzinfgamma(y_sci_i(i), E_sci(i)/encounterprob_sci(i), encounterprob_sci(i), log_notencounterprob_sci(i), Sigma_sci, true);
+          
       }
     }
 
@@ -306,7 +327,6 @@ Type objective_function<Type>::operator() (){
 
   if(Options_vec(4)==1){
     ADREPORT(S_x);
-    // ADREPORT(delta_x);
   }
   
   

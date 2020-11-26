@@ -73,6 +73,7 @@ simu_commercial_scientific <- function(Results,
                                        nu,
                                        SD_x,
                                        SD_delta,
+                                       SD_eta,
                                        n_samp_sci,
                                        logSigma_sci,
                                        q1_sci,
@@ -140,12 +141,14 @@ simu_commercial_scientific <- function(Results,
                                                  range,
                                                  nu,
                                                  SD_x,
-                                                 SD_delta)
+                                                 SD_delta,
+                                                 SD_eta)
   
   Cov_x <- simu_latent_field_outputs$Cov_x
   Strue_x <- simu_latent_field_outputs$Strue_x
   beta <- simu_latent_field_outputs$beta
-  delta_x <- simu_latent_field_outputs$delta_x
+  # delta_x <- simu_latent_field_outputs$delta_x
+  # eta_x <- simu_latent_field_outputs$eta_x
   
   #-----------------
   #  Scientific data
@@ -180,6 +183,7 @@ simu_commercial_scientific <- function(Results,
                                                          beta0_fb,
                                                          beta_fb,
                                                          xfb_x,
+                                                         eta_x,
                                                          zero.infl_model,
                                                          n_samp_com,
                                                          logSigma_com,
@@ -261,7 +265,8 @@ simu_commercial_scientific <- function(Results,
                                   counter=counter,
                                   i=i,
                                   n_sim=n_sim,
-                                  delta_x=delta_x,
+                                  # delta_x=delta_x,
+                                  # eta_x=eta_x,
                                   Strue_x=Strue_x,
                                   index_sci_i=index_sci_i,
                                   c_sci_x=c_sci_x,

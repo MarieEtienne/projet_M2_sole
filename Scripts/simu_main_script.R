@@ -35,8 +35,8 @@ beta = c(0,0,0,0,0) # covariates
 simu_tool <- "MaternCov" # 2 way to simulate latent fields : "RandomFields", "MaternCov"
 range = sqrt(prod(grid_dim))/(5)*2 # --> MaternCov
 nu = 1 
-SD_x = SD_delta = 1
-
+SD_x = 0.5
+SD_delta = SD_eta= 0.5
 ###
 ## Commercial sampling process
 ###
@@ -189,6 +189,7 @@ for(i in i0:n_sim){
                                       nu,
                                       SD_x,
                                       SD_delta,
+                                      SD_eta,
                                       n_samp_sci,
                                       logSigma_sci,
                                       q1_sci,

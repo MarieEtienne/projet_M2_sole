@@ -39,7 +39,8 @@ simu_latent_field <- function(loc_x,
                               range,
                               nu,
                               SD_x,
-                              SD_delta){
+                              SD_delta,
+                              SD_eta){
   
   # 1st param : continuous variable, 4 nexts : strata_1, strata_2, strata_3, strata_4
   beta[1] = runif(1,-.5,.5)
@@ -52,13 +53,15 @@ simu_latent_field <- function(loc_x,
   
   # Create random noise
   delta_x <- rnorm(nrow(Cov_x),mean = 0, sd = SD_delta)
+  eta_x <- rnorm(nrow(Cov_x),mean = 0, sd = SD_eta)
   
   # Total abundance
-  Strue_x = exp(beta0 + as.matrix(Cov_x) %*% beta + delta_x)
+  Strue_x = exp(beta0 + as.matrix(Cov_x) %*% beta) # + delta_x
   res <- list(Cov_x = Cov_x,
               Strue_x = Strue_x,
               beta = beta,
-              delta_x = delta_x)
+              delta_x = delta_x,
+              eta_x = eta_x)
   return(res)
 }
 
