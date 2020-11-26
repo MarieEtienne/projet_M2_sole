@@ -3,10 +3,12 @@
 ############################
 #' @title RelBias_param_Results_loop : produce boxplots of relative bias of models parameters (or just bias when true value == 0 because in this case it is not possible to divide by the true value)
 #' 
-#' @param file : file of Results_loop data
+#' @param Results : summary outputs dataframe
+#' @param List_param_full : full outputs
 #' 
-#' file = "E:/outputs/Simulation/com_x_sci_data_10-2020-04-28_14_51_11_Alpha2_gamma-Results_loop.RData"
-RelBias_param <- function(Results_loop){
+
+
+RelBias_param <- function(Results,List_param_full){
   
   # Load results and separate simulation according to model that was used
   counter_table <- Results %>%
@@ -78,18 +80,18 @@ RelBias_param <- function(Results_loop){
           names(RelBias_obs_param) <- c("counter",names(obs_param_true))
         }
         
-        # Spatial process parameter
-        Spatial_param_est <- c(List_param[[i]]$Report$Range_S,List_param[[i]]$Report$MargSD_S)
-        Spatial_param_est <- unique(Spatial_param_est)
-        names(Spatial_param_est) <- c(rep("range",length(unique(List_param[[i]]$Report$Range_S))),
-                                      rep("SD",length(List_param[[i]]$Report$MargSD_S)))
-        Spatial_param_true <- c(range = List_param[[i]]$data.info$range,SD_delta = List_param[[i]]$data.info$SD_delta,SD_eta = List_param[[i]]$data.info$SD_eta)
-        Spatial_param_true <- c(Spatial_param_true[which(names(Spatial_param_true) == "range")],
-                                Spatial_param_true[which(names(Spatial_param_true) == "SD_delta" | names(Spatial_param_true) == "SD_eta")])
-        
-        Spatial_param_true <- c(rep(Spatial_param_true[which(str_detect("range",names(Spatial_param_true)))],length(str_which("range",names(Spatial_param_est)))),
-                                  Spatial_param_true[which(names(Spatial_param_true) == "SD_delta")],
-                                  Spatial_param_true[which(names(Spatial_param_true) == "SD_eta")])
+        # # Spatial process parameter
+        # Spatial_param_est <- c(List_param[[i]]$Report$Range_S,List_param[[i]]$Report$MargSD_S)
+        # Spatial_param_est <- unique(Spatial_param_est)
+        # names(Spatial_param_est) <- c(rep("range",length(unique(List_param[[i]]$Report$Range_S))),
+        #                               rep("SD",length(List_param[[i]]$Report$MargSD_S)))
+        # Spatial_param_true <- c(range = List_param[[i]]$data.info$range,SD_delta = List_param[[i]]$data.info$SD_delta,SD_eta = List_param[[i]]$data.info$SD_eta)
+        # Spatial_param_true <- c(Spatial_param_true[which(names(Spatial_param_true) == "range")],
+        #                         Spatial_param_true[which(names(Spatial_param_true) == "SD_delta" | names(Spatial_param_true) == "SD_eta")])
+        # 
+        # Spatial_param_true <- c(rep(Spatial_param_true[which(str_detect("range",names(Spatial_param_true)))],length(str_which("range",names(Spatial_param_est)))),
+        #                           Spatial_param_true[which(names(Spatial_param_true) == "SD_delta")],
+        # Spatial_param_true[which(names(Spatial_param_true) == "SD_eta")])
         # 
         # if(lev == "scientific_only"){
         #   # Spatial_param_true <- c(Spatial_param_true[which(names(Spatial_param_true) == "range")],  # order parameters so that Spatial_param_est and Spatial_param_true are in the same order (in model "commercial_scientific" or "commercial only" the first SD is delta and the second is eta) 
@@ -97,14 +99,14 @@ RelBias_param <- function(Results_loop){
         #   Spatial_param_est <- Spatial_param_est[1:2]
         # }
         
-        RelBias_spatial <- as.data.frame(rbind(RelBias_spatial,c(counter = i,if_else(Spatial_param_true != 0,(Spatial_param_est - Spatial_param_true)/Spatial_param_true,(Spatial_param_est - Spatial_param_true)))))
-        names(RelBias_spatial) <- c("counter",names(Spatial_param_true))
+        # RelBias_spatial <- as.data.frame(rbind(RelBias_spatial,c(counter = i,if_else(Spatial_param_true != 0,(Spatial_param_est - Spatial_param_true)/Spatial_param_true,(Spatial_param_est - Spatial_param_true)))))
+        # names(RelBias_spatial) <- c("counter",names(Spatial_param_true))
         
       }
     }
     
-    # RelBias_latent_linpred <- RelBias_latent_linpred %>% dplyr::select(counter, beta_j0, beta_j1)
-    RelBias_spatial <- RelBias_spatial %>% dplyr::select(-SD_eta)
+    RelBias_latent_linpred <- RelBias_latent_linpred # %>% dplyr::select(counter, beta_j0, beta_j1)
+    # RelBias_spatial <- RelBias_spatial %>% dplyr::select(-SD_eta)
     
     ## plots
     RelBias_latent_linpred <- inner_join(RelBias_latent_linpred,counter_table_f,by = "counter")
@@ -118,19 +120,26 @@ RelBias_param <- function(Results_loop){
       
     }
     
+    # if(!exists("RelBias_latent_linpred_full")){
+    #   RelBias_latent_linpred_full <- RelBias_latent_linpred
+    # }else{
+    #   RelBias_latent_linpred_full <- rbind(RelBias_latent_linpred_full,RelBias_latent_linpred)
+    # }
+    
+    
     if(! is.null(RelBias_fb_linpred)){
       RelBias_fb_linpred  <- inner_join(RelBias_fb_linpred,counter_table_f,by = "counter")
-      for(name_param in names(RelBias_fb_linpred)[which(str_detect(names(RelBias_fb_linpred),"beta_k") | names(RelBias_fb_linpred) == "b")]){
+      for(name_param in names(RelBias_fb_linpred)[which(str_detect(names(RelBias_fb_linpred),"beta_k0") | names(RelBias_fb_linpred) == "par_b")]){
         if(count_plot > 16) x11()
         count_plot <- count_plot+1
         boxplot(RelBias_fb_linpred[,name_param] ~ if_else(is.na(RelBias_latent_linpred$b_true) == T,0,RelBias_latent_linpred$b_true),
                 main = name_param,
                 xlab ="",ylab="Relative Bias")
         abline(h=0, lty = 2)
-
+        
       }
     }
-
+    
     RelBias_obs_param  <- inner_join(RelBias_obs_param,counter_table_f,by = "counter")
     for(name_param in names(RelBias_obs_param)[which(str_detect(names(RelBias_obs_param),"q1_") == T | str_detect(names(RelBias_obs_param),"logSigma_") == T)]){
       if(count_plot > 16) x11()
@@ -143,18 +152,44 @@ RelBias_param <- function(Results_loop){
     
     # if(lev == "scientific_only") RelBias_spatial <- dplyr::select(RelBias_spatial,counter,range,SD_delta)
     
-    if(length(which(names(RelBias_spatial) == "range")) == 2) names(RelBias_spatial)[which(names(RelBias_spatial) == "range")] <- paste0("range",c("_delta","_eta"))
-    if(length(which(names(RelBias_spatial) == "range")) > 2) names(RelBias_spatial)[which(names(RelBias_spatial) == "range")] <- paste0("range.",seq(1:length(which(names(RelBias_spatial) == "range"))))
+    # if(length(which(names(RelBias_spatial) == "range")) == 2) names(RelBias_spatial)[which(names(RelBias_spatial) == "range")] <- paste0("range",c("_delta","_eta"))
+    # if(length(which(names(RelBias_spatial) == "range")) > 2) names(RelBias_spatial)[which(names(RelBias_spatial) == "range")] <- paste0("range.",seq(1:length(which(names(RelBias_spatial) == "range"))))
+    # 
+    # RelBias_spatial  <- inner_join(RelBias_spatial,counter_table_f,by = "counter")
+    # for(name_param in names(RelBias_spatial)[which(str_detect(names(RelBias_spatial),"range_") | str_detect(names(RelBias_spatial),"SD_") | str_detect(names(RelBias_spatial),"scale"))]){
+    #   if(count_plot > 16) x11()
+    #   count_plot <- count_plot+1
+    #   boxplot(RelBias_spatial[,name_param] ~ if_else(is.na(RelBias_latent_linpred$b_true) == T,0,RelBias_latent_linpred$b_true),
+    #   main = name_param,
+    #   xlab ="",ylab="Relative Bias")
+    #   abline(h=0, lty = 2)
+    # }
     
-    RelBias_spatial  <- inner_join(RelBias_spatial,counter_table_f,by = "counter")
-    for(name_param in names(RelBias_spatial)[which(str_detect(names(RelBias_spatial),"range") | str_detect(names(RelBias_spatial),"SD_") | str_detect(names(RelBias_spatial),"scale"))]){
-      if(count_plot > 16) x11()
-      count_plot <- count_plot+1
-      boxplot(RelBias_spatial[,name_param] ~ if_else(is.na(RelBias_latent_linpred$b_true) == T,0,RelBias_latent_linpred$b_true),
-      main = name_param,
-      xlab ="",ylab="Relative Bias")
-      abline(h=0, lty = 2)
-    }
+    # if(lev == "scientific_only"){
+    #   RelBias_spatial <- RelBias_spatial %>%
+    #     mutate(range_delta = range,
+    #            range_eta = 0) %>%
+    #     dplyr::select_at(colnames(RelBias_spatial_full))
+    # }
+    
+    # if(!exists("RelBias_spatial_full")){
+    #   RelBias_spatial_full <- RelBias_spatial
+    # }else{
+    #   RelBias_spatial_full <- rbind(RelBias_spatial_full,RelBias_spatial)
+    # }
+    
   }
-
+  
 }
+
+# Build List_param_full
+List_param_full <- list()
+for(i in Results$counter){
+  print(i)
+  load(paste0("results/com_x_sci_data_14-2020-11-19_22_29_28_Lognormal_with_eta_real_case/List_param_",i,".RData"))
+  List_param_full[[i]] <- List_param
+}
+
+save(data = List_param_full,file = "results/com_x_sci_data_14-2020-11-04_16_55_41_Lognormal_ZoneWithout_9_9_with_sci/List_param_full.RData")
+
+
