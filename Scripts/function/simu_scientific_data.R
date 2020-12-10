@@ -52,7 +52,9 @@ simu_scientific_data <- function(loc_x,
     mutate(hauls = round(value/n_cells*n_samp_sci)) -> nb_hauls_strata
 
   index_sci_i <- do.call(c,lapply(1:nrow(nb_hauls_strata),function(j){
-    index_sci_i <- c(index_sci_i,sample(loc_x_2$cell[which(loc_x_2$strata == nb_hauls_strata$strata[j])], size=nb_hauls_strata$hauls[which(nb_hauls_strata$strata == nb_hauls_strata$strata[j])],replace=FALSE))
+    index_sci_i <- c(index_sci_i,sample(loc_x_2$cell[which(loc_x_2$strata == nb_hauls_strata$strata[j])],
+                                        size=nb_hauls_strata$hauls[which(nb_hauls_strata$strata == nb_hauls_strata$strata[j])],
+                                        replace=FALSE))
   }))
   
   c_sci_x = ifelse(1:prod(grid_dim) %in% index_sci_i, 1, 0) # shots for scientific data
