@@ -1,0 +1,346 @@
+---
+title: "Simualation du modele"
+author: "Oceane GUITTON, Chloe TELLIER, Juliette THEOLEYRE"
+output:
+  html_document:
+    toc: yes
+    toc_float: yes
+    theme: cerulean
+  pdf_document:
+    toc: yes
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE)
+```
+
+
+Importations des packages :
+
+```{r, message=FALSE}
+library(spatstat)
+library(tidyverse)
+library(ggplot2)
+```
+
+
+On considere un modele integre, qui prend en compte l'echantillonage preferentiel (des donnees commerciales), et qui deduit la distribution spatiale de densites de poissons a partir des donnees scientifiques et/ou des donnees commerciales.
+
+Ce domument presente une situation dans le cadre de la generation de donnees commerciales. 
+
+On considere une grille de taille 10*10 qui va definir notre zone d'etude.
+
+# Champ Latent S(x)
+
+Dans un premier premier temps, on s'interesse a la generation du *champ latent S(x)*.
+
+Le champ latent represente une densite de poisson au point x considere.
+
+Ce champ latent est modelise selon champ spatial gaussien (plus precisément "latent log gaussian") sur un domaine discret.
+
+Ce champ latent depend de differentes covariables (comme par exemple le type de sol et la profondeur) et d'un effet spatial aleatoire.
+
+Le champ latent est exprime en fonction dun intercept (alpha_s ou $\alpha_{s}$), des covariables environnementales et des parametres (betas_s ou $\beta_{s}$) qui leur sont associes (ces parametres traduisent la relation entre les especes et leur habitat (effets fixes)), et enfin de l'effet spatial aleatoire qui traduit la correlation spatiale des captures ($\delta(x)$).
+
+Voici ci dessous les expressions du champ latent et de l'effet spatial aleatoire :
+
+\begin{eqnarray*}
+\text{log}(S(x)) & = & \alpha_{s} + \Gamma_{s}(x)^{T} \cdot \beta_{s} + \delta(x)
+\end{eqnarray*}
+
+\begin{eqnarray*}
+\delta(x) & = & \text{GRF} (0 , M (x , x':\rho) )
+\end{eqnarray*}
+
+Par simplification, on ne considere ici qu'une seule covariable (qui est le type de sol) et on ne prend pas en compte l'effet spatial aleatoire. On considere quatre modalites pour la variable type de sol numerotees de 1 a 4.
+
+La fonction zonage prend pour argument les coordonnees d'un point de la zone d'etude (coodonnees x et y) et renvoie pour ce point la valeur associee au type de sol du point considere.  Par exemple, le point de coordonnees (7,7) presente la modalite 4 pour le type de sol.
+
+```{r}
+
+zonage <- function(x,y, xmed = 5, ymed = 5){
+  ifelse(x<xmed, 1, 2) + ifelse(y<ymed, 0, 2) 
+}
+
+zonage(7,7)
+```
+
+On initialise ensuite les valeurs des coefficients $\alpha_{s}$ et $\beta_{s}$.
+Le coefficient $\alpha_{s}$ est initialise a -0.5.
+La covariable type de sol etant discrete a quatre modalites, on initialise quatre valeurs de $\beta_{s}$, une pour chaque modalite. 
+Les $\beta_{s}$ sont initialises a 0, 1, -1 et 2. 
+
+```{r}
+alpha_s <- -0.5
+betas_s <- c(0, 1, -1, 2)
+```
+
+On cree ensuite une fonction champ latent qui va calculer la densite de poisson pour un point donne (la valeur de ce champ latent depend de la modalite du type de sol).
+
+La fonction champ latent  prend pour argument les coordonnees x et y du point considere, ainsi que les coefficients $\alpha_{s}$ et $\beta_{s}$. Elle renvoie la valeur du champ latent au point considere. Par exemple, la valeur du champ latent au point de coordonnees (7,7) vaut 4.48.
+
+```{r}
+latent_field_function <- function(x,y, alpha_s, betas_s){
+  exp(alpha_s +  betas_s[zonage(x,y)])
+}
+
+latent_field_function(7,7,alpha_s, betas_s)
+```
+
+On propose une representation graphique de la repartition ce champ latent pour des points simules au hasard au sein de notre grille d'etude.
+
+On voit donc que la zone en haut a droite de la grille d'etude est la zone de plus forte densite. 
+
+```{r}
+dta <- data.frame(x = runif(n = 10000, 0,10 ), y = runif(10000, 0, 10)) %>% 
+  mutate(z= latent_field_function(x, y, alpha_s, betas_s))
+ggplot(data= dta) + geom_point(aes(x=x, y=y, col = z)) + labs(colour= "Champ latent")
+```
+
+# Generation des points de peche et processsus de Poisson non homogene
+
+Desormais, nous nous interessons au **processus d'echantillonage**, c'est a dire a la **generation des points de peche** (et de leur distribution spatiale) selon un processus de poisson non homogene. L'intensite des points de peche dans une zone donnee dépend de l'abondance du champ latent a cet endroit.
+
+La distribution spatiale des points de peche peut dependre d'un echantillonage aleatoire (c'est le cas de la recolte des donnees scientifiques) ou bien d'un echantillonage preferentiel (c'est le cas des donnees commerciales).
+
+En effet, les pecheurs ciblent en general leurs zones de peche.
+
+La localisation des points de peche peut dependre de la connaissance a priori de la distribution spatiale de la densite de poisson (champ latent), d'autres effets incarnes par des covariables (comme la connaissance de la presence d'especes non cibles (cf prises accessoires), les technologies disposees, les contraintes logistiques etc) et enfin d'un effet spatial aleatoire. 
+
+On note $X_{com f}$ les points spatiaux ou les bateaux de la flotte f ont peche (ou ont ete identifies comme etant en train de pecher). $X_{com f}$ est considere comme un "poisson point process" avec une variation spatiale d'intensite $\lambda_{f}(x)$.
+
+Cette insensite $\lambda_{f}(x)$ est exprimee en fonction d'un intercept (alpha_Xf ou $\alpha_{Xf}$), d'un parametre $b_{f}$ (qui traduit un echantillonage preferentiel plus ou moins fort), du champ latent au point considere, de covariables et de leurs parametres associes (betas_Xf ou $\beta_{Xf}$), et enfin de l'effet spatial aleatoire ($\eta{f}(x)$). 
+
+Voici ci dessous les expressions de $X_{com f}$ et de $\lambda_{f}(x)$. 
+
+\begin{eqnarray*}
+X_{com f} \sim {\cal IPP} (\lambda_{f}(x))
+\end{eqnarray*}
+
+\begin{eqnarray*}
+\text{log}(\lambda_{f}(x)) & = & \alpha_{Xf} +  b_{f} \cdot \text{log}(S(x)) + \Gamma_{X}(x)^{T} \cdot \beta_{Xf} + \eta_{f}(x)
+\end{eqnarray*}
+
+On commence donc tout d'abord exprimer $\lambda_{f}(x)$.
+
+On commence par initialiser les parametres necessaires a l'expression de $\lambda_{f}(x)$ a savoir $\alpha_{Xf}$ (que l'on fixe a 1) et $b_{f}$ (que l'on fixe a 1).
+
+$b_{f}$ peut prendre pour valeurs 0, 1 et 3.
+
+$b_{f}$ = 0 signifie qu'il n'y a pas d'echantillonage preferentiel.
+
+Ensuite, plus $b_{f}$ augmente plus l'echantillonage preferentiel est important. 
+
+```{r}
+alpha_xf <- 1
+b_f <- 1
+```
+
+On cree ensuite une fonction qui calcule la valeur de l'intensite $\lambda_{f}(x)$ a un point donne de coordonnees (x,y).
+
+Cette fonction prend en argument les coordonnees du point (x,y), ainsi que les parametres $\alpha_{Xf}$, $b_{f}$, $\alpha_{s}$ et $\beta_{s}$.
+
+Par exemple, on calcule l'intensite $\lambda_{f}(x)$ au point de coordonnees (7,7).
+
+```{r}
+lambda_function <- function(x, y, alpha_xf, b_f, alpha_s, betas_s){
+  exp(alpha_xf + b_f * log(latent_field_function(x,y, alpha_s, betas_s)))
+}
+
+lambda_function(7,7,alpha_xf, b_f, alpha_s, betas_s)
+```
+
+On genere ensuite des points de peche selon un processus de poisson non homogene grace a la fonction **rpoispp** du package *spatstat*.
+
+Cette fonction prend pour arguments :
+- lambda : la fonction de densite
+- lmax : pour fixer un maximum pour la densite, eviter qu'elle n'explose
+- win : la fenetre dans laquelle on simule nos points de densite, pour nous c'est 10*10
+- les autres arguments utilises par lambda (sauf x et y qui du coup sont definis par la fenetre win)
+
+```{r}
+pp = rpoispp(lambda_function, lmax=4.5, win=owin(c(0,10),c(0,10)),
+             alpha_xf=alpha_xf, b_f=b_f, alpha_s= alpha_s, betas_s = betas_s)
+plot(pp)
+```
+
+On voit que la zone de droite (zone qui presente les densites de poisson (champ latent) les plus fortes) est la zone qui concentre le plus de points de peches. L'echantillonage preferentiel est donc bien pris en compte : les pecheurs visent les zones avec les plus fortes densites de poissons. 
+
+# Zero inflating
+
+L'objectif est d'attribuer a chaque point de peche prealablement determine avec la fonction rpoispp la quantite de poissons peches, sachant qu'il est possible qu'en certains points de peche aucun poisson n'ai ete peche.
+
+On determine alors dans un premier temps quels sont les points ou la peche a ete 'sans succes' et ceux ou elle s'est revelee etre fructueuse.
+
+Ensuite on attribue a chaque point de peche 'fructueux' la quantite de poisson pechee.
+
+Pour cela, on fait appel a un modele zero-inflated et on modelise la probabilite de presence/absence de capture par une loi de Bernoulli.
+
+## Determination de la nature des peches : fructueuses ou non, loi de Bernoulli
+
+On cree un vecteur de longueur notre nombre de point de peches qui ne contient pour l'instant que des 0.
+
+Ce vecteur sera porteur de l'information de peche : abscence de capture (Y = 0) ou presence de capture (Y = 1).
+
+```{r}
+Y = rep(0, len = length(pp$x))
+```
+
+La fonction peche_attendue permet de calculer la quantite $\mu_f(x_i)$ caracterisee par l'expression $\mu_f(x_i) = q_f\cdot S(x_{i})$.
+
+Elle prend pour arguments les coordonnees du point de peche (x,y), la capturabilite de la flotte q (specifique a chaque flotte) et retourne la peche attendue.
+
+On prend l'exemple du point de peche de coordonnees (7,7) et on obtient sa peche attendue.
+
+```{r}
+# On fixe la capturabilité a 1
+q = 1
+
+# Pêche attendue
+peche_attendue = function(x, y, q){
+  q * latent_field_function(x, y, alpha_s, betas_s)
+}
+
+peche_attendue(7,7,q)
+```
+
+La fonction p0_bernoulli calcule, pour chaque point de peche, la probabilite de ne rien pecher : 
+
+si $y_i = 0$ alors $P(Y = y_i|x_i, S(x_i)) = exp(-e^{\xi_f}\cdot \mu_f(x_i))$ 
+
+La fonction prend pour arguments les coordonnees du point (x,y), $\xi$i (parametre qui controle l'intensite de 0), et q (capturabilite de la flotte).
+
+Par exemple, pour le point de coordonnees (7,7), la probabilite de ne capturer aucun poisson vaut 0,01 (il est coherent que cette probabilite soit faible puisque ce point est dans une zone de forte densite, il est donc plus probable que la peche soit fructueuse).
+
+```{r}
+#  On fixe l'intensité de 0 captures, ksi, a 0
+ksi = 0
+
+# Proba d'absence de capture
+p0_bernoulli = function(x, y, ksi, q){
+  exp(-exp(ksi) * peche_attendue(x, y, q))
+}
+
+p0_bernoulli(7,7,ksi,q)
+```
+
+Dans le cas d'un "succes" de Bernoulli, la flotte n'a peche aucun poisson en ce point de peche.
+
+On fait alors (1 - p0_bernoulli(x,y,ksi,q)) afin que Y prenne la valeur 1 lorsque la peche a ete fructueuse et la valeur 0 si la peche a ete 'sans succes'.
+
+La loi de Bernouilli de parametre p0_bernoulli permet de determiner le succes ou l'echec de la peche pour chacun des points.
+
+```{r}
+Y = 1 - rbinom(n=length(Y), size=1, prob=p0_bernoulli(pp$x, pp$y, ksi, q))
+```
+
+On repertorie nos donnees dans un dataframe qui contient les coordonnees de chaque point de peche ainsi que la nature de la peche : 'fructueuse' ou 'sans succes'.
+
+```{r}
+table = data.frame(x=pp$x, y=pp$y, peche=Y)
+```
+
+## Visualisation de la nature des peches
+
+On affiche dans notre grille les points de peche 'sans succes' et 'fructueux'.
+
+```{r}
+ggplot(table) + geom_point(aes(x=x, y=y, col=as.factor(peche))) + labs(color= "Statut de la peche")
+```
+
+## Determination des quantites pechees en chaque point de peche fructueuse : loi logNormale
+
+On cherche maintenant quel est le nombre de poissons potentiellement peches en chaque point de peche.
+
+Pour cela on modelise une loi lognormale : ${\cal L} (y_i,\frac{\mu_f(x_i)}{1-exp(-e^{\xi_f}\cdot \mu_f(x_i)},\sigma^2)$.
+
+Remarque : on fixe notre ecart-type $\sigma^2$ a 1.
+
+```{r}
+L = rlnorm(n=length(Y), 
+           meanlog = peche_attendue(pp$x, pp$y, q)/(1 - p0_bernoulli(pp$x, pp$y, ksi, q)),
+           sdlog=0.1)
+```
+
+On ajoute a notre table une colonne quantite qui materialise la quantite de poisson pechee en chaque point de peche :
+
+Le nombre de poissons peches = le succes ou non de la peche (Y) * le nombre de poissons potentiellement peches (L).
+
+Ce qui donne sous forme mathematique : $(1-exp(-e^{\xi_f}\cdot \mu_f(x_i))\cdot{\cal L} (y_i,\frac{\mu_f(x_i)}{1-exp(-e^{\xi_f}\cdot \mu_f(x_i)},\sigma^2$
+
+```{r}
+table <-table %>%
+  mutate(quantite = L*Y)
+```
+
+## Visualisation des quantites de poissons peches en chaque point de peche
+
+On represente graphiquement les quantites de poisson peches en differents points de notre grille d'etude.
+
+```{r}
+ggplot(table) + 
+  geom_point(aes(x=x, y=y, col=quantite)) + labs(color= "Quantite pechee")
+```
+
+L'histogramme ci-dessous permet de visualiser la loi zero inflated :
+
+```{r}
+hist(table$quantite, main = "Frequence des quantites de poissons peches", xlab = "Quantite de poisson peches", ylab = "Frequence")
+```
+
+# Re allocation uniforme des captures
+
+On va maintenant considerer que la capture totale est enregistree a l'echelle d'une zone.
+
+```{r}
+capturetotale = sum(table$peche)
+```
+
+Ensuite, au sein de cette zone, nous n'avons pas le detail de chaque capture a chaque point de peche : la capture totale est repartie de facon uniforme entre tous les points de peche.
+
+## Division de notre grille d'etude en une seule zone
+
+```{r}
+table$L_unezone = mean(table$peche)
+ggplot(table) + geom_point(aes(x=x, y=y, col=as.factor(L_unezone))) + labs(color= "Quantite pechee")
+```
+
+## Division de notre grille d'etude en deux zones
+
+```{r}
+
+# On coupe selon l'axe des x, a une valeur definie
+xmed = 5
+premierezone = table[which(table$x < xmed),]
+deuxiemezone = table[which(table$x >= xmed),]
+mean_premierezone = mean(premierezone$peche)
+mean_deuxiemezone = mean(deuxiemezone$peche)
+table$L_deuxzones = rep(0, nrow(table))
+table[which(table$x < xmed), "L_deuxzones"] = mean_premierezone
+table[which(table$x >= xmed), "L_deuxzones"] = mean_deuxiemezone
+hist(table$L_deuxzones)
+ggplot(table) + geom_point(aes(x=x, y=y, col=as.factor(L_deuxzones))) + labs(color= "Quantite pechee")
+```
+
+## Division de notre grille d'etude en quatre zones
+
+```{r}
+# On coupe selon l'axe des x et l'axe des y, a des valeurs definies
+xmed = 5
+ymed = 5
+premierezone = table[which(table$x < xmed & table$y < ymed),]
+deuxiemezone = table[which(table$x < xmed & table$y >= ymed),]
+troisiemezone = table[which(table$x >= xmed & table$y < ymed),]
+quatriemezone = table[which(table$x >= xmed & table$y >= ymed),]
+mean_premierezone = mean(premierezone$peche)
+mean_deuxiemezone = mean(deuxiemezone$peche)
+mean_troisiemezone = mean(troisiemezone$peche)
+mean_quatriemezone = mean(quatriemezone$peche)
+table$L_quatrezones = rep(0, nrow(table))
+table[which(table$x < xmed & table$y < ymed), "L_quatrezones"] = mean_premierezone
+table[which(table$x < xmed & table$y >= ymed), "L_quatrezones"] = mean_deuxiemezone
+table[which(table$x >= xmed & table$y < ymed), "L_quatrezones"] = mean_troisiemezone
+table[which(table$x >= xmed & table$y >= ymed), "L_quatrezones"] = mean_quatriemezone
+hist(table$L_quatrezones, breaks = 100)
+ggplot(table) + geom_point(aes(x=x, y=y, col=as.factor(L_quatrezones))) + labs(color= "Quantite pechee")
+```
