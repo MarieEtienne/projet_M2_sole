@@ -189,7 +189,8 @@ fit_IM <- function(Estimation_model_i = 1,
   #Upper = Inf
   Lower = -50  #getting a few cases where -Inf,Inf bounds result in nlminb failure (NaN gradient)
   Upper = 50
-  Opt = nlminb( start=Obj$par, objective=Obj$fn, gradient=Obj$gr, lower=Lower, upper=Upper, control=list(trace=1, maxit=1000))         #
+  Opt = nlminb( start=Obj$par, objective=Obj$fn, gradient=Obj$gr, lower=Lower, upper=Upper,
+                control=list(trace=1, maxit=1000))         #
   Opt[["diagnostics"]] = data.frame( "Param"=names(Obj$par), "Lower"=-Inf, "Est"=Opt$par, "Upper"=Inf, "gradient"=Obj$gr(Opt$par) )
   Report = Obj$report()
   
