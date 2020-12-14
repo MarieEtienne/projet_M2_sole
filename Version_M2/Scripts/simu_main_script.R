@@ -37,12 +37,14 @@ range = sqrt(prod(grid_dim))/(5)*2 # --> MaternCov
 nu = 1 
 SD_x = 0.5
 SD_delta = SD_eta= 0.5
+
+
 ###
 ## Commercial sampling process
 ###
 
 # intercept
-beta0_fb = 2
+beta0_fb = 2 
 
 ###
 ## Observation process
@@ -100,7 +102,7 @@ counter <- 1
 # index of the first iteration
 i0 <- 1
 # Number of simulation
-n_sim = 10
+n_sim = 100
 
 RandomSeed = 123456
 

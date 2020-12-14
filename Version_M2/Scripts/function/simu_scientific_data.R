@@ -36,27 +36,39 @@ simu_scientific_data <- function(loc_x,
                                  n_strate,
                                  scientific_data){
 
-  index_sci_i <- c()
+  index_sci_i <- c() #doit contenir les cellules ou il y a eu peche par l'enquete
+  #scientifique. Initialisé vide
   
   # ## Uniform sampling
   # index_sci_i <- sample(loc_x$cell,size=n_samp_sci)
 
   ## Random stratified sampling
+  #creation de loc_x_2
   loc_x %>%
     tidyr::pivot_longer(cols = starts_with("strata"),names_to = "strata") %>%
     data.frame() %>% filter(value > 0) -> loc_x_2
+  #on vient de créer loc_x_2 : c'est une transformation de loc_x : au lieu d'avoir
+  #une colonne par strate, on a une colonne qui répertorie le num de la strate 
+  #et une colonne value qui donne le nb de points de cette coordonnée dans cette 
+  #strate : que des 1
   # nb of samples in each strata
 
+  #on cree nb_hauls_strata qui compte 3 col et 4 lignes : une ligne par strate,
+  #une colonne strat, une colonne value (qui compte le nb de points par strate)
+  #et une colonne hauls qui détermine le nb de points de peches scientifiques par
+  #strate : apres il va falloir choisir ces points
   loc_x_2 %>% group_by(strata) %>%
     dplyr::summarise(value = sum(value)) %>%
     mutate(hauls = round(value/n_cells*n_samp_sci)) -> nb_hauls_strata
 
+  #on selectionne les 49 points de peche (6+18+18+7) et index_sci_i prend les
+  #numéros de ligne correspondant a ces points de peche 
   index_sci_i <- do.call(c,lapply(1:nrow(nb_hauls_strata),function(j){
-    index_sci_i <- c(index_sci_i,sample(loc_x_2$cell[which(loc_x_2$strata == nb_hauls_strata$strata[j])],
-                                        size=nb_hauls_strata$hauls[which(nb_hauls_strata$strata == nb_hauls_strata$strata[j])],
-                                        replace=FALSE))
+    index_sci_i <- c(index_sci_i,sample(loc_x_2$cell[which(loc_x_2$strata == nb_hauls_strata$strata[j])], size=nb_hauls_strata$hauls[which(nb_hauls_strata$strata == nb_hauls_strata$strata[j])],replace=FALSE))
   }))
   
+  #pour chacun des 625 points de la grille : si le point a été choisi comme point 
+  #de peche prend la valeur 1 sinon 0 
   c_sci_x = ifelse(1:prod(grid_dim) %in% index_sci_i, 1, 0) # shots for scientific data
   
   # # check sampling of sci data
@@ -70,6 +82,7 @@ simu_scientific_data <- function(loc_x,
   #   theme_bw()
   
   # scientific data (zero-inflated)
+  #pour chacun des 49 points de peche, on renvoie la valeur de la peche (poids)
   y_sci_i <- do.call(c,lapply(1:length(index_sci_i), function(j){
     exp_catch <- q2_sci * Strue_x[index_sci_i[j]] # expected catch
     # proba of encounter
@@ -91,7 +104,11 @@ simu_scientific_data <- function(loc_x,
   res <- list(index_sci_i = index_sci_i,
               c_sci_x = c_sci_x,
               y_sci_i=y_sci_i)
-  
+  #res contient :
+  #index_sci_i (les numéros de lignes dans loc_x des 49 points de peche)
+  #c_sci_x (pour les 625 points de la grille, 1 si c'est un des 49 points de peche
+  #0 sinon)
+  #y_sci_i (valeur de la peche pour les 49 points de peche )
   return(res)
   
 }

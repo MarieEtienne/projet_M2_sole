@@ -106,31 +106,40 @@ simu_commercial_scientific <- function(Results,
   #---------------
   
   # create grid and cells + strata
-  n_cells <- grid_dim['x'] * grid_dim['y']
-  loc_x = expand.grid( "x"=1:grid_dim['x'], "y"=1:grid_dim['y'])
-  loc_x = cbind(loc_x,cell = 1:n_cells)
-  diff.dim_y_x <- grid_dim['y'] - grid_dim['x']
+  n_cells <- grid_dim['x'] * grid_dim['y'] # 25*25 = 625
+  loc_x = expand.grid( "x"=1:grid_dim['x'], "y"=1:grid_dim['y']) #toutes les 
+  #combinaisons possibles de (x,y)
+  loc_x = cbind(loc_x,cell = 1:n_cells) #chaque combinaison possible est une cellule
+  #il les numerote de 1 à 625
+  diff.dim_y_x <- grid_dim['y'] - grid_dim['x'] #25-25 =0
   loc_x %>%
     mutate(strata_1 = ifelse(x <= n_strate & y > grid_dim['y'] - n_strate , 1, 0)) %>%
     mutate(strata_4 = ifelse(x >= grid_dim['x'] - n_strate & y <= n_strate + diff.dim_y_x, 1, 0), 1, 0) %>%
     mutate(strata_3 = ifelse((x < grid_dim['x'] - n_strate & y <= grid_dim['y'] - n_strate & x + y <= grid_dim['y'] + 1),1,0)) %>%
     mutate(strata_2 = ifelse(strata_1 == 0 & strata_4 == 0 & strata_3 == 0, 1, 0)) %>%
     dplyr::select(x,y,cell,strata_1,strata_2,strata_3,strata_4) -> loc_x
+  #a ce stae, loc_x contient une colonne x, une colonne y, une colonne cellule (jusqu'a 625)
+  #et 4 colonnes de strates codées de facon binaires : si le point de coordonnées
+  #(x,y) est dans la strate valeur 1, s'il est pas dans la strate valeur 0
   
-  # # plot strata
-  # loc_x %>%
-  #   tidyr::pivot_longer(cols = starts_with("strata"),names_to = "strata") %>%
-  #   data.frame() %>% filter(value > 0) -> loc_x_plot
-  # 
-  # ggplot(loc_x_plot)+
-  # geom_point(aes(x,y,col=strata)) + theme_bw()
-  
+ # # plot strata : representation graphique des 4 strates dans la grille 
+ #  loc_x %>%
+ #    tidyr::pivot_longer(cols = starts_with("strata"),names_to = "strata") %>%
+ #    data.frame() %>% filter(value > 0) -> loc_x_plot
+ # 
+ #  ggplot(loc_x_plot)+
+ #  geom_point(aes(x,y,col=strata)) + theme_bw()
+
   
   #---------------
   #  Latent field
   #---------------
   # simulate or load data for abundance distribution
-  
+  #l'out put de cette fonction est une liste qui contient Cov_x (matrix for 
+  #covariates levels / values), Strue_x (Strue_x Latent field values), 
+  #beta (fixed parameters for the abundance distribution equation), 
+  #delta_x (random effect for the abundance distribution equation), 
+  #eta_x (random effect for the sampling process equation)
   simu_latent_field_outputs <- simu_latent_field(loc_x,
                                                  latent_fields_simu,
                                                  latent_field,
@@ -144,9 +153,13 @@ simu_commercial_scientific <- function(Results,
                                                  SD_delta,
                                                  SD_eta)
   
-  Cov_x <- simu_latent_field_outputs$Cov_x
-  Strue_x <- simu_latent_field_outputs$Strue_x
-  beta <- simu_latent_field_outputs$beta
+  Cov_x <- simu_latent_field_outputs$Cov_x #Cov_x contient une colonne cov_x
+  #correspondant à la covariable continue et les 4 colonnes de strates codées
+  #binaires pour l'appartenance du point a la strate ou non
+  Strue_x <- simu_latent_field_outputs$Strue_x #contient 625 lignes et une colonne
+  #correspondant aux valeurs du champ latent en chacun des points
+  beta <- simu_latent_field_outputs$beta # contient le coefficient beta de la 
+  #var continue et les coeff des 4 modalités/strates de la covariable catégorielle
   # delta_x <- simu_latent_field_outputs$delta_x
   # eta_x <- simu_latent_field_outputs$eta_x
   
@@ -154,6 +167,11 @@ simu_commercial_scientific <- function(Results,
   #  Scientific data
   #-----------------
   # simulate or load data for scientific data
+  #l'out put de cette fonction est une liste qui contient :
+  #index_sci_i (cells sampled by the scientific survey), 
+  #c_sci_x (vector filled with 0/1. 
+    #If 1 : the cell has been sampled. If 0 :  the cell has not been sampled.), 
+  #y_sci_i (scientific observations)
   simu_scientific_data_outputs <- simu_scientific_data(loc_x,
                                                        grid_dim,
                                                        Strue_x,
@@ -170,12 +188,17 @@ simu_commercial_scientific <- function(Results,
   y_sci_i <- simu_scientific_data_outputs$y_sci_i
   
   # loop on preferential sampling levels
+  #3 valeurs de b (0,1 et 3) ont été initialisées dans simu_main_script
   for(b in b_set){
     
     #-----------------
     #  Commercial data
     #-----------------
-    
+    ##l'out put de cette fonction est une liste qui contient :
+    # index_com_i (cells sampled by the scientific survey), 
+    # y_com_i (vector filled with 0/1. 
+    # b_com_i(scientific observations)
+    # c_com_x
     simu_commercial_data_outputs <- simu_commercial_data(loc_x,
                                                          grid_dim,
                                                          n_cells,
@@ -202,9 +225,15 @@ simu_commercial_scientific <- function(Results,
     
     # Loop on alternative configuration models
     for(Estimation_model in Data_source){
+      
+      #Estimation_model_i prend a chaque simulation (de 1 à 100) alternativement
+      #les trois configurations de data source (que scientifique, que commercial
+      #ou les deux)
+      
+      # Estimation_model_i vaut 1 (commercial scientifique),2 (scientifique only)
+      #3 (commercial only)
       Estimation_model_i <- which(Data_source == Estimation_model)
-      cat(paste("counter ",counter," | Simulation ",i, " | b ",b ," | EM ",EM,
-                " | Estimation_model ",Estimation_model," | n_samp_com ",n_samp_com,"\n"))
+      cat(paste("counter ",counter," | Simulation ",i, " | b ",b ," | EM ",EM," | Estimation_model ",Estimation_model," | n_samp_com ",n_samp_com,"\n"))
       
       ############
       ## Fit Model
@@ -356,4 +385,3 @@ simu_commercial_scientific <- function(Results,
   res <- list(Results,List_param,counter)
   return(res)
 }
-

@@ -48,54 +48,76 @@ simu_commercial_data <- function(loc_x,
                                  q2_com,
                                  b){
   
-  index_com_i_2 = c()
-  y_com_i_2 = c()
-  b_com_i_2 = c()
-  c_com_x_2 = c()
+  #initialisation
+  index_com_i_2 = c() #index_com_i : sampled cell for each observation
+  y_com_i_2 = c() # y_com_i : catch data
+  b_com_i_2 = c() #b_com_i : fleet related to each observation
+  c_com_x_2 = c() #c_com_x : number of sample in each cell (line) for each fleet (column)
   
   Strue_fb <- log(Strue_x) # covariate related to abundance in the sampling intensity process
   
+  #on rajoute une nouvelle colonne (Strue_fb) à loc_x : il contient désormais les
+  #colonnes x,y,cell, 4 col de strat binaires, et la col Strue_fb
   loc_x <- cbind(loc_x,Strue_fb) # add log-scaled abundance to design matrix
   
-  # grid to simulate point process  
+  # grid to simulate point process : grille remplie de NA de 25 lignes et 25 col
+  #qui va contenir les points de peche commerciaux
   Int_ps <- matrix(ncol = grid_dim['x'],nrow = grid_dim['y'])
   
-  # sampling intensity in each cell
+  # sampling intensity in each cell : Int_ps va contenir les intensites lambda
+  #pour chaque point
   for(k in 1:n_cells){
     Int_ps[loc_x$y[k],loc_x$x[k]] <- exp(beta0_fb + b*Strue_fb[k])
   }
   
+  #on simule le processus de poisson non homogene
   win_df <- owin(xrange=c(0.5,grid_dim['x'] + 0.5), yrange=c(0.5,grid_dim['y'] + 0.5),ystep  = 1,xstep=1) # parameter of the window to simulate point process (fishing shoots)
   X <- rpoint(n_samp_com,as.im(Int_ps,win_df)) # simulate point process
   
-  # plot(X)
+  #plot(X) #representation des points de peche commerciaux simules dans la grille
   
   ## Aggregate data / discretise (use Raster, same as VMS data)
   #------------------------------------------------------------
   
+  #definition de la grille raster
   grid <- raster(extent(c(0.5,grid_dim['x']+0.5,0.5,grid_dim['y']+0.5))) # create grid
   res(grid) <- 1 # resolution of the grid
   # Transform this raster into a polygon 
   gridpolygon <- rasterToPolygons(grid)
-  coord_grid <- as.data.frame(coordinates(gridpolygon))
+  coord_grid <- as.data.frame(coordinates(gridpolygon)) #combinaisons de v1/v2 : 
+  #tous les couples de coordonnées de la grilles
   colnames(coord_grid)[1] <- "x"
   colnames(coord_grid)[2] <- "y"
+  coord_grid #les colonnes de coord_grid sont desormais appelées x et y 
+  
   
   # # check that loc_x and gridpolygon have same coordinate system
   # library(ggrepel)
   # ggplot(loc_x)+geom_point(aes(x,y))+geom_text(aes(x,y,label = cell), size = 3.5)
-  
+
+  #on rajoute la col cell a coord_grid qui contient les numéros de cellules 
+  #correspondant a chaque couple (x,y)
   coord_grid <- inner_join(coord_grid,loc_x[,c("x","y","cell")],by = c("x","y"))
-  gridpolygon$layer <- coord_grid$cell
+  gridpolygon$layer <- coord_grid$cell #on rentre la col des cellules dans le raster
+  
   X_1 <- SpatialPoints(coords=cbind(X$x,X$y))
+  
   # intersect of grid and VMS data
-  X_2 <- over(X_1, gridpolygon)
+  X_2 <- over(X_1, gridpolygon) #3000 lignes pour les 3000 points de peche commerciales
+  #et une colonne layer (numero de la cellule correspondant a chacun des 3000 points de peche ? )
   colnames(X_2)[1] <- "layer"
+  
+  #creation de X3 : nombre de peches commerciales pour chacune des 625 cellules 
   X_2 %>%
     dplyr::count(layer) %>%
     arrange(layer) %>%
     data.frame()  -> X_3
+
+  
   gridpolygon@data <- full_join(gridpolygon@data,X_3,by=c("layer"))
+  
+  #creation de c_com_x : nombre de peches commerciales pour chacune des 625 cellules
+  #rangé dans l'ordre croissant
   gridpolygon@data %>%
     arrange(layer) %>%
     mutate(n = ifelse(is.na(n), 0,n)) %>%
@@ -122,6 +144,10 @@ simu_commercial_data <- function(loc_x,
   #--------------------------------------------------------------------
   
   # Generate a vector where number of cell are repeated as many times as the cell was sampled by fishers
+  # vecteur des cellules : chaque cellule apparait autant de fois que de tentatives 
+  #de peches qu'elle a recu, les cellules sont rangées dans l'ordre croissant
+  #par exemple il y a eu 5 tentatives de peche dans la cellule 1 : le vecteur
+  #commence par 4 uns puis 2 deux par ex 
   index_com_i <- do.call(c,lapply(1:length(c_com_x),function(k){
     n<-c_com_x[k]   # not clean --> call fishing_shots which is outside the function
     titi <- rep(k,n)
@@ -129,13 +155,19 @@ simu_commercial_data <- function(loc_x,
   
   
   # presence/absence data for commercial data
-  q2_com <- 1 * q2_sci   ## commercial catchability
+  q2_com <- 1 * q2_sci   ## commercial catchability : la capturabilité commerciale
+  #dépend de la capturabilité scientifique
+  
+  #calcul de la valeur de capture des 3000 tentatives de peche commerciales 
   y_com_i <- do.call(c,lapply(1:length(index_com_i), function(j){
-    exp_catch <- q2_com * Strue_x[index_com_i[j]] # expected catch
-    # proba of encounter
-    prob_encount <- 1-exp(- exp(q1_com[1]) * exp_catch)
-    abs_com_i <- rbinom(1,1,prob_encount)
+    exp_catch <- q2_com * Strue_x[index_com_i[j]] # expected catch #mu cf formule papier baptiste
     
+    # proba of encounter : probabilité d'une peche fructueuse (cf papier baptiste)
+    prob_encount <- 1-exp(- exp(q1_com[1]) * exp_catch) # c'est pour ca qu'il y a aucune peche ratée
+    abs_com_i <- rbinom(1,1,prob_encount) #vaut 1 : que du succès pour chacun des 3000 points de peche
+    
+    #c'est l'équivalent de notre log normale pour calculer la quantité péchée
+    #expliquer car cela ne correspond pas à la formule du papier 
     if(abs_com_i>0){
       # y_com_i <- rlnorm(1,meanlog = log(exp_catch), sdlog = exp(logSigma_com))
       # shape <- exp(logSigma_com)^-2
@@ -148,6 +180,8 @@ simu_commercial_data <- function(loc_x,
   
   
   # fleet target factor
+  #i est le numéro de de la boucle, le num de la simulation, varie entre 1 et 100
+  #vecteur qui contient 3000 fois i
   b_com_i <- rep(i,length(y_com_i))
   
   # length((y_com_i[which(y_com_i > 0)]))/length(y_com_i)
@@ -164,9 +198,22 @@ simu_commercial_data <- function(loc_x,
   # ggplot(verif_df,aes(x=observation)) +
   #   geom_histogram(aes(y=..density..),color="black", fill="white")
   
+  #index_com_i_2 contient les index_com_i (vecteur des cellules : chaque cellule 
+  #apparait autant de fois que de tentatives 
+  #de peches qu'elle a recu, les cellules sont rangées dans l'ordre croissant
+  #par exemple il y a eu 5 tentatives de peche dans la cellule 1 : le vecteur
+  #commence par 4 uns) de l'ITERATION i
   index_com_i_2 = c(index_com_i_2,index_com_i) 
+  
+  #contient les valeurs de peche des 3000 tentatives de peche 
+  #de l'iteration i
   y_com_i_2 = c(y_com_i_2,y_com_i)
+  
+  #vecteur de 3000 * i
   b_com_i_2 = c(b_com_i_2,b_com_i)
+  
+  #nombre de peches commerciales pour chacune des 625 cellules
+  #rangé dans l'ordre croissant pour l'itération i
   c_com_x_2 = cbind(c_com_x_2,c_com_x)
   
   b_com_i_2 <- factor(b_com_i_2)

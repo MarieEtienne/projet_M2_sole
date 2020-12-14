@@ -15,13 +15,17 @@
 #' @param ignore.uncertainty if TRUE, ignore uncertainty in estimation
 #' 
 #' # Data/model Inputs
+#' 
+#' #ce sont les outputs de de commercial data
 #' @param c_com_x number of sample in each cell (line) for each fleet (column)
 #' @param y_com_i catch data
 #' @param index_com_i sampled cell for commercial observation
 #' 
+#' #ce sont les outputs de scientific data
 #' @param y_sci_i scientific observation
 #' @param index_sci_i sampled cell for scientific observation
 #' 
+#' #output de latent field
 #' @param Cov_x covariate for species distribution
 #' 
 #' @return SD 
@@ -31,6 +35,7 @@
 #' @return Data
 #' @return Params
 #' @return Map
+
 
 fit_IM <- function(Estimation_model_i = 1,
                    Samp_process = 1,
@@ -52,6 +57,7 @@ fit_IM <- function(Estimation_model_i = 1,
   # Params : list of parameters
   # Map : parameters that are fixed to a specific value
   
+  #configuration du modele considéré pour l'estimation 
   Options_vec = c( 'Prior'=0, # (DEPRECATED)
                    'Alpha'=2, # (DEPRECATED)
                    'IncludeDelta'=1, # (DEPRECATED)
@@ -66,9 +72,13 @@ fit_IM <- function(Estimation_model_i = 1,
                    'catchability_random' = 0)  # (DEPRECATED)
   
   ## Data & Params
-  Map = list()
+  Map = list() #liste vide
+  
+  #Pour chacune des trois configurations de modele (1,2 ou 3 ie les deux, scienti
+  #only ou commer only) on définit les données d'entrée, les paramètres à estimer 
   if(Estimation_model_i == 1){   # Integrated model (scientific_commercial)
     
+    #on prend bien en argument les sorties des fonctions commerciales et scientifiques
     Data = list( "Options_vec"=Options_vec,
                  "c_com_x"=c_com_x,
                  "y_com_i"=y_com_i,
@@ -80,6 +90,7 @@ fit_IM <- function(Estimation_model_i = 1,
                  "q2_sci" =  1,
                  "q2_com" = 1 )
     
+    #on initialise tous les parametres a estimer
     Params = list("beta_j"=rep(0,ncol(Data$Cov_xj)), # linear predictor for abundance 
                   "beta_k"=0, # intercept of fishin intensity
                   "par_b"=0, # link between abundance and sampling intensity
@@ -189,8 +200,7 @@ fit_IM <- function(Estimation_model_i = 1,
   #Upper = Inf
   Lower = -50  #getting a few cases where -Inf,Inf bounds result in nlminb failure (NaN gradient)
   Upper = 50
-  Opt = nlminb( start=Obj$par, objective=Obj$fn, gradient=Obj$gr, lower=Lower, upper=Upper,
-                control=list(trace=1, maxit=1000))         #
+  Opt = nlminb( start=Obj$par, objective=Obj$fn, gradient=Obj$gr, lower=Lower, upper=Upper, control=list(trace=1, maxit=1000))         #
   Opt[["diagnostics"]] = data.frame( "Param"=names(Obj$par), "Lower"=-Inf, "Est"=Opt$par, "Upper"=Inf, "gradient"=Obj$gr(Opt$par) )
   Report = Obj$report()
   

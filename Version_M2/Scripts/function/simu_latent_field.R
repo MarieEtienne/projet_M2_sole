@@ -18,7 +18,7 @@
 #' @param SD_xfb Standard deviation for the simulation of covariate related to the sampling process.
 #' @param SD_eta Standard devioation for the random effect eta (sampling process).
 #' 
-#' @return Cov_x : design matrix (matrix for covariates levles / values)
+#' @return Cov_x : design matrix (matrix for covariates levels / values)
 #' @return Strue_x Latent field values
 #' @return beta : fixed parameters for the abundance distribution equation
 #' @return delta_x : random effect for the abundance distribution equation
@@ -51,7 +51,7 @@ simu_latent_field <- function(loc_x,
   # Create design matrix for covariates
   Cov_x <- as.matrix(cbind(Cov_x,loc_x[,which(str_detect(colnames(loc_x),"strata"))]))
   
-  # Create random noise
+  # Create random noise : effets spatiaux aleatoires
   delta_x <- rnorm(nrow(Cov_x),mean = 0, sd = SD_delta)
   eta_x <- rnorm(nrow(Cov_x),mean = 0, sd = SD_eta)
   
