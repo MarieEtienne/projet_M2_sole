@@ -1,14 +1,10 @@
-###NOTRE FONCTION
+##### 1. Initialisation des paramètres
 
 source("Scripts/function/load_packages.R")
-
-# Simulation name
 simu_name = "test"
 
 
-###
 ## Latent field
-###
 
 # Grid dimension
 grid_side_x <- 25
@@ -25,32 +21,81 @@ beta = c(0,0,0,0) # covariates
 SD_x = 0.5 # a combien on le met ? 1 ou 0.1 ? cf notre rmd simulation
 
 
-###
 ## Commercial sampling process
-###
 
 # intercept
 beta0_fb <- 2 #intercept dans la formule du lambda
 
+
 ## Commercial data
+
 # Number of commercial samples
 n_samp_com = 3000
 # observation error 
-logSigma_com = log(1) #a quoi ca correspond? 
+logSigma_com = log(1) # A quoi ca correspond? 
 # zero-inflation parameter
 q1_com <- 1
 # Relative catchability
 q2_com <- 1
+
 # Levels of preferential sampling
 b <- 1 
 
 
-#--------------------
-# Model configuration
-#--------------------
+## Model configuration
 
 # Data sources feeding the model
-Data_source <- "commercial_only"
+Data_source = c("scientific_commercial","scientific_only","commercial_only")
+
+# b estimated or b fixed to 0 in estimation
+EM_set = c("fix_b","est_b")
+EM = EM_set[2]
+
+# if 1, sampling process is accounted for in estimation
+Samp_process = 1
+
+# TMB model version
+TmbFile = "Scripts/"
+
+# if F, compute uncertainty for parameters estimates
+ignore.uncertainty = T
+
+## Loop indices
+
+# Index for Results
+counter <- 1 
+# index of the first iteration
+i0 <- 1
+# Number of simulation
+n_sim = 1
+
+RandomSeed = 123456
+
+## Results dataframe
+
+n_cov = 5
+colnames_Results <- c("counter","sim","b_true","Data_source","type_b","Alpha","b_est","ObsMod","Sigma_com_true","Sigma_sci_true","Sigma_com","Sigma_sci","n_samp_com","n_samp_sci","N_true","N_est","SD_N","Convergence","LogLik","MSPE_S","k")
+Results = data.frame(matrix(NA,1,length(colnames_Results)))
+colnames(Results)=colnames_Results
+
+## List for simulated parameters and parameters estimates
+List_param <- list()
+
+
+
+##### 2. On définit les fonctions qui nous interessent
+
+# When simu crashes --> param to re-run the loop.
+# Before re-runing the loop load the last Results_loop list (Results/Simu/)
+restart_after_crash = F
+if(restart_after_crash == T){
+  counter <- max(Results$counter,na.rm=T)
+  i0 <- max(Results$sim,na.rm=T) + 1
+  n_sim <- n_sim
+  Results <- Results
+  List_param <- Results_loop$List_param
+  simu_file <- "results/com_x_sci_data_14/com_x_sci_data_14-2020-08-29_11_59_26_Lognormal_Nsamp"
+}
 
 #ou est ce que latent_fields_simu, latent_field, simu_tool ont été fixés ??
 simu_latent_field <- function(loc_x,
@@ -71,6 +116,7 @@ simu_latent_field <- function(loc_x,
               beta = beta)
   return(res)
 }
+
 
 # ou est ce que beta_fb, xfb_x, zero.infl_model? 
 simu_commercial_data <- function(loc_x,
@@ -232,8 +278,6 @@ simu_commercial_data <- function(loc_x,
 }
 
 
-
-### COMMERCIAL SCIENTIFIQUE 
 simu_commercial_scientific <- function(Results,
                                        simu_file,
                                        grid_dim,
@@ -264,8 +308,8 @@ simu_commercial_scientific <- function(Results,
                                        ignore.uncertainty,
                                        counter,
                                        i,
-                                       n_sim){
-  
+                                       n_sim)
+{
   ################
   ## Simulate data
   ################
@@ -330,7 +374,7 @@ simu_commercial_scientific <- function(Results,
   # delta_x <- simu_latent_field_outputs$delta_x
   # eta_x <- simu_latent_field_outputs$eta_x
   
-##debut de l'ancienne boucle sur b_set
+  ##debut de l'ancienne boucle sur b_set
     
   #-----------------
   #  Commercial data
@@ -353,8 +397,7 @@ simu_commercial_scientific <- function(Results,
     logSigma_com,
     q1_com,
     q2_com,
-    b
-  )
+    b)
   
   index_com_i <-  simu_commercial_data_outputs$index_com_i
   y_com_i <- simu_commercial_data_outputs$y_com_i
@@ -366,7 +409,7 @@ simu_commercial_scientific <- function(Results,
   ## Fit model
   ############
   
-##CETTE BOUCLE SERAIT A ENLEVER vu qu'on a que commercial : a voir comment
+  ##CETTE BOUCLE SERAIT A ENLEVER vu qu'on a que commercial : a voir comment
   #apres avoir compris fitIM
   # Loop on alternative configuration models
   for (Estimation_model in Data_source) {
@@ -468,8 +511,7 @@ simu_commercial_scientific <- function(Results,
       index_com_i = index_com_i,
       y_com_i = y_com_i,
       # b_com_i=b_com_i,
-      c_com_x = c_com_x
-    )
+      c_com_x = c_com_x)
     
     
     # Full outputs list
@@ -477,8 +519,7 @@ simu_commercial_scientific <- function(Results,
       data.info = list_simu.data.info,
       Opt_par = Opt,
       SD = SD,
-      Report = Report
-    )
+      Report = Report)
     
     
     # Fill Results --> summary of simulation loops
@@ -508,8 +549,7 @@ simu_commercial_scientific <- function(Results,
       Results[counter, "b_est"] = Report$par_b
     }
     
-    if (Estimation_model == "scientific_commercial" |
-        Estimation_model == "scientific_commercial_q_est") {
+    if (Estimation_model == "scientific_commercial" | Estimation_model == "scientific_commercial_q_est") {
       Results[counter, "b_true"] = b
       Results[counter, "Sigma_com"] = Report$Sigma_com
       Results[counter, "Sigma_sci"] = Report$Sigma_sci
@@ -520,39 +560,281 @@ simu_commercial_scientific <- function(Results,
       # Results[counter,"sci_sampling"]=sci_sampling
       Results[counter, "n_samp_com"] = n_samp_com
       Results[counter, "n_samp_sci"] = n_samp_sci
-      
-      
     } else if (Estimation_model == "scientific_only") {
       Results[counter, "Sigma_sci"] = Report$Sigma_sci
       Results[counter, "Bias_Sigma_sci"] = Report$Sigma_sci - exp(logSigma_sci)
       Results[counter, "Sigma_sci_true"] = exp(logSigma_sci)
       # Results[counter,"sci_sampling"]=sci_sampling
       Results[counter, "n_samp_sci"] = n_samp_sci
-      
-      
     } else if (Estimation_model == "commercial_only") {
       Results[counter, "b_true"] = b
       Results[counter, "Sigma_com"] = Report$Sigma_com
       Results[counter, "Bias_Sigma_com"] = Report$Sigma_com - exp(logSigma_com)
       Results[counter, "Sigma_com_true"] = exp(logSigma_com)
       Results[counter, "n_samp_com"] = n_samp_com
-      
     }
     
     if (Estimation_model == "scientific_commercial_q_est") {
       Results[counter, "k"] = Report$k
-      
     }
     
     # save data
-    if (!dir.exists(simu_file))
+    if (!dir.exists(simu_file)){
       dir.create(simu_file)
-    save(List_param,
+      save(List_param,
          file = paste0(simu_file, "/List_param_", counter, ".RData"))
-    save(Results, file = paste0(simu_file, "/Results.RData"))
-    
-    counter <- counter + 1
+      save(Results, file = paste0(simu_file, "/Results.RData"))
+      counter <- counter + 1
+    }
   }
   res <- list(Results,List_param,counter)
   return(res)
 }
+
+
+############
+## Fit model
+############
+
+#' @title fit_IM()
+#' 
+## Model configuration
+#' @param Estimation_model_i index of the estimation model (scientific only, commercial only, integrated)
+#' @param Samp_process If 1 : the sampling process contribute to the likelihood, else it doesn't
+#' @param EM if "est_b" : b is estimated, if "fix_b" : b is fixed to 0
+#' 
+#' # TMB model version = "com_data"
+#' @param Version estimation model version
+#' @param TmbFile file for the C++ template
+#' @param ignore.uncertainty if TRUE, ignore uncertainty in estimation
+#' 
+#' # Data/model Inputs
+#' 
+#' #ce sont les outputs de de commercial data
+#' @param c_com_x number of sample in each cell (line) for each fleet (column)
+#' @param y_com_i catch data
+#' @param index_com_i sampled cell for commercial observation
+#' 
+#' #ce sont les outputs de scientific data
+#' @param y_sci_i scientific observation
+#' @param index_sci_i sampled cell for scientific observation
+#' 
+#' #output de latent field
+#' @param Cov_x covariate for species distribution
+#' 
+#' @return SD 
+#' @return Opt 
+#' @return Report
+#' @return Converge
+#' @return Data
+#' @return Params
+#' @return Map
+
+
+fit_IM <- function(Estimation_model_i = 1,
+                   Samp_process = 1,
+                   EM = "est_b",
+                   TmbFile,
+                   ignore.uncertainty,
+                   c_com_x,
+                   y_com_i,
+                   index_com_i,
+                   y_sci_i,
+                   index_sci_i,
+                   Cov_x){
+  
+  #configuration du modele considéré pour l'estimation 
+  Options_vec = c( 'Prior'=0, # (DEPRECATED)
+                   'Alpha'=2, # (DEPRECATED)
+                   'IncludeDelta'=1, # (DEPRECATED)
+                   'IncludeEta'=1, # (DEPRECATED)
+                   'SE'=1, # bias correction for S
+                   'DataSource' = Estimation_model_i,
+                   'DataObs' = 2,  # (DEPRECATED)
+                   'SamplingProcess' = Samp_process , # 1 : sampling process is activated, else : it is ignored
+                   'zero.infl_model' = 2,  # (DEPRECATED)
+                   'commercial_obs' = 1, # (DEPRECATED)
+                   'b_constraint' = 2, # (DEPRECATED)
+                   'catchability_random' = 0)  # (DEPRECATED)
+  
+  ## Data & Params
+  Map = list() #liste vide
+  
+  #Pour chacune des trois configurations de modele (1,2 ou 3 ie les deux, scienti
+  #only ou commer only) on définit les données d'entrée, les paramètres à estimer 
+  if(Estimation_model_i == 1){   # Integrated model (scientific_commercial)
+    
+    #on prend bien en argument les sorties des fonctions commerciales et scientifiques
+    Data = list( "Options_vec"=Options_vec,
+                 "c_com_x"=c_com_x,
+                 "y_com_i"=y_com_i,
+                 "y_sci_i"=y_sci_i,
+                 "index_com_i"=index_com_i-1,
+                 "index_sci_i"=index_sci_i-1,
+                 "Cov_xj"=cbind(1,Cov_x),
+                 "Cov_xk"=array(1,c(list(nrow(Cov_x),1))),
+                 "q2_sci" =  1,
+                 "q2_com" = 1 )
+    
+    #on initialise tous les parametres a estimer
+    Params = list("beta_j"=rep(0,ncol(Data$Cov_xj)), # linear predictor for abundance 
+                  "beta_k"=0, # intercept of fishin intensity
+                  "par_b"=0, # link between abundance and sampling intensity
+                  "logSigma_com"=log(1),
+                  "logSigma_sci"=log(1),
+                  "q1_sci"=0,
+                  "q1_com"=0,
+                  "k_com" = 1,
+                  "k_sci" = 1)
+    
+    Map[["k_com"]] <- seq(1:(length(Params$k_com))) # first k is for scientific data
+    Map[["k_com"]][1] <- NA # reference level is the first fleet
+    Map[["k_com"]] <- factor(Map[["k_com"]])
+    
+  }else if(Estimation_model_i == 2){ # scientific model (scientific_only)
+    
+    Data = list( "Options_vec"=Options_vec,
+                 "y_sci_i"=y_sci_i,
+                 "index_sci_i"=index_sci_i-1,
+                 "Cov_xj"=cbind(1,Cov_x),
+                 "q2_sci" = 1)
+    
+    Params = list("beta_j"=rep(0,ncol(Data$Cov_xj)), # linear predictor for abundance 
+                  "logSigma_sci"=log(1),
+                  "q1_sci"=0,
+                  "k_sci" = 1)
+    
+    Map[["k_sci"]] <- factor(NA)
+    
+    
+  }else if(Estimation_model_i == 3){ # commercial model (commercial_only)
+    
+    Data = list( "Options_vec"=Options_vec,
+                 "c_com_x"=c_com_x,
+                 "y_com_i"=y_com_i,
+                 "index_com_i"=index_com_i-1,
+                 "Cov_xj"=cbind(1,Cov_x),
+                 "Cov_xk"=array(1,c(list(nrow(Cov_x),1))),
+                 "q2_sci" =  1,
+                 "q2_com" = 1)
+    
+    Params = list("beta_j"=rep(0,ncol(Data$Cov_xj)), # linear predictor for abundance 
+                  "beta_k"=0, # intercept of fishin intensity
+                  "par_b"=0, # link between abundance and sampling intensity
+                  "logSigma_com"=log(1),
+                  "q1_com"=0,
+                  "k_com" = 1)
+    
+    Map[["k_com"]] <- seq(1:(length(Params$k_com))) # first k is for scientific data
+    Map[["k_com"]][1] <- NA
+    Map[["k_com"]] <- factor(Map[["k_com"]])
+    
+  }
+  
+  # fix reference level for latent field covariate
+  map_beta_j <- seq(1:ncol(Data$Cov_xj))
+  if(exists("ref_level")) map_beta_j[which(colnames(Data$Cov_xj) %in% ref_level)] <- NA
+  Map[["beta_j"]] = factor(map_beta_j)
+  
+  # no linkeage between sampling process and biomass field
+  if( EM=="fix_b" ) Map[["par_b"]] <- factor(rep(NA,length(Params$par_b)))
+  
+  #-----------
+  ## Run model
+  #-----------
+  
+  Start_time = Sys.time()
+  # library(TMB)
+  # TMB::compile(paste0(TmbFile,"inst/executables/",Version,"_scientific_commercial.cpp"),"-O1 -g",DLLFLAGS="")
+  Obj = MakeADFun( data=Data, parameters=Params, map = Map, silent = TRUE,hessian = T)
+  Obj$fn( Obj$par )
+  
+  # Run
+  #Lower = -Inf
+  #Upper = Inf
+  Lower = -50  #getting a few cases where -Inf,Inf bounds result in nlminb failure (NaN gradient)
+  Upper = 50
+  Opt = nlminb( start=Obj$par, objective=Obj$fn, gradient=Obj$gr, lower=Lower, upper=Upper, control=list(trace=1, maxit=1000))         #
+  Opt[["diagnostics"]] = data.frame( "Param"=names(Obj$par), "Lower"=-Inf, "Est"=Opt$par, "Upper"=Inf, "gradient"=Obj$gr(Opt$par) )
+  Report = Obj$report()
+  
+  Converge=Opt$convergence
+  
+  
+  #-------------------------
+  ## Compute standard errors
+  #-------------------------
+  
+  # SD  --> very long with catchability and I got NANs
+  if(Converge==0){
+    Report = Obj$report()
+    SD = sdreport( Obj,ignore.parm.uncertainty = F)
+    SD$unbiased$value = c("total_abundance"=Report$total_abundance)
+    
+  }else{SD = NULL}
+  Opt[["run_time"]] = Sys.time()-Start_time
+  
+  res <- list(SD = SD, Opt = Opt, Report = Report,  Converge = Converge,Data = Data, Params = Params, Map = Map)
+  return(res)
+}
+
+
+
+
+#### Maintenant on fait tourner
+
+
+####### Compile TMB model ########
+
+TMB::compile(paste0(TmbFile,"inst/executables/com_x_sci_data_14_scientific_commercial_simple.cpp"),"-O1 -g",DLLFLAGS="")
+
+
+# file name for savinf outputs
+Start_time.tot = Sys.time()
+Start_time.tot_2 <- str_replace_all(Start_time.tot, " ", "_")
+Start_time.tot_2 <- str_replace_all(Start_time.tot_2, ":", "_")
+simu_file <- paste0("results/com_x_sci_data_14_scientific_commercial_simple-",Start_time.tot_2,"_",simu_name,"/")
+
+# load TMB model
+dyn.load( dynlib(paste0(TmbFile,"inst/executables/com_x_sci_data_14_scientific_commercial_simple") ) )
+
+for(i in i0:n_sim){
+  
+  res <- simu_commercial_scientific(Results,
+                                    simu_file,
+                                    grid_dim,
+                                    n_cells,
+                                    beta0,
+                                    beta,
+                                    range,
+                                    nu,
+                                    SD_x,
+                                    SD_delta,
+                                    SD_eta,
+                                    n_samp_sci,
+                                    logSigma_sci,
+                                    q1_sci,
+                                    q2_sci,
+                                    n_strate,
+                                    n_samp_com,
+                                    logSigma_com,
+                                    q1_com,
+                                    q2_com,
+                                    b_set,
+                                    Data_source,
+                                    Samp_process,
+                                    EM,
+                                    RandomSeed,
+                                    Version,
+                                    TmbFile,
+                                    ignore.uncertainty,
+                                    counter,
+                                    i,
+                                    n_sim)
+  
+  Results <- res[[1]]
+  List_param <- res[[2]]
+  counter <- res[[3]]
+}
+
+dyn.unload( dynlib(paste0(TmbFile,"inst/executables/com_x_sci_data_14_scientific_commercial_simple") ) )
