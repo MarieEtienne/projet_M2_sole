@@ -100,6 +100,7 @@ fit_IM <- function(Estimation_model_i = 1,
                   "q1_com"=0,
                   "k_com" = 1,
                   "k_sci" = 1)
+    #"k_com" = 1 #capturabilite relative
     
     Map[["k_com"]] <- seq(1:(length(Params$k_com))) # first k is for scientific data
     Map[["k_com"]][1] <- NA # reference level is the first fleet
@@ -160,6 +161,8 @@ fit_IM <- function(Estimation_model_i = 1,
   Start_time = Sys.time()
   # library(TMB)
   # TMB::compile(paste0(TmbFile,"inst/executables/",Version,"_scientific_commercial.cpp"),"-O1 -g",DLLFLAGS="")
+  
+  #on cree cet objet pour le TMB qui va contenir tout ce dont on a besoin pour l'estimation
   Obj = MakeADFun( data=Data, parameters=Params, map = Map, silent = TRUE,hessian = T)
   Obj$fn( Obj$par )
   
@@ -200,8 +203,11 @@ fit_IM <- function(Estimation_model_i = 1,
   #Upper = Inf
   Lower = -50  #getting a few cases where -Inf,Inf bounds result in nlminb failure (NaN gradient)
   Upper = 50
+  #nlminb : algo pour optimiser la vraisemblance
   Opt = nlminb( start=Obj$par, objective=Obj$fn, gradient=Obj$gr, lower=Lower, upper=Upper, control=list(trace=1, maxit=1000))         #
   Opt[["diagnostics"]] = data.frame( "Param"=names(Obj$par), "Lower"=-Inf, "Est"=Opt$par, "Upper"=Inf, "gradient"=Obj$gr(Opt$par) )
+  
+  #on va chercher dans les sorties de l'algo qui a convergé ce qui nous intéresse : valeur des paramètres, distribution du champ latent, lambda etc
   Report = Obj$report()
   
   # https://www.stats.bris.ac.uk/R/web/packages/glmmTMB/vignettes/troubleshooting.html
@@ -245,6 +251,8 @@ fit_IM <- function(Estimation_model_i = 1,
   #   
   # }
   
+  
+  #est ce que l'algo a convergé : 0 c'est bon sinon non
   Converge=Opt$convergence
   
   
@@ -253,6 +261,8 @@ fit_IM <- function(Estimation_model_i = 1,
   #-------------------------
   
   # SD  --> very long with catchability and I got NANs
+  
+  #on calcule les écarts type des grandeurs (matrice de var covar)
   if(Converge==0){
     Report = Obj$report()
     SD = sdreport( Obj,ignore.parm.uncertainty = F)
@@ -264,3 +274,5 @@ fit_IM <- function(Estimation_model_i = 1,
   res <- list(SD = SD, Opt = Opt, Report = Report,  Converge = Converge,Data = Data, Params = Params, Map = Map)
   return(res)
 }
+
+#map: parametres fixés dans l'estimation
