@@ -30,12 +30,21 @@ n_cells = grid_dim[1]*grid_dim[2]
 beta0 = 2 # intercept
 beta = c(0,0,0,0,0) # covariates
 # parameters covariates vector : 1st param : continuous variable, 4 nexts : strata_1, strata_2, strata_3, strata_4
+#la premiere covariable est continue et a une structure spatiale
+#afin de simuler cette corrélation spatiale on a besoin de deux paramètres :
+# - la portée de cette corrélation (nu)(+ la portée est grande et + la distance sur 
+#   laquelle les points sont corrélées entre eux est importante, et donc plus la 
+#   distance est grande, plus il faut "s'éloigner" pour avoir des points indépendants
+# - la variance marginale de ce processus (écart type SD_x)(cad à quel point ce signal varie)
 
-# Correlation structure of the covariate
+
+# Correlation structure of the continuous covariate 
 simu_tool <- "MaternCov" # 2 way to simulate latent fields : "RandomFields", "MaternCov"
-range = sqrt(prod(grid_dim))/(5)*2 # --> MaternCov
-nu = 1 
-SD_x = 0.5
+range = sqrt(prod(grid_dim))/(5)*2 # --> MaternCov 
+nu = 1  #portée de la covariable continue
+SD_x = 0.5 # ecart type/ variance marginale du processus de la var continue
+
+#effets spatiaux aléatoires
 SD_delta = SD_eta= 0.5
 
 
@@ -43,7 +52,7 @@ SD_delta = SD_eta= 0.5
 ## Commercial sampling process
 ###
 
-# intercept
+# intercept pour l'intensite lambda
 beta0_fb = 2 
 
 ###

@@ -36,6 +36,7 @@
 #' @return Params
 #' @return Map
 
+#C’est bien d’aller regarder le modèle codé en C++
 
 fit_IM <- function(Estimation_model_i = 1,
                    Samp_process = 1,
@@ -57,7 +58,11 @@ fit_IM <- function(Estimation_model_i = 1,
   # Params : list of parameters
   # Map : parameters that are fixed to a specific value
   
-  #configuration du modele considéré pour l'estimation 
+  #Le Option_vec sert à la configuration du modele considéré pour l'estimation 
+  #il y a pleins de choses qui sont "deprecated" : ce sont des éléments qui ne sont
+  #pas pris en compte (car le modèle est simplifié ici)
+  
+  #ATTENTION : mieux vaut ne pas toucher au Options_vec (car relié au code C++)
   Options_vec = c( 'Prior'=0, # (DEPRECATED)
                    'Alpha'=2, # (DEPRECATED)
                    'IncludeDelta'=1, # (DEPRECATED)
@@ -72,7 +77,7 @@ fit_IM <- function(Estimation_model_i = 1,
                    'catchability_random' = 0)  # (DEPRECATED)
   
   ## Data & Params
-  Map = list() #liste vide
+  Map = list() #liste vide : correspond aux paramètres fixés dans l'estimation
   
   #Pour chacune des trois configurations de modele (1,2 ou 3 ie les deux, scienti
   #only ou commer only) on définit les données d'entrée, les paramètres à estimer 
@@ -84,13 +89,13 @@ fit_IM <- function(Estimation_model_i = 1,
                  "y_com_i"=y_com_i,
                  "y_sci_i"=y_sci_i,
                  "index_com_i"=index_com_i-1,
-                 "index_sci_i"=index_sci_i-1,
+                 "index_sci_i"=index_sci_i-1, #les -1 permettent de décaler les indices de 1 car en C++ c’est comme en Python, les objets sont numérotés à partir de 0 (et pas à partir de 1 comme dans R)
                  "Cov_xj"=cbind(1,Cov_x),
-                 "Cov_xk"=array(1,c(list(nrow(Cov_x),1))),
+                 "Cov_xk"=array(1,c(list(nrow(Cov_x),1))),#Cov_xk : pour faire varier b dans l'espace : nous on s'en fiche !
                  "q2_sci" =  1,
                  "q2_com" = 1 )
     
-    #on initialise tous les parametres a estimer
+    #les des parametres du modèle a estimer (on les initialise ici)
     Params = list("beta_j"=rep(0,ncol(Data$Cov_xj)), # linear predictor for abundance 
                   "beta_k"=0, # intercept of fishin intensity
                   "par_b"=0, # link between abundance and sampling intensity
@@ -100,7 +105,8 @@ fit_IM <- function(Estimation_model_i = 1,
                   "q1_com"=0,
                   "k_com" = 1,
                   "k_sci" = 1)
-    #"k_com" = 1 #capturabilite relative
+    #beta_k : effets des covariables qui jouent sur l’échantillonnage, mais ici on n’en prend pas en compte (cf formule 4 du papier de Baptiste)
+    #k_com = 1 #capturabilite relative
     
     Map[["k_com"]] <- seq(1:(length(Params$k_com))) # first k is for scientific data
     Map[["k_com"]][1] <- NA # reference level is the first fleet
@@ -162,7 +168,9 @@ fit_IM <- function(Estimation_model_i = 1,
   # library(TMB)
   # TMB::compile(paste0(TmbFile,"inst/executables/",Version,"_scientific_commercial.cpp"),"-O1 -g",DLLFLAGS="")
   
-  #on cree cet objet pour le TMB qui va contenir tout ce dont on a besoin pour l'estimation
+  #on cree cet objet pour le TMB qui va contenir tout ce dont on a besoin pour 
+  #l'estimation
+  #il n'est pas necessaire que l'on comprenne cette fonction
   Obj = MakeADFun( data=Data, parameters=Params, map = Map, silent = TRUE,hessian = T)
   Obj$fn( Obj$par )
   
@@ -193,21 +201,43 @@ fit_IM <- function(Estimation_model_i = 1,
   # TMB::gdbsource(paste0(TmbFile,"inst/executables/com_x_sci_data_14_scientific_commercial_simple.R"),interactive = T) ## Non-interactive
   # dyn.unload( dynlib(paste0(TmbFile,"inst/executables/com_x_sci_data_14_scientific_commercial_simple") ) )
 
+  
+  
   # # Hessian
+  #permet de regarder les paramètres problématiques quand l’algorithme n’arrive pas
+  #à converger, quand il y a des pbs pour estimer certains paramètres
+  
   #   hessian.fixed <- optimHess(Obj$par,Obj$fn,Obj$gr)
   # chol(hessian.fixed)
   # which(diag(hessian.fixed)[which(names(diag(hessian.fixed)) == "k_com")]<0)
   
+  
   # Run
   #Lower = -Inf
   #Upper = Inf
+  #Lower et Upper permettent de fixer les bornes inférieures et supérieures
+  #pour l'estimation des paramètres
+  #gamme de valeurs où notre algorithme va chercher à estimer nos paramètres, 
+  #c’est la même pour tous les paramètres
+  #on peut mettre -inf / inf, c’est pareil, juste là on rajoute une contrainte
+
   Lower = -50  #getting a few cases where -Inf,Inf bounds result in nlminb failure (NaN gradient)
   Upper = 50
-  #nlminb : algo pour optimiser la vraisemblance
+  
+
+  #La fonction nlminb est l’algorithme qui permet d’optimiser la vraisemblance, 
+  #cet algorithme est fait en TMB, avec des méthodes de différentiation automatique
+  #pour la descente de gradient
   Opt = nlminb( start=Obj$par, objective=Obj$fn, gradient=Obj$gr, lower=Lower, upper=Upper, control=list(trace=1, maxit=1000))         #
   Opt[["diagnostics"]] = data.frame( "Param"=names(Obj$par), "Lower"=-Inf, "Est"=Opt$par, "Upper"=Inf, "gradient"=Obj$gr(Opt$par) )
   
-  #on va chercher dans les sorties de l'algo qui a convergé ce qui nous intéresse : valeur des paramètres, distribution du champ latent, lambda etc
+  #Avec cet objet Report, on va chercher dans les sorties de l'algo qui a convergé 
+  #ce qui nous intéresse : valeur des paramètres, distribution du champ latent, 
+  #lambda etc
+  #Dans le fichier C++ on spécifie les paramètres que l’on veut sortir, 
+  #ça correspond à ce $report()
+  #Donc ça vaut le coup d’aller voir le C++ pour savoir ce qu’on ressort, 
+  #et potentiellement sortir d’autres choses si ça nous intéresse
   Report = Obj$report()
   
   # https://www.stats.bris.ac.uk/R/web/packages/glmmTMB/vignettes/troubleshooting.html
@@ -252,7 +282,7 @@ fit_IM <- function(Estimation_model_i = 1,
   # }
   
   
-  #est ce que l'algo a convergé : 0 c'est bon sinon non
+  #est ce que l'algo a convergé : 0 c'est bon, sinon non
   Converge=Opt$convergence
   
   
@@ -262,7 +292,9 @@ fit_IM <- function(Estimation_model_i = 1,
   
   # SD  --> very long with catchability and I got NANs
   
-  #on calcule les écarts type des grandeurs (matrice de var covar)
+  #dans ce if (on rentre dans la boucle si l'algorithme a convergé),
+  #on calcule la matrice de variance covariance de notre modèle, on récupère les 
+  #écarts types des paramètres/grandeurs du modèle
   if(Converge==0){
     Report = Obj$report()
     SD = sdreport( Obj,ignore.parm.uncertainty = F)

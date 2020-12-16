@@ -94,6 +94,7 @@ simu_commercial_scientific <- function(Results,
                                        counter,
                                        i,
                                        n_sim){
+  #on se fiche de l'argument version ici, on pourrait le supprimer
     
   ################
   ## Simulate data
@@ -118,9 +119,14 @@ simu_commercial_scientific <- function(Results,
     mutate(strata_3 = ifelse((x < grid_dim['x'] - n_strate & y <= grid_dim['y'] - n_strate & x + y <= grid_dim['y'] + 1),1,0)) %>%
     mutate(strata_2 = ifelse(strata_1 == 0 & strata_4 == 0 & strata_3 == 0, 1, 0)) %>%
     dplyr::select(x,y,cell,strata_1,strata_2,strata_3,strata_4) -> loc_x
-  #a ce stae, loc_x contient une colonne x, une colonne y, une colonne cellule (jusqu'a 625)
+  #a ce stade, loc_x contient une colonne x, une colonne y, une colonne cellule (jusqu'a 625)
   #et 4 colonnes de strates codées de facon binaires : si le point de coordonnées
   #(x,y) est dans la strate valeur 1, s'il est pas dans la strate valeur 0
+  
+  #on a donc dès lors un plan d'échantillonage stratifié, le nombre de points d'échantillonage
+  #dans chaque strate est proportionnel à la taille de la strate 
+  #ce plan d'échantillonage stratifié présente une structure en esclier (c'est le choix de baptiste, représentation assez réaliste)
+  #on peut visualiser ce plan d'échantillonage avec le plot ci dessous
   
  # # plot strata : representation graphique des 4 strates dans la grille 
  #  loc_x %>%
@@ -270,6 +276,7 @@ simu_commercial_scientific <- function(Results,
       }
       
       # All data and info
+      # list_simu.data.info contient toutes les informations sur la simulation
       list_simu.data.info <- list(grid_dim=grid_dim,
                                   # latent_fields_simu=latent_fields_simu,
                                   beta0=beta0,
@@ -308,6 +315,9 @@ simu_commercial_scientific <- function(Results,
       
       
       # Full outputs list
+      # List_param : données d’entrée + données de sortie
+      #les valeurs du champ latent pour chaque simulation sont disponnibles dans 
+      #List_param (et non dans Results)
       List_param <- list(data.info = list_simu.data.info,
                          Opt_par = Opt,
                          SD = SD,
@@ -315,6 +325,9 @@ simu_commercial_scientific <- function(Results,
 
 
       # Fill Results --> summary of simulation loops
+      #Results : seulement ce qui nous intéresse
+      #Ce Results permet de créer rapidement les plots des métriques de performance
+      #(→ MSPE, biais sur l’abondance totale, biais sur b)
       Results[counter,"counter"]=counter
       Results[counter,"sim"]=i
       Results[counter,"Data_source"]=Estimation_model

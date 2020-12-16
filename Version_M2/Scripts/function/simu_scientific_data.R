@@ -63,6 +63,7 @@ simu_scientific_data <- function(loc_x,
 
   #on selectionne les 49 points de peche (6+18+18+7) et index_sci_i prend les
   #numéros de ligne correspondant a ces points de peche 
+  #49 points et non 50 c'est du à l'arrondi
   index_sci_i <- do.call(c,lapply(1:nrow(nb_hauls_strata),function(j){
     index_sci_i <- c(index_sci_i,sample(loc_x_2$cell[which(loc_x_2$strata == nb_hauls_strata$strata[j])], size=nb_hauls_strata$hauls[which(nb_hauls_strata$strata == nb_hauls_strata$strata[j])],replace=FALSE))
   }))

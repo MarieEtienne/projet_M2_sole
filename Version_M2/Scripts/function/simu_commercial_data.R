@@ -74,16 +74,34 @@ simu_commercial_data <- function(loc_x,
   win_df <- owin(xrange=c(0.5,grid_dim['x'] + 0.5), yrange=c(0.5,grid_dim['y'] + 0.5),ystep  = 1,xstep=1) # parameter of the window to simulate point process (fishing shoots)
   X <- rpoint(n_samp_com,as.im(Int_ps,win_df)) # simulate point process
   
+  #ici, pour le processus de poisson homogène, baptiste n'utilise pas rpoispp mais
+  #rpoint
+  #rpoispp on ne fixe pas le nombre d'échantillon que l'on veut mais les paramètres
+  #avec rpoint, on fixe en entrée le nb d'échantillons que l'on veut (3000 ici)
+  #rpoint est donc plus adapté à notre situation
+  
+  #rpoint prend en argument une image (et non une fonction lambda comme le fait rpoispp)
+  #On simule le processus ponctuel de poisson à partir de cette image sur une 
+  #structure continue
+  #mais nous on veut que ce soit défini sur la grille : 
+  #pour cela, on discrétise tout, en passant par des raster
+  
+  
   #plot(X) #representation des points de peche commerciaux simules dans la grille
   
   ## Aggregate data / discretise (use Raster, same as VMS data)
   #------------------------------------------------------------
   
-  #definition de la grille raster
+ 
+  #, on croise le processus spatial avec la grille
+  
+  
+  #definition de la grille raster : On commence par créer un raster de même 
+  #dimension que la grille
   grid <- raster(extent(c(0.5,grid_dim['x']+0.5,0.5,grid_dim['y']+0.5))) # create grid
   res(grid) <- 1 # resolution of the grid
   # Transform this raster into a polygon 
-  gridpolygon <- rasterToPolygons(grid)
+  gridpolygon <- rasterToPolygons(grid) #on transforme le raster en polygone
   coord_grid <- as.data.frame(coordinates(gridpolygon)) #combinaisons de v1/v2 : 
   #tous les couples de coordonnées de la grilles
   colnames(coord_grid)[1] <- "x"
@@ -96,11 +114,12 @@ simu_commercial_data <- function(loc_x,
   # ggplot(loc_x)+geom_point(aes(x,y))+geom_text(aes(x,y,label = cell), size = 3.5)
 
   #on rajoute la col cell a coord_grid qui contient les numéros de cellules 
-  #correspondant a chaque couple (x,y)
+  #correspondant a chaque couple (x,y) grace a une jointure
   coord_grid <- inner_join(coord_grid,loc_x[,c("x","y","cell")],by = c("x","y"))
   gridpolygon$layer <- coord_grid$cell #on rentre la col des cellules dans le raster
   
-  X_1 <- SpatialPoints(coords=cbind(X$x,X$y))
+  X_1 <- SpatialPoints(coords=cbind(X$x,X$y)) #on transforme X (points du processus 
+  #de poisson) en spatial point ie on recupere les coord
   
   # intersect of grid and VMS data
   X_2 <- over(X_1, gridpolygon) #3000 lignes pour les 3000 points de peche commerciales
@@ -113,6 +132,7 @@ simu_commercial_data <- function(loc_x,
     arrange(layer) %>%
     data.frame()  -> X_3
 
+  #le @ permet d’accéder à un champ de l’objet, c’est un peu l’équivalent du $
   
   gridpolygon@data <- full_join(gridpolygon@data,X_3,by=c("layer"))
   
@@ -176,8 +196,11 @@ simu_commercial_data <- function(loc_x,
     }else{
       y_com_i <- 0
     }
-  })) # q2_com * Strue_x : expected catch     |      q1_com : parameter linking number of zero and density for scientific data
-  
+  })) 
+  # q2_com * Strue_x : exp_catch (expected catch)
+  #q1_com : parameter linking number of zero and density for scientific data (c'est la ksi)
+  #ici c'est bien une loi lognormale, ce n'est juste pas modélisé exactement de la
+  #meme facon que dans le papier de baptiste (d’où le fait qu’on n’ait pas exactement la même moyenne)
   
   # fleet target factor
   #i est le numéro de de la boucle, le num de la simulation, varie entre 1 et 100
@@ -207,6 +230,9 @@ simu_commercial_data <- function(loc_x,
   
   #contient les valeurs de peche des 3000 tentatives de peche 
   #de l'iteration i
+  #ici, y n'a pas d'unité mais en réalité l'unité est des CPUE donc catch per unit 
+  #effort donc kg pêchés / heure de pêche et on estime que cette unité est représentative de la biomasse
+
   y_com_i_2 = c(y_com_i_2,y_com_i)
   
   #vecteur de 3000 * i
