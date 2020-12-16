@@ -111,7 +111,7 @@ counter <- 1
 # index of the first iteration
 i0 <- 1
 # Number of simulation
-n_sim = 100
+n_sim = 3
 
 RandomSeed = 123456
 

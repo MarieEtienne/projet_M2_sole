@@ -93,7 +93,10 @@ simu_commercial_scientific <- function(Results,
                                        ignore.uncertainty,
                                        counter,
                                        i,
-                                       n_sim){
+                                       n_sim,
+                                       reallocation,
+                                       xlim,
+                                       ylim){
   #on se fiche de l'argument version ici, on pourrait le supprimer
     
   ################
