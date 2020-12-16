@@ -115,6 +115,11 @@ n_sim = 100
 
 RandomSeed = 123456
 
+# Reallocation uniforme ?
+reallocation = 4
+xlim = 10
+ylim = 8
+
 
 #-------------------------------------------------------------
 #-------------- Dataframes and model compilation -------------
@@ -165,6 +170,8 @@ source("Scripts/function/simu_latent_field.R")
 source("Scripts/function/simu_scientific_data.R")
 ## Simulate commercial data : simu_commercial_data()
 source("Scripts/function/simu_commercial_data.R")
+## Reallocation uniforme des peches commerciales
+source("Scripts/function/commercial_reallocation_uniforme.R")
 
 # file name for savinf outputs
 Start_time.tot = Sys.time()
@@ -220,7 +227,10 @@ for(i in i0:n_sim){
                                       ignore.uncertainty,
                                       counter,
                                       i,
-                                      n_sim)
+                                      n_sim,
+                                      reallocation,
+                                      xlim,
+                                      ylim)
     
     Results <- res[[1]]
     List_param <- res[[2]]

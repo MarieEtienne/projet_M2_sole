@@ -223,6 +223,11 @@ simu_commercial_scientific <- function(Results,
     y_com_i <- simu_commercial_data_outputs$y_com_i
     c_com_x <- simu_commercial_data_outputs$c_com_x
     
+    if (reallocation>0){
+      y_com_i <- commercial_reallocation_uniforme(reallocation, xlim, ylim, y_com_i, n_samp_com,
+                                                  index_com_i, loc_x)
+    }
+    
     # print(paste0("% of pos. values : ",length((y_com_i[which(y_com_i > 0)]))/length(y_com_i)))
     
     ############

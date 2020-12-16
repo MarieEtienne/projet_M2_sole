@@ -228,7 +228,7 @@ fit_IM <- function(Estimation_model_i = 1,
   #La fonction nlminb est l’algorithme qui permet d’optimiser la vraisemblance, 
   #cet algorithme est fait en TMB, avec des méthodes de différentiation automatique
   #pour la descente de gradient
-  Opt = nlminb( start=Obj$par, objective=Obj$fn, gradient=Obj$gr, lower=Lower, upper=Upper, control=list(trace=1, maxit=1000))         #
+  Opt = nlminb( start=Obj$par, objective=Obj$fn, gradient=Obj$gr, lower=Lower, upper=Upper, control=list(trace=1, iter.max=100000000))
   Opt[["diagnostics"]] = data.frame( "Param"=names(Obj$par), "Lower"=-Inf, "Est"=Opt$par, "Upper"=Inf, "gradient"=Obj$gr(Opt$par) )
   
   #Avec cet objet Report, on va chercher dans les sorties de l'algo qui a convergé 
