@@ -10,7 +10,7 @@ source("Scripts/function/load_packages.R")
 #-----------------------------------------------------------
 
 # Simulation name
-simu_name = "test"
+simu_name = "100_simu_4_types_reallocation_1_bateau"
 
 #---------------------
 # Simulation scenarios
@@ -116,87 +116,92 @@ n_sim = 3
 RandomSeed = 123456
 
 # Reallocation uniforme ?
-reallocation = 4
+reallocation = c(0,1,2,4)
 xlim = 10
 ylim = 8
 
+# Nombre de bateaux ?
+nboat = 10
 
-#-------------------------------------------------------------
-#-------------- Dataframes and model compilation -------------
-#-------------------------------------------------------------
+for (k in reallocation) {
+# Reallocation uniforme ?
 
-## Results dataframe
-n_cov = 5
-colnames_Results <- c("counter","sim","b_true","Data_source","type_b","Alpha","b_est","ObsMod","Sigma_com_true","Sigma_sci_true","Sigma_com","Sigma_sci","n_samp_com","n_samp_sci","N_true","N_est","SD_N","Convergence","LogLik","MSPE_S","k")
-
-# add_cov_abs <- paste0("BiasBetaj_abs_",c(1:n_cov+1))
-# add_cov_pos <- paste0("BiasBetaj_pos_",c(1:n_cov+1))
-# colnames_Results <- c(colnames_Results,add_cov_abs,add_cov_pos)
-
-Results = data.frame(matrix(NA,1,length(colnames_Results)))
-colnames(Results)=colnames_Results
-
-## list for simulated parameters and parameters estimates
-List_param <- list()
-
-
-####### Compile TMB model ########
-
-# https://kaskr.github.io/adcomp/Introduction.html : for TMB details
-# https://cran.r-project.org/web/packages/glmmTMB/vignettes/troubleshooting.html 
-
-TMB::compile(paste0(TmbFile,"inst/executables/com_x_sci_data_14_scientific_commercial_simple.cpp"),"-O1 -g",DLLFLAGS="")
-
-# If problems with the PATH
-# Sys.setenv(PATH = paste("C:/Rtools/bin", Sys.getenv("PATH"), sep=";")) # if "C:/Rtools/bin" is not in the PATH
-
-
-#-------------------------------------------------------------
-#------------------- Simulation/Estimation loop --------------
-#-------------------------------------------------------------
-
-################
-# source Scripts
-################
-## Simulation loop function : simu_commercial_scientific()
-source("Scripts/function/commercial_scientific_14.R")
-## Simulate Matérn field : sim_GF_Matern()
-source("Scripts/function/sim_GF_Matern.R")
-## Fit model : fit_IM()
-source("Scripts/function/fit_IM.R")
-## Simulate latent field : simu_latent_field()
-source("Scripts/function/simu_latent_field.R")
-## Simulate scientific data : simu_scientific_data()
-source("Scripts/function/simu_scientific_data.R")
-## Simulate commercial data : simu_commercial_data()
-source("Scripts/function/simu_commercial_data.R")
-## Reallocation uniforme des peches commerciales
-source("Scripts/function/commercial_reallocation_uniforme.R")
-
-# file name for savinf outputs
-Start_time.tot = Sys.time()
-Start_time.tot_2 <- str_replace_all(Start_time.tot, " ", "_")
-Start_time.tot_2 <- str_replace_all(Start_time.tot_2, ":", "_")
-simu_file <- paste0("results/com_x_sci_data_14_scientific_commercial_simple-",Start_time.tot_2,"_",simu_name,"/")
-
-# When simu crashes --> param to re-run the loop.
-# Before re-runing the loop load the last Results_loop list (Results/Simu/)
-restart_after_crash = F
-if(restart_after_crash == T){
-  counter <- max(Results$counter,na.rm=T)
-  i0 <- max(Results$sim,na.rm=T) + 1
-  n_sim <- n_sim
-  Results <- Results
-  List_param <- Results_loop$List_param
-  simu_file <- "results/com_x_sci_data_14/com_x_sci_data_14-2020-08-29_11_59_26_Lognormal_Nsamp"
-}
-
-# load TMB model
-dyn.load( dynlib(paste0(TmbFile,"inst/executables/com_x_sci_data_14_scientific_commercial_simple") ) )
-#dyn.unload( dynlib(paste0(TmbFile,"inst/executables/",Version,"_scientific_commercial") ) )
-## loop
-for(i in i0:n_sim){
-
+  #-------------------------------------------------------------
+  #-------------- Dataframes and model compilation -------------
+  #-------------------------------------------------------------
+  
+  ## Results dataframe
+  n_cov = 5
+  colnames_Results <- c("counter","sim","b_true","Data_source","type_b","Alpha","b_est","ObsMod","Sigma_com_true","Sigma_sci_true","Sigma_com","Sigma_sci","n_samp_com","n_samp_sci","N_true","N_est","SD_N","Convergence","LogLik","MSPE_S","k")
+  
+  # add_cov_abs <- paste0("BiasBetaj_abs_",c(1:n_cov+1))
+  # add_cov_pos <- paste0("BiasBetaj_pos_",c(1:n_cov+1))
+  # colnames_Results <- c(colnames_Results,add_cov_abs,add_cov_pos)
+  
+  Results = data.frame(matrix(NA,1,length(colnames_Results)))
+  colnames(Results)=colnames_Results
+  
+  ## list for simulated parameters and parameters estimates
+  List_param <- list()
+  
+  
+  ####### Compile TMB model ########
+  
+  # https://kaskr.github.io/adcomp/Introduction.html : for TMB details
+  # https://cran.r-project.org/web/packages/glmmTMB/vignettes/troubleshooting.html 
+  
+  TMB::compile(paste0(TmbFile,"inst/executables/com_x_sci_data_14_scientific_commercial_simple.cpp"),"-O1 -g",DLLFLAGS="")
+  
+  # If problems with the PATH
+  # Sys.setenv(PATH = paste("C:/Rtools/bin", Sys.getenv("PATH"), sep=";")) # if "C:/Rtools/bin" is not in the PATH
+  
+  
+  #-------------------------------------------------------------
+  #------------------- Simulation/Estimation loop --------------
+  #-------------------------------------------------------------
+  
+  ################
+  # source Scripts
+  ################
+  ## Simulation loop function : simu_commercial_scientific()
+  source("Scripts/function/commercial_scientific_14.R")
+  ## Simulate Matérn field : sim_GF_Matern()
+  source("Scripts/function/sim_GF_Matern.R")
+  ## Fit model : fit_IM()
+  source("Scripts/function/fit_IM.R")
+  ## Simulate latent field : simu_latent_field()
+  source("Scripts/function/simu_latent_field.R")
+  ## Simulate scientific data : simu_scientific_data()
+  source("Scripts/function/simu_scientific_data.R")
+  ## Simulate commercial data : simu_commercial_data()
+  source("Scripts/function/simu_commercial_data.R")
+  ## Reallocation uniforme des peches commerciales
+  source("Scripts/function/commercial_reallocation_uniforme.R")
+  
+  # file name for savinf outputs
+  Start_time.tot = Sys.time()
+  Start_time.tot_2 <- str_replace_all(Start_time.tot, " ", "_")
+  Start_time.tot_2 <- str_replace_all(Start_time.tot_2, ":", "_")
+  simu_file <- paste0("results/com_x_sci_data_14_scientific_commercial_simple-",Start_time.tot_2,"_",simu_name,"/")
+  
+  # When simu crashes --> param to re-run the loop.
+  # Before re-runing the loop load the last Results_loop list (Results/Simu/)
+  restart_after_crash = F
+  if(restart_after_crash == T){
+    counter <- max(Results$counter,na.rm=T)
+    i0 <- max(Results$sim,na.rm=T) + 1
+    n_sim <- n_sim
+    Results <- Results
+    List_param <- Results_loop$List_param
+    simu_file <- "results/com_x_sci_data_14/com_x_sci_data_14-2020-08-29_11_59_26_Lognormal_Nsamp"
+  }
+  
+  # load TMB model
+  dyn.load( dynlib(paste0(TmbFile,"inst/executables/com_x_sci_data_14_scientific_commercial_simple") ) )
+  #dyn.unload( dynlib(paste0(TmbFile,"inst/executables/",Version,"_scientific_commercial") ) )
+  ## loop
+  for(i in i0:n_sim){
+    
     res <- simu_commercial_scientific(Results,
                                       simu_file,
                                       grid_dim,
@@ -228,32 +233,59 @@ for(i in i0:n_sim){
                                       counter,
                                       i,
                                       n_sim,
-                                      reallocation,
+                                      k,
                                       xlim,
-                                      ylim)
+                                      ylim,
+                                      nboat)
     
     Results <- res[[1]]
     List_param <- res[[2]]
     counter <- res[[3]]
-
+    
+  }
+  dyn.unload( dynlib(paste0(TmbFile,"inst/executables/com_x_sci_data_14_scientific_commercial_simple") ) )
+  
+  
+  
+  #-------------------------------------------------------------
+  #------------------------ Plot results -----------------------
+  #-------------------------------------------------------------
+  
+  ## Function for plotting elative bias of abundance, of b and MSPE : Plot_Results()
+  source("Scripts/function/plot_simu.R")
+  
+  # Results <- Results_loop$Results
+  # Strue_df <- Results_loop$Strue_df
+  # PE_df <- Results_loop$PE_df
+  # SD.S_df <- Results_loop$SD.S_df
+  
+  if (k==0){
+    Plot_results_list0 <- Plot_Results(Results,b_set)
+  } else if (k==1) {
+    Plot_results_list1 <- Plot_Results(Results,b_set)
+  }else if (k==2){
+    Plot_results_list2 <- Plot_Results(Results,b_set)
+  }else{
+    Plot_results_list4 <- Plot_Results(Results,b_set)
+  }
 }
-dyn.unload( dynlib(paste0(TmbFile,"inst/executables/com_x_sci_data_14_scientific_commercial_simple") ) )
 
-#-------------------------------------------------------------
-#------------------------ Plot results -----------------------
-#-------------------------------------------------------------
+#POUR AVOIR SUR LE MEME GRAPHE DES DIFFERENTES CONFIG DE REALLOCATION
+library(ggpubr) #pour utiliser ggarrange
 
-## Function for plotting elative bias of abundance, of b and MSPE : Plot_Results()
-source("Scripts/function/plot_simu.R")
+#biais abondance
+ggarrange(Plot_results_list0[[1]],Plot_results_list1[[1]],Plot_results_list2[[1]],Plot_results_list4[[1]],ncol=4,common.legend=TRUE,legend="top")
 
-# Results <- Results_loop$Results
-# Strue_df <- Results_loop$Strue_df
-# PE_df <- Results_loop$PE_df
-# SD.S_df <- Results_loop$SD.S_df
+#biais b
+ggarrange(Plot_results_list0[[2]],Plot_results_list1[[2]],Plot_results_list2[[2]],Plot_results_list4[[2]],ncol=4,common.legend=TRUE,legend="top")
 
-Plot_results_list <- Plot_Results(Results,b_set)
-grid.arrange(Plot_results_list[[1]],Plot_results_list[[2]],Plot_results_list[[3]],ncol=3)
+#MSPE
+ggarrange(Plot_results_list0[[3]],Plot_results_list1[[3]],Plot_results_list2[[3]],Plot_results_list4[[3]],ncol=4,common.legend=TRUE,legend="top")
 
+
+#ANCIENNES LIGNES DE BAPTISTE
+#Plot_results_list <- Plot_Results(Results,b_set)
+#grid.arrange(Plot_results_list[[1]],Plot_results_list[[2]],Plot_results_list[[3]],ncol=3)
 
 # ## (DEPRECATED) Plot parameters estimate (relative) bias
 # ## See "in_progress" folder

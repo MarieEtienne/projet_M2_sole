@@ -94,9 +94,10 @@ simu_commercial_scientific <- function(Results,
                                        counter,
                                        i,
                                        n_sim,
-                                       reallocation,
+                                       k,
                                        xlim,
-                                       ylim){
+                                       ylim,
+                                       nboat){
   #on se fiche de l'argument version ici, on pourrait le supprimer
     
   ################
@@ -226,9 +227,9 @@ simu_commercial_scientific <- function(Results,
     y_com_i <- simu_commercial_data_outputs$y_com_i
     c_com_x <- simu_commercial_data_outputs$c_com_x
     
-    if (reallocation>0){
-      y_com_i <- commercial_reallocation_uniforme(reallocation, xlim, ylim, y_com_i, n_samp_com,
-                                                  index_com_i, loc_x)
+    if (k>0){
+      y_com_i <- commercial_reallocation_uniforme(k, xlim, ylim, y_com_i, n_samp_com,
+                                                  index_com_i, loc_x, nboat)
     }
     
     # print(paste0("% of pos. values : ",length((y_com_i[which(y_com_i > 0)]))/length(y_com_i)))

@@ -21,11 +21,12 @@ Plot_Results <- function(Results,b_set){
   
   # For figures, limit to results for which |b estimate| < 10
   Results[which(Results[,"Converge"]==2),"Converge"]=1
-
+  
   # Convergence table
   Converge_table = summaryBy(Converge~b_true+Data_source,data=Results,FUN=sum)
-
-  # Filter simulation which converged
+  
+  # Filter simulation which converged : on ne conserve dans les résultats que les
+  #simulations ou l'algorithme a convergé
   WhichFailed <- which(Results[,"Convergence"]!=0)
   Results_cvg.failed <- Results[WhichFailed,]
   WhichDone = which(Results[,"Convergence"]==0)
@@ -36,7 +37,7 @@ Plot_Results <- function(Results,b_set){
   Results[,"Bias_b"]=(Results[,"b_est"]-Results[,"b_true"]) / ifelse(Results[,"b_true"] != 0,Results[,"b_true"],1)
   # plot estimates of 'b'
   Which_plot = which(Results[,"type_b"] == "est_b")
-
+  
   # Handle data to have pretty graph (a bit dirty...)
   Results %>%
     filter(Data_source == "scientific_only") -> Results_sc_only
@@ -50,13 +51,12 @@ Plot_Results <- function(Results,b_set){
     df_1$b_true <- b_set[i]
     Results_sc_only <- rbind(Results_sc_only,df_1)
   }))
-
+  
   Results_2 <- rbind(Results_sc_only,Results_com)
   Results_2$b_est[which(is.na(Results_2[,"b_est"]))] <- 0
   Results_plot <- Results_2[which(Results_2[,"b_est"]<10),]
   
   # Plots
-  
   Results_plot$Data_source <- factor(Results_plot$Data_source, levels = c("scientific_only", "commercial_only", "scientific_commercial"))
   
   #construction du boxplot pour le biais de l'abondance
@@ -71,9 +71,8 @@ Plot_Results <- function(Results,b_set){
     scale_fill_manual(breaks = c("scientific_only", "commercial_only", "scientific_commercial"), 
                       values=c("#56B4E9","#999999","#E69F00"))+
     ylab("Relative bias of abundance")+
-    xlab("Levels of preferential sampling (b)") +
-    facet_wrap(~k)
-
+    xlab(" ")
+  
   #construction du graphique pour le biais de b 
   Bias_b <- ggplot()+
     geom_boxplot(data = Results_plot,
@@ -86,7 +85,7 @@ Plot_Results <- function(Results,b_set){
     scale_fill_manual(breaks = c("commercial_only", "scientific_commercial"), 
                       values=c("#999999","#E69F00"))+
     ylab("Relative bias of b")+
-    xlab("Levels of preferential sampling (b)")
+    xlab(" ")
   
   #construction du graphique pour le MSPE
   MSPE_S <- ggplot()+
@@ -99,14 +98,14 @@ Plot_Results <- function(Results,b_set){
     scale_fill_manual(breaks = c("scientific_only", "commercial_only", "scientific_commercial"), 
                       values=c("#56B4E9","#999999","#E69F00"))+
     ylab("MSPE")+
-    xlab("Levels of preferential sampling (b)")
+    xlab(" ")
   
   res <- list(RelBias_N=RelBias_N,
               Bias_b=Bias_b,
               MSPE_S=MSPE_S,
               Converge_table=Converge_table)
   
-    return(res)
+  return(res)
 }
 
 
