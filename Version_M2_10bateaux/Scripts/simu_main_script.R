@@ -111,12 +111,12 @@ counter <- 1
 # index of the first iteration
 i0 <- 1
 # Number of simulation
-n_sim = 100
+n_sim = 10
 
 RandomSeed = 123456
 
 # Reallocation uniforme ?
-reallocation = c(0,1,2,4)
+reallocation = c(0,1) # Reallocation = 0 si pas de reallocation, = 1 si reallocation
 xlim = 10
 ylim = 8
 
@@ -261,12 +261,8 @@ for (k in reallocation) {
   
   if (k==0){
     Plot_results_list0 <- Plot_Results(Results,b_set)
-  } else if (k==1) {
+  } else {
     Plot_results_list1 <- Plot_Results(Results,b_set)
-  }else if (k==2){
-    Plot_results_list2 <- Plot_Results(Results,b_set)
-  }else{
-    Plot_results_list4 <- Plot_Results(Results,b_set)
   }
 }
 
@@ -274,13 +270,15 @@ for (k in reallocation) {
 library(ggpubr) #pour utiliser ggarrange
 
 #biais abondance
-ggarrange(Plot_results_list0[[1]],Plot_results_list1[[1]],Plot_results_list2[[1]],Plot_results_list4[[1]],ncol=4,common.legend=TRUE,legend="top")
+ggarrange(Plot_results_list0[[1]],Plot_results_list1[[1]],ncol=2,common.legend=TRUE,legend="top")
 
 #biais b
-ggarrange(Plot_results_list0[[2]],Plot_results_list1[[2]],Plot_results_list2[[2]],Plot_results_list4[[2]],ncol=4,common.legend=TRUE,legend="top")
+ggarrange(Plot_results_list0[[2]],Plot_results_list1[[2]],ncol=2,common.legend=TRUE,legend="top")
 
 #MSPE
-ggarrange(Plot_results_list0[[3]],Plot_results_list1[[3]],Plot_results_list2[[3]],Plot_results_list4[[3]],ncol=4,common.legend=TRUE,legend="top")
+ggarrange(Plot_results_list0[[3]],Plot_results_list1[[3]],ncol=2,common.legend=TRUE,legend="top")
+
+# Forcer l'échelle à être identique pour pouvoir comparer
 
 
 #ANCIENNES LIGNES DE BAPTISTE

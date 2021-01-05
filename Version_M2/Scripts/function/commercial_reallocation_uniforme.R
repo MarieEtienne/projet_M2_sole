@@ -96,10 +96,29 @@ commercial_reallocation_uniforme = function(k,
     # - 3000 lignes correspondant aux 3000 points de pêche, aux 3000 échantillons commerciaux
     # - Pour chaque point de pêche, la quantité pêchée (issue de y_com_i)
     # - Pour chaque point de pêche, sa cellule et les coordonnées de celle-ci, x et y (issues de loc_x)
+    
+    # Code MPE a revoir
+    #
+    # dta_prov <-   data.frame(y = loc_x[index_com_i,"y"], x = loc_x[index_com_i,"x"] ) %>%
+    #   mutate(n_cell = ifelse(x < xlim, 0, 1) + ifelse(y < ylim, 0, 1) * 2 + 1) 
+    # 
+    # dta_prov %>%
+    #   group_by(n_cell) %>%
+    #   dplyr::summarize(n = n())
+    # 
+    # data.frame(y = loc_x[index_com_i,"y"], x = loc_x[index_com_i,"x"], capt = y_com_i ) %>%
+    #   mutate(n_cell = ifelse(x < xlim, 0, 1) + ifelse(y < ylim, 0, 1) * 2 + 1) %>%
+    #   group_by(n_cell) %>%
+    #   dplyr::summarize(capt_mean = mean(capt)) %>% inner_join(dta_prov) 
+    #
+    # Pour division en plusieurs zones voir switch plutot que ifelse
+    # Sinon faire une fonction à qui on passe xlim et ylim et x et y et qui nous renvoie la zone
+    
     index_com_i_new = as.data.frame(index_com_i)
     colnames(index_com_i_new) = "cell"
     y_com_i_new = as.data.frame(y_com_i)
     x = rep(0, n_samp_com)
+  
     y = rep(0, n_samp_com)
     y_com_i_new = cbind(y_com_i_new, x, y, index_com_i_new)
     colnames(y_com_i_new) = c("y_com_i", "x", "y", "cell")
