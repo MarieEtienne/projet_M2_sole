@@ -173,6 +173,12 @@ simu_commercial_scientific <- function(Results,
   # delta_x <- simu_latent_field_outputs$delta_x
   # eta_x <- simu_latent_field_outputs$eta_x
   
+  # # Représentation graphique du champ latent
+  # Strue_x_2 = as.data.frame(cbind(x=loc_x$x, y=loc_x$y, Champ_latent=as.vector(Strue_x)))
+  # ggplot(Strue_x_2)+
+  #   geom_point(aes(x,y,col=Champ_latent)) + theme_bw()
+  
+    
   #-----------------
   #  Scientific data
   #-----------------
@@ -197,6 +203,17 @@ simu_commercial_scientific <- function(Results,
   c_sci_x <- simu_scientific_data_outputs$c_sci_x
   y_sci_i <- simu_scientific_data_outputs$y_sci_i
   
+  # # Représentation graphique des points de prelevement scientifique
+  # pointsdepeche_sci = as.data.frame(cbind(index_sci_i, y_sci_i))
+  # pointsdepeche_sci$x = rep(0, length(pointsdepeche_sci$index_sci_i))
+  # pointsdepeche_sci$y = rep(0, length(pointsdepeche_sci$index_sci_i))
+  # for (i in 1:length(pointsdepeche_sci$index_sci_i))
+  # {
+  #   pointsdepeche_sci[i, "x"] = loc_x$x[which(loc_x[, "cell"] == pointsdepeche_sci[i, "index_sci_i"])]
+  #   pointsdepeche_sci[i, "y"] = loc_x$y[which(loc_x[, "cell"] == pointsdepeche_sci[i, "index_sci_i"])]
+  # }
+  # ggplot(pointsdepeche_sci) + geom_point(aes(x=x, y=y, col=y_sci_i)) + labs(color= "Quantite pechee") + theme_bw()
+
   # loop on preferential sampling levels
   #3 valeurs de b (0,1 et 3) ont été initialisées dans simu_main_script
   for(b in b_set){
@@ -228,12 +245,21 @@ simu_commercial_scientific <- function(Results,
     y_com_i <- simu_commercial_data_outputs$y_com_i
     c_com_x <- simu_commercial_data_outputs$c_com_x
     boats_number <- simu_commercial_data_outputs$boats_number
+    x_com <- simu_commercial_data_outputs$x_com
+    y_com <- simu_commercial_data_outputs$y_com
     
     if (k>0){ # Si on fait de la reallocation uniforme (cad k = 1)
       y_com_i <- commercial_reallocation_uniforme(k, xlim, ylim, y_com_i, n_samp_com,
                                                   index_com_i, loc_x, nboat, boats_number)
     }
     
+    
+    # Représentation graphique des points de peche, donnees commerciales
+    pointsdepeche_com = as.data.frame(cbind(x = x_com, y = y_com, boats = boats_number, ncell = index_com_i, y_com_i = y_com_i))
+    ggplot(pointsdepeche_com) + geom_point(aes(x=x, y=y, col=as.factor(boats)), size=4) + labs(color= "Bateau") + theme_bw()
+    ggplot(pointsdepeche_com) + geom_point(aes(x=x, y=y, col=y_com_i), size=4) + labs(color= "Quantité pechee") + theme_bw()
+    
+        
     # print(paste0("% of pos. values : ",length((y_com_i[which(y_com_i > 0)]))/length(y_com_i)))
     
     ############

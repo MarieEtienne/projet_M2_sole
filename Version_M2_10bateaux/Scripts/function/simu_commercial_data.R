@@ -80,6 +80,11 @@ simu_commercial_data <- function(loc_x,
   X <- rpoint(nboat,as.im(Int_ps,win_df)) # Simulation des 10 points centraux
   # X correspond donc aux coordonnées des 10 "points centraux" des zones de peche de chaque bateau
   
+  # Visualisation des 10 centres des zones de peche de chaque bateau
+  centres = as.data.frame(cbind(x = X$x, y = X$y, boats = seq(1, 10)))
+  ggplot(centres) + geom_point(aes(x=x, y=y, col=as.factor(boats)), size=8) + labs(color= "Bateau") + theme_bw()
+  
+  
   # Pour l'instant on dit que la zone de peche de chaque bateau =
   # point central +- 5 sur y, point centra +- 5 sur x
   
@@ -103,9 +108,9 @@ simu_commercial_data <- function(loc_x,
   
   # On définit un vecteur qui correspond au numéro du bateau associé à chaque point de peche
   boats = numeric(0)
-  for (i in 1:nboat)
+  for (j in 1:nboat)
   {
-    boats = c(boats, rep(i, n_samp_com/nboat))
+    boats = c(boats, rep(j, n_samp_com/nboat))
   }
   
   # On a donc :
@@ -113,7 +118,15 @@ simu_commercial_data <- function(loc_x,
   # boats_y les coordonnées sur l'axe des y des 3000 points de peche
   # boats les numéros des bateaux associés à chaque point de peche
   
+  # Visualisation des points de peche de chaque bateau dans sa zone
+  peche_com = as.data.frame(cbind(x=boats_x, y=boats_y, boats=boats))
+  ggplot(peche_com) + geom_point(aes(x=x, y=y, col=as.factor(boats)), size=4) + labs(color= "Bateau") + theme_bw()
   
+  # # Visualisation des points de peche du premier bateau dans sa zone
+  # peche_com_boat1 = as.data.frame(cbind(x=boats_x[1:300], y=boats_y[1:300], boats=boats[1:300]))
+  # ggplot(peche_com_boat1) + geom_point(aes(x=x, y=y, col=as.factor(boats)), size=4) + labs(color= "Bateau") + theme_bw()
+
+    
   #ici, pour le processus de poisson homogène, baptiste n'utilise pas rpoispp mais
   #rpoint
   #rpoispp on ne fixe pas le nombre d'échantillon que l'on veut mais les paramètres
@@ -171,6 +184,7 @@ simu_commercial_data <- function(loc_x,
     dplyr::count(layer) %>%
     arrange(layer) %>%
     data.frame()  -> X_3
+  # sum(X_3$n) = 3000 --> n correspond au nb de peche realisee dans la cellule (colonne layer)
 
   #le @ permet d’accéder à un champ de l’objet, c’est un peu l’équivalent du $
   
@@ -284,7 +298,21 @@ simu_commercial_data <- function(loc_x,
   
   b_com_i_2 <- factor(b_com_i_2)
   
-  res <- list(index_com_i = index_com_i_2, y_com_i = y_com_i_2, b_com_i = b_com_i_2, c_com_x = c_com_x_2, boats_number = boats)
+  # # Visualisation des points de peche de chaque bateau dans sa zone et de la quantité pechee
+  peche_com_boat = peche_com
+  peche_com_boat$x = round(peche_com_boat$x)
+  peche_com_boat$y = round(peche_com_boat$y)
+  peche_com_boat$ncell = rep(0, length(peche_com_boat$boats))
+  for (j in 1:length(peche_com_boat$boats))
+  {
+    peche_com_boat[j, "ncell"] = loc_x$cell[which(loc_x[, "x"] == peche_com_boat[i, "x"] & loc_x[, "y"] == peche_com_boat[j, "y"])]
+  }
+  qte_pechee = as.data.frame(cbind(ncell = index_com_i_2, y_com_i = y_com_i))
+  peche_com_boat = peche_com_boat[order(peche_com_boat$ncell),]
+  qte_pechee = qte_pechee[order(qte_pechee$ncell),]
+  peche_com_boat = cbind(peche_com_boat, y_com_i = qte_pechee$y_com_i)
+  
+  res <- list(index_com_i = peche_com_boat$ncell, y_com_i = peche_com_boat$y_com_i, b_com_i = b_com_i_2, c_com_x = c_com_x_2, boats_number = peche_com_boat$boats, x_com = peche_com_boat$x, y_com = peche_com_boat$y)
   return(res)
 }
 
