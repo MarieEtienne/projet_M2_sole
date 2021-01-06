@@ -67,8 +67,8 @@ simu_commercial_data <- function(loc_x,
   
   # sampling intensity in each cell : Int_ps va contenir les intensites lambda
   #pour chaque point
-  for(k in 1:n_cells){
-    Int_ps[loc_x$y[k],loc_x$x[k]] <- exp(beta0_fb + b*Strue_fb[k])
+  for(q in 1:n_cells){
+    Int_ps[loc_x$y[q],loc_x$x[q]] <- exp(beta0_fb + b*Strue_fb[q])
   }
   
   # On dit qu'il y a 10 bateaux et 3000 points de peche au total
@@ -82,8 +82,10 @@ simu_commercial_data <- function(loc_x,
   
   # Visualisation des 10 centres des zones de peche de chaque bateau
   centres = as.data.frame(cbind(x = X$x, y = X$y, boats = seq(1, 10)))
-  ggplot(centres) + geom_point(aes(x=x, y=y, col=as.factor(boats)), size=8) + labs(color= "Bateau") + theme_bw()
-  
+  plot_centres = ggplot(centres) + geom_point(aes(x=x, y=y, col=as.factor(boats)), size=4) +
+    labs(color= "Bateau", title = paste0("i = ", i, ", k = ", k, " et b = ", b)) +
+    theme_bw()
+
   
   # Pour l'instant on dit que la zone de peche de chaque bateau =
   # point central +- 5 sur y, point centra +- 5 sur x
@@ -120,7 +122,9 @@ simu_commercial_data <- function(loc_x,
   
   # Visualisation des points de peche de chaque bateau dans sa zone
   peche_com = as.data.frame(cbind(x=boats_x, y=boats_y, boats=boats))
-  ggplot(peche_com) + geom_point(aes(x=x, y=y, col=as.factor(boats)), size=4) + labs(color= "Bateau") + theme_bw()
+  plot_pointsdepechecomperboat = ggplot(peche_com) + geom_point(aes(x=x, y=y, col=as.factor(boats)), size=4) +
+    labs(color= "Bateau", title = paste0("i = ", i, ", k = ", k, " et b = ", b)) +
+    theme_bw()
   
   # # Visualisation des points de peche du premier bateau dans sa zone
   # peche_com_boat1 = as.data.frame(cbind(x=boats_x[1:300], y=boats_y[1:300], boats=boats[1:300]))
@@ -222,9 +226,9 @@ simu_commercial_data <- function(loc_x,
   #de peches qu'elle a recu, les cellules sont rangées dans l'ordre croissant
   #par exemple il y a eu 5 tentatives de peche dans la cellule 1 : le vecteur
   #commence par 4 uns puis 2 deux par ex 
-  index_com_i <- do.call(c,lapply(1:length(c_com_x),function(k){
-    n<-c_com_x[k]   # not clean --> call fishing_shots which is outside the function
-    titi <- rep(k,n)
+  index_com_i <- do.call(c,lapply(1:length(c_com_x),function(q){
+    n<-c_com_x[q]   # not clean --> call fishing_shots which is outside the function
+    titi <- rep(q,n)
   }))
   
   
@@ -312,7 +316,7 @@ simu_commercial_data <- function(loc_x,
   qte_pechee = qte_pechee[order(qte_pechee$ncell),]
   peche_com_boat = cbind(peche_com_boat, y_com_i = qte_pechee$y_com_i)
   
-  res <- list(index_com_i = peche_com_boat$ncell, y_com_i = peche_com_boat$y_com_i, b_com_i = b_com_i_2, c_com_x = c_com_x_2, boats_number = peche_com_boat$boats, x_com = peche_com_boat$x, y_com = peche_com_boat$y)
+  res <- list(index_com_i = peche_com_boat$ncell, y_com_i = peche_com_boat$y_com_i, b_com_i = b_com_i_2, c_com_x = c_com_x_2, boats_number = peche_com_boat$boats, x_com = peche_com_boat$x, y_com = peche_com_boat$y, plot_centres = plot_centres, plot_pointsdepechecomperboat = plot_pointsdepechecomperboat)
   return(res)
 }
 

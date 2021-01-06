@@ -133,12 +133,12 @@ simu_commercial_scientific <- function(Results,
   #on peut visualiser ce plan d'échantillonage avec le plot ci dessous
   
  # # plot strata : representation graphique des 4 strates dans la grille 
- #  loc_x %>%
- #    tidyr::pivot_longer(cols = starts_with("strata"),names_to = "strata") %>%
- #    data.frame() %>% filter(value > 0) -> loc_x_plot
- # 
- #  ggplot(loc_x_plot)+
- #  geom_point(aes(x,y,col=strata)) + theme_bw()
+  loc_x %>%
+    tidyr::pivot_longer(cols = starts_with("strata"),names_to = "strata") %>%
+    data.frame() %>% filter(value > 0) -> loc_x_plot
+
+  plot_strates = ggplot(loc_x_plot) + geom_point(aes(x,y,col=strata), size=4) + theme_bw() +
+    labs(title = paste0("Strates de la zone etudiee, pour i = ", i, " et k = ", k))
 
   
   #---------------
@@ -173,10 +173,12 @@ simu_commercial_scientific <- function(Results,
   # delta_x <- simu_latent_field_outputs$delta_x
   # eta_x <- simu_latent_field_outputs$eta_x
   
-  # # Représentation graphique du champ latent
-  # Strue_x_2 = as.data.frame(cbind(x=loc_x$x, y=loc_x$y, Champ_latent=as.vector(Strue_x)))
-  # ggplot(Strue_x_2)+
-  #   geom_point(aes(x,y,col=Champ_latent)) + theme_bw()
+  # Représentation graphique du champ latent
+  Strue_x_2 = as.data.frame(cbind(x=loc_x$x, y=loc_x$y, Champ_latent=as.vector(Strue_x)))
+  plot_latentfield = ggplot(Strue_x_2) + geom_point(aes(x,y,col=Champ_latent), size=4) + theme_bw() +
+    scale_color_gradient2(midpoint = mean(Strue_x_2$Champ_latent), low = "#E6F2FC", mid = "#62B4FC",
+                          high = "#02182C", space = "Lab" ) +
+    labs(title = paste0("Representation du champ latent, pour i = ", i, " et k = ", k))
   
     
   #-----------------
@@ -203,16 +205,20 @@ simu_commercial_scientific <- function(Results,
   c_sci_x <- simu_scientific_data_outputs$c_sci_x
   y_sci_i <- simu_scientific_data_outputs$y_sci_i
   
-  # # Représentation graphique des points de prelevement scientifique
-  # pointsdepeche_sci = as.data.frame(cbind(index_sci_i, y_sci_i))
-  # pointsdepeche_sci$x = rep(0, length(pointsdepeche_sci$index_sci_i))
-  # pointsdepeche_sci$y = rep(0, length(pointsdepeche_sci$index_sci_i))
-  # for (i in 1:length(pointsdepeche_sci$index_sci_i))
-  # {
-  #   pointsdepeche_sci[i, "x"] = loc_x$x[which(loc_x[, "cell"] == pointsdepeche_sci[i, "index_sci_i"])]
-  #   pointsdepeche_sci[i, "y"] = loc_x$y[which(loc_x[, "cell"] == pointsdepeche_sci[i, "index_sci_i"])]
-  # }
-  # ggplot(pointsdepeche_sci) + geom_point(aes(x=x, y=y, col=y_sci_i)) + labs(color= "Quantite pechee") + theme_bw()
+  # Représentation graphique des points de prelevement scientifique
+  pointsdepeche_sci = as.data.frame(cbind(index_sci_i, y_sci_i))
+  pointsdepeche_sci$x = rep(0, length(pointsdepeche_sci$index_sci_i))
+  pointsdepeche_sci$y = rep(0, length(pointsdepeche_sci$index_sci_i))
+  for (j in 1:length(pointsdepeche_sci$index_sci_i))
+  {
+    pointsdepeche_sci[j, "x"] = loc_x$x[which(loc_x[, "cell"] == pointsdepeche_sci[j, "index_sci_i"])]
+    pointsdepeche_sci[j, "y"] = loc_x$y[which(loc_x[, "cell"] == pointsdepeche_sci[j, "index_sci_i"])]
+  }
+  plot_scientificdata = ggplot(pointsdepeche_sci) + geom_point(aes(x=x, y=y, col=y_sci_i), size=4) +
+    labs(color= "Quantite pechee") + theme_bw() +
+    scale_color_gradient2(midpoint = mean(pointsdepeche_sci$y_sci_i), low = "#E6F2FC", mid = "#62B4FC",
+                          high = "#02182C", space = "Lab" ) +
+    labs(title = paste0("Quantites pechees pour les peches scientifiques, pour i = ", i, " et k = ", k))
 
   # loop on preferential sampling levels
   #3 valeurs de b (0,1 et 3) ont été initialisées dans simu_main_script
@@ -247,6 +253,8 @@ simu_commercial_scientific <- function(Results,
     boats_number <- simu_commercial_data_outputs$boats_number
     x_com <- simu_commercial_data_outputs$x_com
     y_com <- simu_commercial_data_outputs$y_com
+    plot_centres <- simu_commercial_data_outputs$plot_centres
+    plot_pointsdepechecomperboat <- simu_commercial_data_outputs$plot_pointsdepechecomperboat
     
     if (k>0){ # Si on fait de la reallocation uniforme (cad k = 1)
       y_com_i <- commercial_reallocation_uniforme(k, xlim, ylim, y_com_i, n_samp_com,
@@ -256,10 +264,39 @@ simu_commercial_scientific <- function(Results,
     
     # Représentation graphique des points de peche, donnees commerciales
     pointsdepeche_com = as.data.frame(cbind(x = x_com, y = y_com, boats = boats_number, ncell = index_com_i, y_com_i = y_com_i))
-    ggplot(pointsdepeche_com) + geom_point(aes(x=x, y=y, col=as.factor(boats)), size=4) + labs(color= "Bateau") + theme_bw()
-    ggplot(pointsdepeche_com) + geom_point(aes(x=x, y=y, col=y_com_i), size=4) + labs(color= "Quantité pechee") + theme_bw()
+    plot_pointsdepechecell = ggplot(pointsdepeche_com) +
+      geom_point(aes(x=x, y=y, col=as.factor(boats)), size=4) +
+      labs(color= "Bateau", title = paste0("i = ", i, ", k = ", k, " et b = ", b)) +
+      theme_bw()
     
-        
+    if (k==0){
+      plot_pointsdepecheqte = ggplot(pointsdepeche_com) + geom_point(aes(x=x, y=y, col=y_com_i), size=4) +
+        labs(color= "Quantite pechee", title = paste0("i = ", i, ", k = ", k, " et b = ", b)) +
+        theme_bw() +
+        scale_color_gradient2(midpoint = mean(pointsdepeche_com$y_com_i), low = "#E6F2FC", mid = "#62B4FC",
+                              high = "#02182C", space = "Lab" )
+    } else{
+      plot_pointsdepecheqte = ggplot(pointsdepeche_com) + geom_point(aes(x=x, y=y, col=as.factor(round(y_com_i, 1))), size=4) +
+        labs(color= "Quantite pechee", title = paste0("i = ", i, ", k = ", k, " et b = ", b)) + theme_bw()
+    }
+    
+    if (b==0) {
+      plot_centres_b0 = plot_centres
+      plot_pointsdepechecomperboat_b0 = plot_pointsdepechecomperboat
+      plot_pointsdepechecell_b0 = plot_pointsdepechecell
+      plot_pointsdepecheqte_b0 = plot_pointsdepecheqte
+    } else if (b==1) {
+      plot_centres_b1 = plot_centres
+      plot_pointsdepechecomperboat_b1 = plot_pointsdepechecomperboat
+      plot_pointsdepechecell_b1 = plot_pointsdepechecell
+      plot_pointsdepecheqte_b1 = plot_pointsdepecheqte
+    } else {
+      plot_centres_b3 = plot_centres
+      plot_pointsdepechecomperboat_b3 = plot_pointsdepechecomperboat
+      plot_pointsdepechecell_b3 = plot_pointsdepechecell
+      plot_pointsdepecheqte_b3 = plot_pointsdepecheqte
+    }
+    
     # print(paste0("% of pos. values : ",length((y_com_i[which(y_com_i > 0)]))/length(y_com_i)))
     
     ############
@@ -432,6 +469,61 @@ simu_commercial_scientific <- function(Results,
       counter <- counter + 1
     }
   }
+  
+  plot_centres = ggarrange(plot_centres_b0, plot_centres_b1, plot_centres_b3, ncol=3,
+                           common.legend=TRUE, legend="right")
+  plot_pointsdepechecomperboat = ggarrange(plot_pointsdepechecomperboat_b0,
+                                           plot_pointsdepechecomperboat_b1,
+                                           plot_pointsdepechecomperboat_b3,
+                                           ncol=3,
+                                           common.legend=TRUE, legend="right")
+  plot_pointsdepechecell = ggarrange(plot_pointsdepechecell_b0, plot_pointsdepechecell_b1,
+                                     plot_pointsdepechecell_b3,
+                                     ncol=3,
+                                     common.legend=TRUE, legend="right")
+  plot_pointsdepecheqte = ggarrange(plot_pointsdepecheqte_b0, plot_pointsdepecheqte_b1,
+                                    plot_pointsdepecheqte_b3, ncol=3,
+                                    common.legend=TRUE, legend="right")
+
+    
+  # On sauve les 7 graphes produits pour ce couple de valeurs (k, i)
+  if(! dir.exists(simu_file_plots)) dir.create(simu_file_plots)
+  
+  path = paste0(simu_file_plots, "plot_strates_i",i,"_k",k,".png")
+  png(file = path, width = 600, height = 500)
+  plot(plot_strates)
+  dev.off()
+  
+  path = paste0(simu_file_plots, "plot_latentfield_i",i,"_k",k,".png")
+  png(file = path, width = 600, height = 500)
+  plot(plot_latentfield)
+  dev.off()
+  
+  path = paste0(simu_file_plots, "plot_scientificdata_i",i,"_k",k,".png")
+  png(file = path, width = 600, height = 500)
+  plot(plot_scientificdata)
+  dev.off()
+  
+  path = paste0(simu_file_plots, "plot_centres_i",i,"_k",k,".png")
+  png(file = path, width = 1500, height = 500)
+  plot(plot_centres)
+  dev.off()
+  
+  path = paste0(simu_file_plots, "plot_pecheperboat_i",i,"_k",k,".png")
+  png(file = path, width = 1500, height = 500)
+  plot(plot_pointsdepechecomperboat)
+  dev.off()
+  
+  path = paste0(simu_file_plots, "plot_pechecell_i",i,"_k",k,".png")
+  png(file = path, width = 1500, height = 500)
+  plot(plot_pointsdepechecell)
+  dev.off()
+  
+  path = paste0(simu_file_plots, "plot_pecheqte_i",i,"_k",k,".png")
+  png(file = path, width = 1500, height = 500)
+  plot(plot_pointsdepecheqte)
+  dev.off()
+  
   res <- list(Results,List_param,counter)
   return(res)
 }

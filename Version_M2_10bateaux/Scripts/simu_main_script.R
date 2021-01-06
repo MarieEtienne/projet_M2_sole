@@ -4,13 +4,14 @@
 # B. Alglave based on Conn et al. (2017)
 
 source("Scripts/function/load_packages.R")
+library(ggpubr) #pour utiliser ggarrange
 
 #-----------------------------------------------------------
 #-------------- Simulation/estimation settings -------------
 #-----------------------------------------------------------
 
 # Simulation name
-simu_name = "100_simu_4_types_reallocation_10_bateau"
+simu_name = "Bateaux10_Repets100_b013_k01"
 
 #---------------------
 # Simulation scenarios
@@ -111,14 +112,12 @@ counter <- 1
 # index of the first iteration
 i0 <- 1
 # Number of simulation
-n_sim = 100
+n_sim = 2
 
 RandomSeed = 123456
 
 # Reallocation uniforme ?
 reallocation = c(0,1) # Reallocation = 0 si pas de reallocation, = 1 si reallocation
-xlim = 10
-ylim = 8
 
 # Nombre de bateaux ?
 nboat = 10
@@ -183,6 +182,7 @@ for (k in reallocation) {
   Start_time.tot_2 <- str_replace_all(Start_time.tot, " ", "_")
   Start_time.tot_2 <- str_replace_all(Start_time.tot_2, ":", "_")
   simu_file <- paste0("results/com_x_sci_data_14_scientific_commercial_simple-",Start_time.tot_2,"_",simu_name,"/")
+  simu_file_plots <- paste0("results_plots/com_x_sci_data_14_scientific_commercial_simple-",Start_time.tot_2,"_",simu_name,"/")
   
   # When simu crashes --> param to re-run the loop.
   # Before re-runing the loop load the last Results_loop list (Results/Simu/)
@@ -267,7 +267,6 @@ for (k in reallocation) {
 }
 
 #POUR AVOIR SUR LE MEME GRAPHE DES DIFFERENTES CONFIG DE REALLOCATION
-library(ggpubr) #pour utiliser ggarrange
 
 #biais abondance
 ggarrange(Plot_results_list0[[1]],Plot_results_list1[[1]],ncol=2,common.legend=TRUE,legend="top")
@@ -279,6 +278,7 @@ ggarrange(Plot_results_list0[[2]],Plot_results_list1[[2]],ncol=2,common.legend=T
 ggarrange(Plot_results_list0[[3]],Plot_results_list1[[3]],ncol=2,common.legend=TRUE,legend="top")
 
 # Forcer l'échelle à être identique pour pouvoir comparer
+# Ajouter légende au haut en gris : pas de réallocation / réallocation uniforme des captures d'un meme bateau
 
 
 #ANCIENNES LIGNES DE BAPTISTE
