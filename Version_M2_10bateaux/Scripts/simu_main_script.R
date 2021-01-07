@@ -111,7 +111,7 @@ counter <- 1
 # index of the first iteration
 i0 <- 1
 # Number of simulation
-n_sim = 2
+n_sim = 100
 
 RandomSeed = 123456
 
@@ -269,7 +269,8 @@ for (k in reallocation) {
 #POUR AVOIR SUR LE MEME GRAPHE DES DIFFERENTES CONFIG DE REALLOCATION
 
 #biais abondance
-figure_biaisabondance <- ggarrange(Plot_results_list0[[1]],Plot_results_list1[[1]],ncol=2,common.legend=TRUE,legend="top")
+figure_biaisabondance <- ggarrange(Plot_results_list0[[1]], Plot_results_list1[[1]],
+                                   ncol=2, common.legend=TRUE, legend="top")
 figure_biaisabondance = annotate_figure(figure_biaisabondance,
                 top = text_grob("Comparaison biais abondance avec et sans reallocation", face = "bold", size = 14),
                 left = text_grob("Relative biais of abundance",
@@ -301,17 +302,17 @@ figure_MSPE
 # On sauve les 3 graphes de métriques de performance
 if(! dir.exists(simu_file_metriques)) dir.create(simu_file_metriques)
 
-path = paste0(simu_file_metriques, "figure_biaisabondance.png")
+path = paste0(simu_file_metriques, "biaisabondance_boats", nboat, ".png")
 png(file = path, width = 1100, height = 500)
 plot(figure_biaisabondance)
 dev.off()
 
-path = paste0(simu_file_metriques, "figure_biaisb.png")
+path = paste0(simu_file_metriques, "biaisb_boats", nboat, ".png")
 png(file = path, width = 1100, height = 500)
 plot(figure_biaisb)
 dev.off()
 
-path = paste0(simu_file_metriques, "figure_MSPE.png")
+path = paste0(simu_file_metriques, "MSPE_boats", nboat, ".png")
 png(file = path, width = 1100, height = 500)
 plot(figure_MSPE)
 dev.off()
