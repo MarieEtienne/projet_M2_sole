@@ -83,19 +83,8 @@ simu_commercial_data <- function(loc_x,
   # Visualisation des 10 centres des zones de peche de chaque bateau
   centres = as.data.frame(cbind(x = X$x, y = X$y, boats = seq(1, 10)))
   plot_centres = ggplot(centres) + geom_point(aes(x=x, y=y, col=as.factor(boats)), size=4) +
-    labs(color= "Bateau") +
-    theme_bw() +
-    theme(axis.title = element_blank(),legend.position='none')
-  if (b==0){
-    plot_centres <- plot_centres +
-      facet_wrap(~"b = 0")
-  }else if (b==1){
-    plot_centres <- plot_centres +
-      facet_wrap(~"b = 1")
-  } else {
-    plot_centres <- plot_centres +
-      facet_wrap(~"b = 3")
-  }
+    labs(color= "Bateau", title = paste0("i = ", i, ", k = ", k, " et b = ", b)) +
+    theme_bw()
 
   
   # Pour l'instant on dit que la zone de peche de chaque bateau =
@@ -134,19 +123,8 @@ simu_commercial_data <- function(loc_x,
   # Visualisation des points de peche de chaque bateau dans sa zone
   peche_com = as.data.frame(cbind(x=boats_x, y=boats_y, boats=boats))
   plot_pointsdepechecomperboat = ggplot(peche_com) + geom_point(aes(x=x, y=y, col=as.factor(boats)), size=4) +
-    labs(color= "Bateau") +
-    theme_bw() + 
-    theme(axis.title = element_blank(),legend.position='none')
-  if (b==0){
-    plot_pointsdepechecomperboat <- plot_pointsdepechecomperboat +
-      facet_wrap(~"b = 0")
-  }else if (b==1){
-    plot_pointsdepechecomperboat <- plot_pointsdepechecomperboat +
-      facet_wrap(~"b = 1")
-  } else {
-    plot_pointsdepechecomperboat <- plot_pointsdepechecomperboat +
-      facet_wrap(~"b = 3")
-  }
+    labs(color= "Bateau", title = paste0("i = ", i, ", k = ", k, " et b = ", b)) +
+    theme_bw()
   
   # # Visualisation des points de peche du premier bateau dans sa zone
   # peche_com_boat1 = as.data.frame(cbind(x=boats_x[1:300], y=boats_y[1:300], boats=boats[1:300]))

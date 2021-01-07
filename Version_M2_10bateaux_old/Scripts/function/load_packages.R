@@ -78,8 +78,7 @@ packages <- c("chron",
               # "tools",
               "viridis",
               #"vmstools",
-              "worms",
-              "ggpubr")
+              "worms")
 
 ipak(packages)
 

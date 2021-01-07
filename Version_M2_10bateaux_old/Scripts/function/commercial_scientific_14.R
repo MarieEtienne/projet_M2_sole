@@ -266,52 +266,18 @@ simu_commercial_scientific <- function(Results,
     pointsdepeche_com = as.data.frame(cbind(x = x_com, y = y_com, boats = boats_number, ncell = index_com_i, y_com_i = y_com_i))
     plot_pointsdepechecell = ggplot(pointsdepeche_com) +
       geom_point(aes(x=x, y=y, col=as.factor(boats)), size=4) +
-      labs(color= "Bateau") +
-      theme_bw() +
-      theme(axis.title = element_blank(),legend.position='none')
-    if (b==0){
-      plot_pointsdepechecell <- plot_pointsdepechecell +
-        facet_wrap(~"b = 0")
-    }else if (b==1){
-      plot_pointsdepechecell <- plot_pointsdepechecell +
-        facet_wrap(~"b = 1")
-    } else {
-      plot_pointsdepechecell <- plot_pointsdepechecell +
-        facet_wrap(~"b = 3")
-    }
+      labs(color= "Bateau", title = paste0("i = ", i, ", k = ", k, " et b = ", b)) +
+      theme_bw()
     
     if (k==0){
       plot_pointsdepecheqte = ggplot(pointsdepeche_com) + geom_point(aes(x=x, y=y, col=y_com_i), size=4) +
-        labs(color= "Quantite pechee") +
+        labs(color= "Quantite pechee", title = paste0("i = ", i, ", k = ", k, " et b = ", b)) +
         theme_bw() +
         scale_color_gradient2(midpoint = mean(pointsdepeche_com$y_com_i), low = "#E6F2FC", mid = "#62B4FC",
-                              high = "#02182C", space = "Lab" ) + 
-        theme(axis.title = element_blank(),legend.position='none')
-      if (b==0){
-        plot_pointsdepecheqte <- plot_pointsdepecheqte +
-          facet_wrap(~"b = 0")
-      }else if (b==1){
-        plot_pointsdepecheqte <- plot_pointsdepecheqte +
-          facet_wrap(~"b = 1")
-      } else {
-        plot_pointsdepecheqte <- plot_pointsdepecheqte +
-          facet_wrap(~"b = 3")
-      }
-        
+                              high = "#02182C", space = "Lab" )
     } else{
       plot_pointsdepecheqte = ggplot(pointsdepeche_com) + geom_point(aes(x=x, y=y, col=as.factor(round(y_com_i, 1))), size=4) +
-        labs(color= "Quantite pechee") + theme_bw() +
-        theme(axis.title = element_blank(),legend.position='none')
-      if (b==0){
-        plot_pointsdepecheqte <- plot_pointsdepecheqte +
-          facet_wrap(~"b = 0")
-      }else if (b==1){
-        plot_pointsdepecheqte <- plot_pointsdepecheqte +
-          facet_wrap(~"b = 1")
-      } else {
-        plot_pointsdepecheqte <- plot_pointsdepecheqte +
-          facet_wrap(~"b = 3")
-      }
+        labs(color= "Quantite pechee", title = paste0("i = ", i, ", k = ", k, " et b = ", b)) + theme_bw()
     }
     
     if (b==0) {
@@ -506,55 +472,20 @@ simu_commercial_scientific <- function(Results,
   
   plot_centres = ggarrange(plot_centres_b0, plot_centres_b1, plot_centres_b3, ncol=3,
                            common.legend=TRUE, legend="right")
-  plot_centres <- annotate_figure(plot_centres,
-                  top = text_grob(paste0("Centres des zones de peche pour les differentes valeurs de b et pour i = ", i, " et k = ", k), face = "bold", size = 20),
-                  left = text_grob("y",
-                                   rot = 90,
-                                   size = 11),
-                  bottom = text_grob("x", size = 11))
-  
   plot_pointsdepechecomperboat = ggarrange(plot_pointsdepechecomperboat_b0,
                                            plot_pointsdepechecomperboat_b1,
                                            plot_pointsdepechecomperboat_b3,
                                            ncol=3,
                                            common.legend=TRUE, legend="right")
-  plot_pointsdepechecomperboat <- annotate_figure(plot_pointsdepechecomperboat,
-                                  top = text_grob(paste0("Points de peches commerciaux par bateaux pour les differentes valeurs de b et pour i = ", i, " et k = ", k), face = "bold", size = 20),
-                                  left = text_grob("y",
-                                                   rot = 90,
-                                                   size = 11),
-                                  bottom = text_grob("x", size = 11))
-  
   plot_pointsdepechecell = ggarrange(plot_pointsdepechecell_b0, plot_pointsdepechecell_b1,
                                      plot_pointsdepechecell_b3,
                                      ncol=3,
                                      common.legend=TRUE, legend="right")
-  plot_pointsdepechecell <- annotate_figure(plot_pointsdepechecell,
-                                                  top = text_grob(paste0("Cellules ou il y a de la peche par bateaux pour les differentes valeurs de b et pour i = ", i, " et k = ", k), face = "bold", size = 20),
-                                                  left = text_grob("y",
-                                                                   rot = 90,
-                                                                   size = 11),
-                                                  bottom = text_grob("x", size = 11))
-  
   plot_pointsdepecheqte = ggarrange(plot_pointsdepecheqte_b0, plot_pointsdepecheqte_b1,
                                     plot_pointsdepecheqte_b3, ncol=3,
                                     common.legend=TRUE, legend="right")
-  if (k==0){
-    plot_pointsdepecheqte <- annotate_figure(plot_pointsdepecheqte,
-                                            top = text_grob(paste0("Quantite pechee par cellule pour les differentes valeurs de b et pour i = ", i, " et k = ", k), face = "bold", size = 20),
-                                            left = text_grob("y",
-                                                             rot = 90,
-                                                             size = 11),
-                                            bottom = text_grob("x", size = 11))
-  }else{
-    plot_pointsdepecheqte <- annotate_figure(plot_pointsdepecheqte,
-                                             top = text_grob(paste0("Quantite pechee par cellule (une couleur correspond a une quantite et donc a un bateau) pour les differentes valeurs de b et pour i = ", i, " et k = ", k), face = "bold", size = 20),
-                                             left = text_grob("y",
-                                                              rot = 90,
-                                                              size = 11),
-                                             bottom = text_grob("x", size = 11))
-  }
 
+    
   # On sauve les 7 graphes produits pour ce couple de valeurs (k, i)
   if(! dir.exists(simu_file_plots)) dir.create(simu_file_plots)
   

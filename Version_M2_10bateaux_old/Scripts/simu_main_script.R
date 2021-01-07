@@ -4,6 +4,7 @@
 # B. Alglave based on Conn et al. (2017)
 
 source("Scripts/function/load_packages.R")
+library(ggpubr) #pour utiliser ggarrange
 
 #-----------------------------------------------------------
 #-------------- Simulation/estimation settings -------------
@@ -182,7 +183,6 @@ for (k in reallocation) {
   Start_time.tot_2 <- str_replace_all(Start_time.tot_2, ":", "_")
   simu_file <- paste0("results/com_x_sci_data_14_scientific_commercial_simple-",Start_time.tot_2,"_",simu_name,"/")
   simu_file_plots <- paste0("results_plots/com_x_sci_data_14_scientific_commercial_simple-",Start_time.tot_2,"_",simu_name,"/")
-  simu_file_metriques <- paste0("results_metriques/com_x_sci_data_14_scientific_commercial_simple-",Start_time.tot_2,"_",simu_name,"/")
   
   # When simu crashes --> param to re-run the loop.
   # Before re-runing the loop load the last Results_loop list (Results/Simu/)
@@ -260,62 +260,25 @@ for (k in reallocation) {
   # SD.S_df <- Results_loop$SD.S_df
   
   if (k==0){
-    Plot_results_list0 <- Plot_Results(Results,b_set,k)
+    Plot_results_list0 <- Plot_Results(Results,b_set)
   } else {
-    Plot_results_list1 <- Plot_Results(Results,b_set,k)
+    Plot_results_list1 <- Plot_Results(Results,b_set)
   }
 }
 
 #POUR AVOIR SUR LE MEME GRAPHE DES DIFFERENTES CONFIG DE REALLOCATION
 
 #biais abondance
-figure_biaisabondance <- ggarrange(Plot_results_list0[[1]],Plot_results_list1[[1]],ncol=2,common.legend=TRUE,legend="top")
-figure_biaisabondance = annotate_figure(figure_biaisabondance,
-                top = text_grob("Comparaison biais abondance avec et sans reallocation", face = "bold", size = 14),
-                left = text_grob("Relative biais of abundance",
-                                 rot = 90,
-                                 size = 11),
-                bottom = text_grob("Levels of sampling", size = 11))
-figure_biaisabondance
+ggarrange(Plot_results_list0[[1]],Plot_results_list1[[1]],ncol=2,common.legend=TRUE,legend="top")
 
 #biais b
-figure_biaisb <- ggarrange(Plot_results_list0[[2]],Plot_results_list1[[2]],ncol=2,common.legend=TRUE,legend="top")
-figure_biaisb = annotate_figure(figure_biaisb,
-                top = text_grob("Comparaison biais b avec et sans reallocation", face = "bold", size = 14),
-                left = text_grob("Relative biais of b",
-                                 rot = 90,
-                                 size = 11),
-                bottom = text_grob("Levels of sampling", size = 11))
-figure_biaisb
+ggarrange(Plot_results_list0[[2]],Plot_results_list1[[2]],ncol=2,common.legend=TRUE,legend="top")
 
 #MSPE
-figure_MSPE <- ggarrange(Plot_results_list0[[3]],Plot_results_list1[[3]],ncol=2,common.legend=TRUE,legend="top")
-figure_MSPE = annotate_figure(figure_MSPE,
-                top = text_grob("Comparaison biais MSPE avec et sans reallocation", face = "bold", size = 14),
-                left = text_grob("MPSE",
-                                 rot = 90,
-                                 size = 11),
-                bottom = text_grob("Levels of sampling", size = 11))
-figure_MSPE
+ggarrange(Plot_results_list0[[3]],Plot_results_list1[[3]],ncol=2,common.legend=TRUE,legend="top")
 
-# On sauve les 3 graphes de métriques de performance
-if(! dir.exists(simu_file_metriques)) dir.create(simu_file_metriques)
-
-path = paste0(simu_file_metriques, "figure_biaisabondance.png")
-png(file = path, width = 1100, height = 500)
-plot(figure_biaisabondance)
-dev.off()
-
-path = paste0(simu_file_metriques, "figure_biaisb.png")
-png(file = path, width = 1100, height = 500)
-plot(figure_biaisb)
-dev.off()
-
-path = paste0(simu_file_metriques, "figure_MSPE.png")
-png(file = path, width = 1100, height = 500)
-plot(figure_MSPE)
-dev.off()
-
+# Forcer l'échelle à être identique pour pouvoir comparer
+# Ajouter légende au haut en gris : pas de réallocation / réallocation uniforme des captures d'un meme bateau
 
 
 #ANCIENNES LIGNES DE BAPTISTE
@@ -329,3 +292,5 @@ dev.off()
 # file <- ""
 # load(file)
 # RelBias_param(Results_loop)
+
+

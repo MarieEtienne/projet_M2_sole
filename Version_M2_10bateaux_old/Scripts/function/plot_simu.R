@@ -12,7 +12,7 @@
 #' @return Converge_table : convergence table
 #' 
 
-Plot_Results <- function(Results,b_set, k){
+Plot_Results <- function(Results,b_set){
   
   # Identify simulations/estimations that have failed
   Results[,"OnBoundary"]=rep(0,nrow(Results))
@@ -67,17 +67,12 @@ Plot_Results <- function(Results,b_set, k){
                      fill = Data_source))+
     geom_hline(yintercept = 0,linetype="dashed")+
     theme_bw()+
-    theme(axis.title = element_blank(),legend.position='none') +
+    theme(legend.position='none')+
     scale_fill_manual(breaks = c("scientific_only", "commercial_only", "scientific_commercial"), 
-                      values=c("#56B4E9","#999999","#E69F00"))
-  if (k==0){
-    RelBias_N <- RelBias_N +
-      facet_wrap(~"Pas de reallocation")
-  }else{
-    RelBias_N <- RelBias_N +
-      facet_wrap(~"Reallocation")
-  }
-    
+                      values=c("#56B4E9","#999999","#E69F00"))+
+    ylab("Relative bias of abundance")+
+    xlab("Levels of preferential sampling (b)") +
+    facet_wrap(~k)
 
   #construction du graphique pour le biais de b 
   Bias_b <- ggplot()+
@@ -87,16 +82,11 @@ Plot_Results <- function(Results,b_set, k){
                      fill = Data_source))+
     geom_hline(yintercept = 0,linetype="dashed")+
     theme_bw()+
-    theme(axis.title = element_blank(),legend.position='none')+
+    theme(legend.position='none')+
     scale_fill_manual(breaks = c("commercial_only", "scientific_commercial"), 
-                      values=c("#999999","#E69F00"))
-  if (k==0){
-    Bias_b <- Bias_b +
-      facet_wrap(~"Pas de reallocation")
-  }else{
-    Bias_b <- Bias_b +
-      facet_wrap(~"Reallocation")
-  }
+                      values=c("#999999","#E69F00"))+
+    ylab("Relative bias of b")+
+    xlab("Levels of preferential sampling (b)")
   
   #construction du graphique pour le MSPE
   MSPE_S <- ggplot()+
@@ -105,16 +95,11 @@ Plot_Results <- function(Results,b_set, k){
                      y = MSPE_S,
                      fill = Data_source))+
     theme_bw()+
-    theme(axis.title = element_blank(),legend.position='none')+
+    theme(legend.position='none')+
     scale_fill_manual(breaks = c("scientific_only", "commercial_only", "scientific_commercial"), 
-                      values=c("#56B4E9","#999999","#E69F00"))
-  if (k==0){
-    MSPE_S <- MSPE_S +
-      facet_wrap(~"Pas de reallocation")
-  }else{
-    MSPE_S <- MSPE_S +
-      facet_wrap(~"Reallocation")
-  }
+                      values=c("#56B4E9","#999999","#E69F00"))+
+    ylab("MSPE")+
+    xlab("Levels of preferential sampling (b)")
   
   res <- list(RelBias_N=RelBias_N,
               Bias_b=Bias_b,
