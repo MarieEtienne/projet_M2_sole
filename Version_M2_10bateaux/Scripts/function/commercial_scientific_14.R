@@ -269,15 +269,15 @@ simu_commercial_scientific <- function(Results,
       labs(color= "Bateau") +
       theme_bw() +
       theme(axis.title = element_blank(),legend.position='none')
-    if (b==0){
+    if (b==b_set[1]){
       plot_pointsdepechecell <- plot_pointsdepechecell +
-        facet_wrap(~"b = 0")
-    }else if (b==1){
+        facet_wrap(~paste0("b = ", b_set[1]))
+    }else if (b==b_set[2]){
       plot_pointsdepechecell <- plot_pointsdepechecell +
-        facet_wrap(~"b = 1")
+        facet_wrap(~paste0("b = ", b_set[2]))
     } else {
       plot_pointsdepechecell <- plot_pointsdepechecell +
-        facet_wrap(~"b = 3")
+        facet_wrap(~paste0("b = ", b_set[3]))
     }
     
     if (k==0){
@@ -287,39 +287,39 @@ simu_commercial_scientific <- function(Results,
         scale_color_gradient2(midpoint = mean(pointsdepeche_com$y_com_i), low = "#E6F2FC", mid = "#62B4FC",
                               high = "#02182C", space = "Lab" ) + 
         theme(axis.title = element_blank(),legend.position='none')
-      if (b==0){
+      if (b==b_set[1]){
         plot_pointsdepecheqte <- plot_pointsdepecheqte +
-          facet_wrap(~"b = 0")
-      }else if (b==1){
+          facet_wrap(~paste0("b = ", b_set[1]))
+      }else if (b==b_set[2]){
         plot_pointsdepecheqte <- plot_pointsdepecheqte +
-          facet_wrap(~"b = 1")
+          facet_wrap(~paste0("b = ", b_set[1]))
       } else {
         plot_pointsdepecheqte <- plot_pointsdepecheqte +
-          facet_wrap(~"b = 3")
+          facet_wrap(~paste0("b = ", b_set[1]))
       }
         
     } else{
       plot_pointsdepecheqte = ggplot(pointsdepeche_com) + geom_point(aes(x=x, y=y, col=as.factor(round(y_com_i, 1))), size=4) +
         labs(color= "Quantite pechee") + theme_bw() +
         theme(axis.title = element_blank(),legend.position='none')
-      if (b==0){
+      if (b==b_set[1]){
         plot_pointsdepecheqte <- plot_pointsdepecheqte +
-          facet_wrap(~"b = 0")
-      }else if (b==1){
+          facet_wrap(~c("b = ", b_set[1]))
+      }else if (b==b_set[2]){
         plot_pointsdepecheqte <- plot_pointsdepecheqte +
-          facet_wrap(~"b = 1")
+          facet_wrap(~c("b = ", b_set[2]))
       } else {
         plot_pointsdepecheqte <- plot_pointsdepecheqte +
-          facet_wrap(~"b = 3")
+          facet_wrap(~c("b = ", b_set[3]))
       }
     }
     
-    if (b==0) {
+    if (b==b_set[1]) {
       plot_centres_b0 = plot_centres
       plot_pointsdepechecomperboat_b0 = plot_pointsdepechecomperboat
       plot_pointsdepechecell_b0 = plot_pointsdepechecell
       plot_pointsdepecheqte_b0 = plot_pointsdepecheqte
-    } else if (b==1) {
+    } else if (b==b_set[2]) {
       plot_centres_b1 = plot_centres
       plot_pointsdepechecomperboat_b1 = plot_pointsdepechecomperboat
       plot_pointsdepechecell_b1 = plot_pointsdepechecell

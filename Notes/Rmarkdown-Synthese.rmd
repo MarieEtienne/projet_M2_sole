@@ -1,0 +1,155 @@
+---
+title: "Synthèse : Effet de l'allocation proportionnelle des captures de soles"
+author: "Oceane GUITTON, Chloe TELLIER, Juliette THEOLEYRE"
+output:
+  html_document:
+    toc: yes
+    toc_float: yes
+    theme: cerulean
+  pdf_document:
+    toc: yes
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+***
+# Contexte
+
+Dans sa thèse Baptiste développe un modèle hiérarchique qui couple des données de captures de soles issues de protocole d’échantillonnage scientifique (protocole standardisé mais couteux et limités dans le temps) et des données de captures commerciales (peu chères, mais qui souffrent d’un biais d’échantillonnage) pour estimer l’abondance de la sole dans le golfe de Gascogne. Son modèle est nourri par des données de capture géoréférencées.  
+A terme, l'objectif de la thèse de Baptiste est de décrire la dynamique spatio-temporel des poissons (ici cas appliqué aux soles) à petite échelle et identifier leurs zones fonctionnelles.
+
+***
+# Problématique
+
+En pratique les données de captures commerciales ne sont pas géoréférencées. La capture débarquée au port est connue ainsi que la trajectoire des bateaux (données réglementaire de positionnement des navires de pêche). D’après la trajectoire des bateaux, des positions du bateau associés à la pêche sont identifiées et la capture totale est répartie équitablement sur chaque point de pêche. C'est ce qu'on appellera par la suite l'uniformisation des pêches.
+
+Dans le modèle que Baptiste utilise, on connait les quantités exactes pêchées à chaque point de pêche. Or, dans la réalité on ne dispose pas de ces valeurs exactes mais seulement d'une valeur moyenne qui est attribuée à chaque point de pêche pour un même bateau.
+
+Se pose alors la problématique suivante : *" Est-ce que l'uniformisation des captures (par carré statistique/ par bateau) amène un biais à la simulation et à l'estimation des paramètres ? "*  
+On peut aussi la poser autrement : *" La prise en compte de l'échantillonnage préférentiel dans les données commerciales couplée aux informations standardisées des données scientifiques permettent ils de compenser le lissage qu'entraine l'uniformisation des points de pêche ? "*
+
+***
+# Modèle et hypotèses de Baptise 
+
+La démarche de Baptiste est la suivante :  
+Il utilise un modèle intégré pour déduire la distribution spatiale des poissons en combinant à la fois des données scientifiques et commerciales tout en tenant compte de l'échantillonnage préférentiel induit par le comportement ciblé des pêcheurs.
+
+(Modèle intégré : Les inférences sont dérivées dans un cadre classique de maximum de vraisemblance.)
+
+(Afin d’explorer les bénéfices de ce modèle : nous évaluons la performance de la méthode d'estimation basée sur des expériences de simulation-estimation.)
+
+Le modèle hiérarchique intégré de Baptiste est contitué de 3 composantes :  
+  * Un champs latent S correspondant à la densité/biomasse de poisson.  
+  * Un processus de Poisson non-homogène qui permet de prendre en compte le biais relatif à l'échantillonnage préférentiel.  
+  * Des valeurs latentes qui conditionnent les processus d'observation des données scientifiques et commerciales. (A revoir niveau formulation)  
+
+
+## Champ Latent
+
+La densité de poissons 𝑆 est modélisée par un **champ spatial latent gaussien logarithmique**. La valeur du champ latent est exprimée par une combinaison linéaire entre un intercept, des co-variables environnementales associées/pondérées? à des paramètres de relation espèce-habitat et un effet aléatoire spatial.
+
+
+## Processus ponctuel de Poisson non-homogène : génération des points de pêche.
+
+Hypothèses :   
+* Les bateaux d'une même flotte présentent un comportement homogène et partagent donc les mêmes paramètres (notamment de capturabilité).    
+* Le processus d’échantillonnage des données scientifiques est considéré indépendant du champ latent (non préférentiel).    
+* L’échantillonnage des données commerciales est préférentiel, et les emplacements de pêche sont conditionnés à l’abondance S.    
+
+Les points de pêches des bateaux sont modélisés par un **processus ponctuel de Poisson non-homogène** avec une intensité qui dépend de l'abondance du champ latent a cet endroit (S). Elle est aussi associée à des co-variables et à un effet spatial résiduel.  
+On définit de plus une métrique sans dimension permettant la quantification du degrès d'échantillonnage préférentiel (b).
+
+## Le modèle Zero-Inflated : attribution des quantités poissons pêchés en chaque point de pêche.
+
+Dans le cadre du modèle de Baptiste, chaque point de pêche se voit attribuer une quantité exact de poissons pêchés.
+
+On determine  dans un premier temps quels sont les points ou la peche a ete 'sans succes' et ceux ou elle s'est revelee etre fructueuse. Pour cela, on fait appel a un **modele zero-inflated** et on modelise la probabilite de presence/absence de capture par une **loi de Bernoulli**.
+
+Puis on attribue a chaque point de peche 'fructueux' la quantite de poisson pechee. Pour cela on modelise une **loi lognormale** et chaque point de pêche fructueux se voit attribuer une quantité de poisson pêchés.
+
+On obtient alors les données sous la forme : quantité de poisson exactement capturés en chaque point de pêche.
+
+## Estimation des paramètres.
+
+Une fois ces données de captures simulées, il ne suffit plus qu'à les rentrer dans le modèle de Baptiste pour ensuite comparer les paramètres estimés à ceux utilisés pour générer les données.
+
+RQ : est ce qu'on doit parler des données VMS et dire qu'on ne connait pas exactement les coordonnées des points de pêche mais on peut les estimer à partir des données VMS ?
+
+***
+# Notre objectif au sein de ce projet
+
+Cependant, les données commerciales ne sont pas rendues sous cette forme. En effet, chaque bateau ne déclare qu'une quantité totale de poissons capturés au cours d'une même journée et non en chaque point de pêche.
+
+De la même manière que Baptiste, on va chercher à simuler un jeu de données commerciales, mais cette fois la capture totale de chaque bateau est repartie de facon uniforme entre tous ses points de peche. Cela implique que les points de pêche visités par un même bateau ont une même valeur de quantité de poissons pêchés.
+
+# Simplification
+
+Afin d'aborder le problème sous un angle simplifié, on retire du modèle hiérarchique intégré tous les effets spatialisés. La ressource est uniquement guidée par des co-variables (sol, teneur en chlorophylle, etc.) et on conserve l’échantillonnage préférentiel.   
+
+L'étude se concentre dans un premier temps sur un seul carré statistique. En effet ce qui se passes à l’échelle d’un carré pourra être retranscrit à l’echelle de plusieurs.  
+
+On fixe notre flotte à 10 bateaux executant en une journée 3000 coups de pêche au total. Tous les bateaux de la flotte présentent les mêmes caractéristiques : le paramètre de capturabilité est le même pour toute la flotte.
+
+# Notre modèle
+
+## Génération du champ latent S
+
+Par simplification par rapport au modèle complet de Baptiste, on ne considère pour la génération du champ latent que les covariables environnementales. La valeur du champ latent représente alors la densité de poissons au point x.
+
+## Génération des points de pêche par le processus ponctuel de Poisson non-homogène
+
+De premier abord, nous nous sommes intéressées au processus d'echantillonage, c'est a dire a la generation des points de peche (et de leur distribution spatiale) selon un **processus de poisson non homogene**. L'intensite des points de peche dans une zone donnee dépendant de l'abondance du champ latent a cet endroit.
+
+Or, au fil de notre appréhension du modèle, on a pu relever un manque de cohérence spatial dans les pêches des différents bateaux. On cherche alors à palier se problème en imaginant une nouvelle stratégie de répartition des points de pêches et des bateaux qui auquels ils sont associés.
+
+On tente alors de rétablir une cohérence en cherchant à tracer le trajet du bateau cible, ou du moins les zones dans lesquels celui-ci va exécuter ses coups de pêche. Ces zones sont délimitées en prenant en compte la force d'attraction de la biomasse (densité de soles) comme avec le premier processus d'échantillonnage.
+Cette stratégie va alors contraindre les points de pêches à être localisés dans les zones où les bateaux sont passés.
+
+
+**La stratégie se révèle être la suivante**
+
+1. Pour chaque bateau, on commence par tirer un point au hasard au moyen d’un **processus ponctuel de Poisson non-homogène**. Ce point va alors constituer le centre de la zone de pêche du bateau i pour le jour j. 
+
+Remarque : Ce point tiré à l’aide d’un processus ponctuel a plus de chance de se retrouver dans une zone où la densité en soles est grande.
+
+2. L’amplitude de la zone de pêche du bateau est ensuite délimitée par un rayon (reste à déterminer ce rayon).  
+On définit alors un cercle de centre I et de rayon R correspondant à la zone de pêche du bateau i pour le jour j.
+
+3. Une fois la zone de pêche délimitée, on va tirer les coups de pêche de bateau cible au sein même de cette zone.  
+Les points de pêches, sont comme dans le modèle précédent tirés selon le **processus ponctuel de Poisson non homogène**.
+
+Remarque : Pour l’instant, on considère que chacun des bateaux execute le même nombre de coups de pêche. Ainsi, sur nos 3000 points de pêche total souhaités, et avec une flotte de 10 bateaux, cela nous ramène à 300 points de pêche par bateau et par jour.
+
+
+Dans un deuxième temps, on pourra réfléchir à ne pas forcer chaque bateau à avoir autant de point de pêche que son voisin. En effet, cela permettrait d’attribuer aux bateaux pêchant dans des zones moins denses en soles d’effectuer moins de coups de pêches, attestant de leur pêche non fructueuse. On gagnerai ainsi en authenticité.
+
+
+## Le modèle Zero-Inflated : réallocation uniforme des quantités poissons pêchés en chaque point de pêche
+
+Le **modèle zero-inflated** nous permet toujours de déterminer la nature des coups de pêche (raté ou fructueux) à l'aide d'une **loi de Bernoulli**.   
+Comme dans le modèle de Baptiste, on commence par attribuer une quantité de poissons capturé par point de pêche à l'aide d'une loi lognormale.   
+On somme ensuite les quantités de poissons en chaque points de pêche d'un même bateau que l'on divise par le nombre de point de pêche du bateau (pour l'instant 300 point de pêche par bateau). Puis, on réalloue à chacun des points de pêche du bateau cette moyenne. On simule ainsi les données commerciales telles quelles sont obtenues, i.e. une quantité totale de poissons capturés par bateau et par jour. Il s'agit de l'uniformisation de nos points de pêche.  
+On se retrouve alors avec autant de quantité différentes qu'il y a de bateau (soit 10 selon notre initialisation actuelle).
+
+
+## Limites du modèle : le rôle du nombre de bateaux
+
+On a remarqué que le “niveau d’uniformisation” pouvait être influencé par le nombre de bateaux au sein de la flotte, soit le nombre de captures totales différentes déclarées par jour. En effet, chaque bateau déclare son nombre total de capture pour la journée, au plus il y a de bateau, au plus il y a de totaux différents et donc au plus l’uniformisation serait ‘smooth’.
+
+On pourrait alors formuler la problématique suivante : *“Au maximum, combien de pings VMS peut on uniformiser pour un même bateau afin que les estimations des paramètres du modèles restent plausibles/efficaces ?”*
+
+Pour répondre à cette problématique, il nous suffirait de faire varier le nombre de bateau dans notre modèle ci-dessus. De ce fait le nombre de pings associé à chaque bateau suivrait une évolution inversement proportionnelle au nombre de bateau.
+
+## Estimation des paramètres
+
+Une fois ces données de captures simulées, il ne suffit plus qu'à les rentrer dans le modèle simplifié pour ensuite comparer les paramètres estimés à ceux utilisés pour générer les données.
+
+# Résultats : les graphiques obtenus ? 
+
+
+
+
+
+
+

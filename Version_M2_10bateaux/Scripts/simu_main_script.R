@@ -10,7 +10,7 @@ source("Scripts/function/load_packages.R")
 #-----------------------------------------------------------
 
 # Simulation name
-simu_name = "Bateaux10_Repets100_b013_k01"
+simu_name = "Test2"
 
 #---------------------
 # Simulation scenarios
@@ -81,7 +81,7 @@ q1_com <- 1
 # Relative catchability
 q2_com <- 1
 # Levels of preferential sampling
-b_set = c(0,1,3) 
+b_set = c(0,1,3)
 
 
 
@@ -111,7 +111,7 @@ counter <- 1
 # index of the first iteration
 i0 <- 1
 # Number of simulation
-n_sim = 100
+n_sim = 1
 
 RandomSeed = 123456
 
