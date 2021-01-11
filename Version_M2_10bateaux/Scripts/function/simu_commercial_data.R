@@ -47,8 +47,8 @@ simu_commercial_data <- function(loc_x,
                                  q1_com,
                                  q2_com,
                                  b,
-                                 nboat){
-  
+                                 sequencesdepeche){
+
   #initialisation
   index_com_i_2 = c() #index_com_i : sampled cell for each observation
   y_com_i_2 = c() # y_com_i : catch data
@@ -71,17 +71,23 @@ simu_commercial_data <- function(loc_x,
     Int_ps[loc_x$y[q],loc_x$x[q]] <- exp(beta0_fb + b*Strue_fb[q])
   }
   
-  # On dit qu'il y a 10 bateaux et 3000 points de peche au total
-  # Donc chaque bateau est associé à 300 points de peche
   
-  # On commence par définir le centre de la zone de peche de chacun des 10 bateaux
-  # Ce point de centre de zone est défini selon un processus de poisson inhomogène qui dépend du champ latent
+  # On commence par définir les centres de peche
+  # Ces points de centres de zone sont définis selon un processus de poisson inhomogène qui dépend du champ latent
   win_df <- owin(xrange=c(0.5,grid_dim['x'] + 0.5), yrange=c(0.5,grid_dim['y'] + 0.5),ystep  = 1,xstep=1)
-  X <- rpoint(nboat,as.im(Int_ps,win_df)) # Simulation des 10 points centraux
-  # X correspond donc aux coordonnées des 10 "points centraux" des zones de peche de chaque bateau
+  X <- rpoint(sequencesdepeche*zonespersequence,as.im(Int_ps,win_df)) # Simulation des points centraux
+  # X correspond donc aux coordonnées des sequencesdepeche*zonespersequence "points centraux" des zones de peche de chaque bateau
   
-  # Visualisation des 10 centres des zones de peche de chaque bateau
-  centres = as.data.frame(cbind(x = X$x, y = X$y, boats = seq(1, nboat)))
+  # Visualisation des sequencesdepeche*zonespersequence centres des zones de peche de chaque bateau
+  boats = numeric()
+  for (q in 1:sequencesdepeche)
+  {
+    boats = c(boats, rep(q, zonespersequence))
+  }
+  
+  ### si choix des centres au hasard, c'est ici qu'il faut modifier
+  
+  centres = as.data.frame(cbind(x = X$x, y = X$y, boats = boats))
   plot_centres = ggplot(centres) + geom_point(aes(x=x, y=y, col=as.factor(boats)), size=4) +
     labs(color= "Bateau") +
     theme_bw() +
@@ -99,21 +105,22 @@ simu_commercial_data <- function(loc_x,
 
   
   # Pour l'instant on dit que la zone de peche de chaque bateau =
-  # point central +- 5 sur y, point centra +- 5 sur x
+  # point central +- 2 sur y, point central +- 2 sur x
   
-  # Pour chaque bateau on simule 300 points de peche dans sa zone de peche
+  # Pour chaque bateau on simule 150 / ( zonespersequence * sequencesdepeche) points de peche dans sa zone de peche
   boats_x = numeric()
   boats_y = numeric()
-  # On va stocker les coordonnées de ces 3000 points de peche (300 * 10 bateaux dans ces deux vecteurs)
+  # On va stocker les coordonnées de ces 150 points de peche dans ces deux vecteurs
   
-  # On considère successivement chacun des bateaux
-  for (boat in 1:nboat)
+  # On considère successivement chacune des sequences de peche * zonespersequence, donc chacune des zones de peche
+  for (centre in 1:(sequencesdepeche*zonespersequence))
   {
-    # On simule le processus de Poisson inhomogene, avec a chaque fois les coordonnées de centre de peche du bateau
-    # pour l'objet owin, n_samp_com/nboat=300 pour le rpoint, et on passe dans le rpoint Int_ps qui correspond
+    # On simule le processus de Poisson inhomogene, avec a chaque fois les coordonnées de centre de peche
+    # pour l'objet owin, n_samp_com/(sequencesdepeche*zonespersequence) pour le rpoint,
+    # et on passe dans le rpoint Int_ps qui correspond
     # aux lambdas qui dépendent du champ latent
-    win_df_boat <- owin(xrange=c(max(0.5, X$x[boat]-5), min(25.5, X$x[boat]+5)), yrange=c(max(0.5, X$y[boat]-5), min(25.5, X$y[boat]+5)), ystep=1, xstep=1)
-    X_boat <- rpoint(n_samp_com/nboat, as.im(Int_ps, win_df_boat))
+    win_df_boat <- owin(xrange=c(max(0.5, X$x[centre]-2), min(25.5, X$x[centre]+2)), yrange=c(max(0.5, X$y[centre]-2), min(25.5, X$y[centre]+2)), ystep=1, xstep=1)
+    X_boat <- rpoint(n_samp_com/(sequencesdepeche*zonespersequence), as.im(Int_ps, win_df_boat))
     # On ajoute les coordonnées de peche obtenues pour le bateau
     boats_x = c(boats_x, X_boat$x)
     boats_y = c(boats_y, X_boat$y)
@@ -121,15 +128,15 @@ simu_commercial_data <- function(loc_x,
   
   # On définit un vecteur qui correspond au numéro du bateau associé à chaque point de peche
   boats = numeric(0)
-  for (j in 1:nboat)
+  for (j in 1:sequencesdepeche)
   {
-    boats = c(boats, rep(j, n_samp_com/nboat))
+    boats = c(boats, rep(j, n_samp_com/sequencesdepeche))
   }
   
   # On a donc :
-  # boats_x les coordonnées sur l'axe des x des 3000 points de peche
-  # boats_y les coordonnées sur l'axe des y des 3000 points de peche
-  # boats les numéros des bateaux associés à chaque point de peche
+  # boats_x les coordonnées sur l'axe des x des 150 points de peche
+  # boats_y les coordonnées sur l'axe des y des 150 points de peche
+  # boats les numéros des sequences de peche associés à chaque point de peche
   
   # Visualisation des points de peche de chaque bateau dans sa zone
   peche_com = as.data.frame(cbind(x=boats_x, y=boats_y, boats=boats))

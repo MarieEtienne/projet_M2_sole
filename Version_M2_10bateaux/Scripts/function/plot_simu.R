@@ -38,26 +38,30 @@ Plot_Results <- function(Results,b_set, k){
   Which_plot = which(Results[,"type_b"] == "est_b")
 
   # Handle data to have pretty graph (a bit dirty...)
-  Results %>%
-    filter(Data_source == "scientific_only") -> Results_sc_only
-  Results_sc_only <- Results_sc_only[which(is.na(Results_sc_only$b_true)),]
+  # LA j'ai mis la partie scientifique en commentaire
+  # Results %>%
+  #   filter(Data_source == "scientific_only") -> Results_sc_only
+  # Results_sc_only <- Results_sc_only[which(is.na(Results_sc_only$b_true)),]
   Results %>%
     filter(Data_source != "scientific_only") -> Results_com
   
-  Results_sc_only$b_true <- b_set[1]
-  df_1 <- Results_sc_only
-  Results_sc_only <- do.call(rbind.data.frame, lapply(2:length(b_set),function(i){
-    df_1$b_true <- b_set[i]
-    Results_sc_only <- rbind(Results_sc_only,df_1)
-  }))
+  # Results_sc_only$b_true <- b_set[1]
+  # df_1 <- Results_sc_only
+  # Results_sc_only <- do.call(rbind.data.frame, lapply(2:length(b_set),function(i){
+  #   df_1$b_true <- b_set[i]
+  #   Results_sc_only <- rbind(Results_sc_only,df_1)
+  # }))
 
-  Results_2 <- rbind(Results_sc_only,Results_com)
+  # Results_2 <- rbind(Results_sc_only,Results_com)
+  Results_2 <- rbind(Results_com)
   Results_2$b_est[which(is.na(Results_2[,"b_est"]))] <- 0
   Results_plot <- Results_2[which(Results_2[,"b_est"]<10),]
   
   # Plots
   
-  Results_plot$Data_source <- factor(Results_plot$Data_source, levels = c("scientific_only", "commercial_only", "scientific_commercial"))
+  # La aussi petite modif pour enlever les données scientifiques
+  # Results_plot$Data_source <- factor(Results_plot$Data_source, levels = c("scientific_only", "commercial_only", "scientific_commercial"))
+  Results_plot$Data_source <- factor(Results_plot$Data_source, levels = c("commercial_only"))
   
   #construction du boxplot pour le biais de l'abondance
   RelBias_N <- ggplot()+
@@ -68,8 +72,10 @@ Plot_Results <- function(Results,b_set, k){
     geom_hline(yintercept = 0,linetype="dashed")+
     theme_bw()+
     theme(axis.title = element_blank(),legend.position='none') +
-    scale_fill_manual(breaks = c("scientific_only", "commercial_only", "scientific_commercial"), 
-                      values=c("#56B4E9","#999999","#E69F00"))
+    scale_fill_manual(breaks = c("commercial_only"), 
+                      values=c("#999999"))
+    # scale_fill_manual(breaks = c("scientific_only", "commercial_only", "scientific_commercial"), 
+    #                   values=c("#56B4E9","#999999","#E69F00"))
   if (k==0){
     RelBias_N <- RelBias_N +
       facet_wrap(~"Pas de reallocation")
@@ -80,6 +86,7 @@ Plot_Results <- function(Results,b_set, k){
     
 
   #construction du graphique pour le biais de b 
+  # Ici modif pour enlever les donnees scientifiques
   Bias_b <- ggplot()+
     geom_boxplot(data = Results_plot,
                  aes(x = as.factor(b_true),
@@ -88,8 +95,10 @@ Plot_Results <- function(Results,b_set, k){
     geom_hline(yintercept = 0,linetype="dashed")+
     theme_bw()+
     theme(axis.title = element_blank(),legend.position='none')+
-    scale_fill_manual(breaks = c("commercial_only", "scientific_commercial"), 
-                      values=c("#999999","#E69F00"))
+    scale_fill_manual(breaks = c("commercial_only"), 
+                      values=c("#999999"))
+    # scale_fill_manual(breaks = c("commercial_only", "scientific_commercial"), 
+    #                 values=c("#999999","#E69F00"))
   if (k==0){
     Bias_b <- Bias_b +
       facet_wrap(~"Pas de reallocation")
@@ -99,6 +108,7 @@ Plot_Results <- function(Results,b_set, k){
   }
   
   #construction du graphique pour le MSPE
+  # Encore enlever les donnees scientifiques
   MSPE_S <- ggplot()+
     geom_boxplot(data = Results_plot,
                  aes(x = as.factor(b_true),
@@ -106,8 +116,10 @@ Plot_Results <- function(Results,b_set, k){
                      fill = Data_source))+
     theme_bw()+
     theme(axis.title = element_blank(),legend.position='none')+
-    scale_fill_manual(breaks = c("scientific_only", "commercial_only", "scientific_commercial"), 
-                      values=c("#56B4E9","#999999","#E69F00"))
+    scale_fill_manual(breaks = c("commercial_only"), 
+                      values=c("#999999"))
+    # scale_fill_manual(breaks = c("scientific_only", "commercial_only", "scientific_commercial"), 
+    #                 values=c("#56B4E9","#999999","#E69F00"))
   if (k==0){
     MSPE_S <- MSPE_S +
       facet_wrap(~"Pas de reallocation")

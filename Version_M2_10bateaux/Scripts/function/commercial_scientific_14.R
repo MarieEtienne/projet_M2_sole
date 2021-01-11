@@ -97,13 +97,13 @@ simu_commercial_scientific <- function(Results,
                                        k,
                                        xlim,
                                        ylim,
-                                       nboat){
+                                       sequencesdepeche){
   #on se fiche de l'argument version ici, on pourrait le supprimer
     
   ################
   ## Simulate data
   ################
-  
+
   set.seed( RandomSeed + i ) # for figures : i = 2
   
   #---------------
@@ -245,7 +245,7 @@ simu_commercial_scientific <- function(Results,
                                                          q1_com,
                                                          q2_com,
                                                          b,
-                                                         nboat)
+                                                         sequencesdepeche)
     
     index_com_i <-  simu_commercial_data_outputs$index_com_i
     y_com_i <- simu_commercial_data_outputs$y_com_i
@@ -258,7 +258,7 @@ simu_commercial_scientific <- function(Results,
     
     if (k>0){ # Si on fait de la reallocation uniforme (cad k = 1)
       y_com_i <- commercial_reallocation_uniforme(k, xlim, ylim, y_com_i, n_samp_com,
-                                                  index_com_i, loc_x, nboat, boats_number)
+                                                  index_com_i, loc_x, sequencesdepeche, boats_number)
     }
     
     
@@ -292,10 +292,10 @@ simu_commercial_scientific <- function(Results,
           facet_wrap(~paste0("b = ", b_set[1]))
       }else if (b==b_set[2]){
         plot_pointsdepecheqte <- plot_pointsdepecheqte +
-          facet_wrap(~paste0("b = ", b_set[1]))
+          facet_wrap(~paste0("b = ", b_set[2]))
       } else {
         plot_pointsdepecheqte <- plot_pointsdepecheqte +
-          facet_wrap(~paste0("b = ", b_set[1]))
+          facet_wrap(~paste0("b = ", b_set[3]))
       }
         
     } else{
@@ -304,13 +304,13 @@ simu_commercial_scientific <- function(Results,
         theme(axis.title = element_blank(),legend.position='none')
       if (b==b_set[1]){
         plot_pointsdepecheqte <- plot_pointsdepecheqte +
-          facet_wrap(~c("b = ", b_set[1]))
+          facet_wrap(~paste0("b = ", b_set[1]))
       }else if (b==b_set[2]){
         plot_pointsdepecheqte <- plot_pointsdepecheqte +
-          facet_wrap(~c("b = ", b_set[2]))
+          facet_wrap(~paste0("b = ", b_set[2]))
       } else {
         plot_pointsdepecheqte <- plot_pointsdepecheqte +
-          facet_wrap(~c("b = ", b_set[3]))
+          facet_wrap(~paste0("b = ", b_set[3]))
       }
     }
     
@@ -435,7 +435,8 @@ simu_commercial_scientific <- function(Results,
       # Fill Results --> summary of simulation loops
       #Results : seulement ce qui nous intéresse
       #Ce Results permet de créer rapidement les plots des métriques de performance
-      #(→ MSPE, biais sur l’abondance totale, biais sur b)
+      # MSPE  biais sur l’abondance totale, biais sur b
+      
       Results[counter,"counter"]=counter
       Results[counter,"sim"]=i
       Results[counter,"Data_source"]=Estimation_model
@@ -507,7 +508,7 @@ simu_commercial_scientific <- function(Results,
   plot_centres = ggarrange(plot_centres_b0, plot_centres_b1, plot_centres_b3, ncol=3,
                            common.legend=TRUE, legend="right")
   plot_centres <- annotate_figure(plot_centres,
-                  top = text_grob(paste0("Centres des zones de peche pour les differentes valeurs de b et pour i = ", i, " et k = ", k, ", pour ", nboat, " bateaux"), face = "bold", size = 20),
+                  top = text_grob(paste0("Centres des zones de peche pour les differentes valeurs de b et pour i = ", i, " et k = ", k, ", pour ", sequencesdepeche, " bateaux"), face = "bold", size = 20),
                   left = text_grob("y",
                                    rot = 90,
                                    size = 11),
@@ -519,7 +520,7 @@ simu_commercial_scientific <- function(Results,
                                            ncol=3,
                                            common.legend=TRUE, legend="right")
   plot_pointsdepechecomperboat <- annotate_figure(plot_pointsdepechecomperboat,
-                                  top = text_grob(paste0("Points de peches commerciaux par bateaux pour les differentes valeurs de b et pour i = ", i, " et k = ", k, ", pour ", nboat, " bateaux"), face = "bold", size = 20),
+                                  top = text_grob(paste0("Points de peches commerciaux par bateaux pour les differentes valeurs de b et pour i = ", i, " et k = ", k, ", pour ", sequencesdepeche, " bateaux"), face = "bold", size = 20),
                                   left = text_grob("y",
                                                    rot = 90,
                                                    size = 11),
@@ -530,7 +531,7 @@ simu_commercial_scientific <- function(Results,
                                      ncol=3,
                                      common.legend=TRUE, legend="right")
   plot_pointsdepechecell <- annotate_figure(plot_pointsdepechecell,
-                                                  top = text_grob(paste0("Cellules ou il y a de la peche par bateaux pour les differentes valeurs de b et pour i = ", i, " et k = ", k, ", pour ", nboat, " bateaux"), face = "bold", size = 20),
+                                                  top = text_grob(paste0("Cellules ou il y a de la peche par bateaux pour les differentes valeurs de b et pour i = ", i, " et k = ", k, ", pour ", sequencesdepeche, " bateaux"), face = "bold", size = 20),
                                                   left = text_grob("y",
                                                                    rot = 90,
                                                                    size = 11),
@@ -541,14 +542,14 @@ simu_commercial_scientific <- function(Results,
                                     common.legend=TRUE, legend="right")
   if (k==0){
     plot_pointsdepecheqte <- annotate_figure(plot_pointsdepecheqte,
-                                            top = text_grob(paste0("Quantite pechee par cellule pour les differentes valeurs de b et pour i = ", i, " et k = ", k, ", pour ", nboat, " bateaux"), face = "bold", size = 20),
+                                            top = text_grob(paste0("Quantite pechee par cellule pour les differentes valeurs de b et pour i = ", i, " et k = ", k, ", pour ", sequencesdepeche, " bateaux"), face = "bold", size = 20),
                                             left = text_grob("y",
                                                              rot = 90,
                                                              size = 11),
                                             bottom = text_grob("x", size = 11))
   }else{
     plot_pointsdepecheqte <- annotate_figure(plot_pointsdepecheqte,
-                                             top = text_grob(paste0("Quantite pechee par cellule pour les differentes valeurs de b et pour i = ", i, " et k = ", k, ", pour ", nboat, " bateaux"), face = "bold", size = 20),
+                                             top = text_grob(paste0("Quantite pechee par cellule pour les differentes valeurs de b et pour i = ", i, " et k = ", k, ", pour ", sequencesdepeche, " bateaux"), face = "bold", size = 20),
                                              left = text_grob("y",
                                                               rot = 90,
                                                               size = 11),
@@ -558,37 +559,37 @@ simu_commercial_scientific <- function(Results,
   # On sauve les 7 graphes produits pour ce couple de valeurs (k, i)
   if(! dir.exists(simu_file_plots)) dir.create(simu_file_plots)
   
-  path = paste0(simu_file_plots, "strates_i",i,"_k",k,"_boat",nboat,".png")
+  path = paste0(simu_file_plots, "strates_i",i,"_k",k,"_boat",sequencesdepeche,".png")
   png(file = path, width = 600, height = 500)
   plot(plot_strates)
   dev.off()
   
-  path = paste0(simu_file_plots, "latentfield_i",i,"_k",k,"_boat",nboat,".png")
+  path = paste0(simu_file_plots, "latentfield_i",i,"_k",k,"_boat",sequencesdepeche,".png")
   png(file = path, width = 600, height = 500)
   plot(plot_latentfield)
   dev.off()
   
-  path = paste0(simu_file_plots, "scientificdata_i",i,"_k",k,"_boat",nboat,".png")
+  path = paste0(simu_file_plots, "scientificdata_i",i,"_k",k,"_boat",sequencesdepeche,".png")
   png(file = path, width = 600, height = 500)
   plot(plot_scientificdata)
   dev.off()
   
-  path = paste0(simu_file_plots, "centres_i",i,"_k",k,"_boat",nboat,".png")
+  path = paste0(simu_file_plots, "centres_i",i,"_k",k,"_boat",sequencesdepeche,".png")
   png(file = path, width = 1500, height = 500)
   plot(plot_centres)
   dev.off()
   
-  path = paste0(simu_file_plots, "pecheperboat_i",i,"_k",k,"_boat",nboat,".png")
+  path = paste0(simu_file_plots, "pecheperboat_i",i,"_k",k,"_boat",sequencesdepeche,".png")
   png(file = path, width = 1500, height = 500)
   plot(plot_pointsdepechecomperboat)
   dev.off()
   
-  path = paste0(simu_file_plots, "pechecell_i",i,"_k",k,"_boat",nboat,".png")
+  path = paste0(simu_file_plots, "pechecell_i",i,"_k",k,"_boat",sequencesdepeche,".png")
   png(file = path, width = 1500, height = 500)
   plot(plot_pointsdepechecell)
   dev.off()
   
-  path = paste0(simu_file_plots, "pecheqte_i",i,"_k",k,"_boat",nboat,".png")
+  path = paste0(simu_file_plots, "pecheqte_i",i,"_k",k,"_boat",sequencesdepeche,".png")
   png(file = path, width = 1500, height = 500)
   plot(plot_pointsdepecheqte)
   dev.off()

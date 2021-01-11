@@ -5,7 +5,8 @@ commercial_reallocation_uniforme = function(k,
                                             n_samp_com,
                                             index_com_i,
                                             loc_x,
-                                            nboat, boats_number){
+                                            sequencesdepeche,
+                                            boats_number){
   
   y_com_i_new = cbind(y_com_i, boats_number)
   y_com_i_new = as.data.frame(y_com_i_new)

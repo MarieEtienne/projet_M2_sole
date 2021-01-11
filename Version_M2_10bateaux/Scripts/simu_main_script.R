@@ -10,7 +10,7 @@ source("Scripts/function/load_packages.R")
 #-----------------------------------------------------------
 
 # Simulation name
-simu_name = "Test2"
+simu_name = "Test_plusieurszonesparbateau"
 
 #---------------------
 # Simulation scenarios
@@ -73,7 +73,8 @@ n_strate <- 9
 
 ## Commercial data
 # Number of commercial samples
-n_samp_com = 3000
+# n_samp_com = 3000
+n_samp_com = 150
 # observation error 
 logSigma_com = log(1)
 # zero-inflation parameter
@@ -90,7 +91,8 @@ b_set = c(0,1,3)
 #--------------------
 
 # Data sources feeding the model
-Data_source = c("scientific_commercial","scientific_only","commercial_only")
+# Data_source = c("scientific_commercial","scientific_only","commercial_only")
+Data_source = c("commercial_only") # On ne fait plus que le modele commercial
 
 # b estimated or b fixed to 0 in estimation
 EM_set = c("fix_b","est_b")
@@ -111,7 +113,7 @@ counter <- 1
 # index of the first iteration
 i0 <- 1
 # Number of simulation
-n_sim = 1
+n_sim = 10
 
 RandomSeed = 123456
 
@@ -119,7 +121,8 @@ RandomSeed = 123456
 reallocation = c(0,1) # Reallocation = 0 si pas de reallocation, = 1 si reallocation
 
 # Nombre de bateaux ?
-nboat = 10
+sequencesdepeche = 5
+zonespersequence = 3
 
 for (k in reallocation) {
 # Reallocation uniforme ?
@@ -236,7 +239,7 @@ for (k in reallocation) {
                                       k,
                                       xlim,
                                       ylim,
-                                      nboat)
+                                      sequencesdepeche)
     
     Results <- res[[1]]
     List_param <- res[[2]]
@@ -302,17 +305,17 @@ figure_MSPE
 # On sauve les 3 graphes de métriques de performance
 if(! dir.exists(simu_file_metriques)) dir.create(simu_file_metriques)
 
-path = paste0(simu_file_metriques, "biaisabondance_boats", nboat, ".png")
+path = paste0(simu_file_metriques, "biaisabondance_boats", sequencesdepeche, ".png")
 png(file = path, width = 1100, height = 500)
 plot(figure_biaisabondance)
 dev.off()
 
-path = paste0(simu_file_metriques, "biaisb_boats", nboat, ".png")
+path = paste0(simu_file_metriques, "biaisb_boats", sequencesdepeche, ".png")
 png(file = path, width = 1100, height = 500)
 plot(figure_biaisb)
 dev.off()
 
-path = paste0(simu_file_metriques, "MSPE_boats", nboat, ".png")
+path = paste0(simu_file_metriques, "MSPE_boats", sequencesdepeche, ".png")
 png(file = path, width = 1100, height = 500)
 plot(figure_MSPE)
 dev.off()
