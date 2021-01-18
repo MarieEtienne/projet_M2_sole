@@ -185,14 +185,10 @@ simu_commercial_scientific <- function(Results,
                                                  beta0,
                                                  beta,
                                                  simu_tool,
-                                                 SpatialScale,
-                                                 SpatialScale_eta,
                                                  range,
-                                                 range_eta,
                                                  nu,
                                                  SD_x,
                                                  SD_delta,
-                                                 SD_xfb,
                                                  SD_eta)
   if(latent_fields_simu == "simulate"){
     
@@ -214,9 +210,6 @@ simu_commercial_scientific <- function(Results,
     
   }
   
-  if(no_eta == T) eta_x <- rep(0,length(eta_x))
-  if(no_eta == F) eta_x <- simu_latent_field_outputs$eta_x
-
   #-----------------
   #  Scientific data
   #-----------------
@@ -227,16 +220,13 @@ simu_commercial_scientific <- function(Results,
     simu_scientific_data_outputs <- simu_scientific_data(loc_x,
                                                          grid_dim,
                                                          Strue_x,
-                                                         DataObs,
                                                          zero.infl_model,
                                                          n_samp_sci,
                                                          logSigma_sci,
                                                          q1_sci,
                                                          q2_sci,
-                                                         sci_sampling,
                                                          n_strate,
-                                                         scientific_data,
-                                                         zone_without_fishing)
+                                                         scientific_data)
     
     index_sci_i <- simu_scientific_data_outputs$index_sci_i
     c_sci_x <- simu_scientific_data_outputs$c_sci_x
@@ -265,17 +255,14 @@ simu_commercial_scientific <- function(Results,
                                                          Strue_x,
                                                          beta0_fb,
                                                          beta_fb,
-                                                         b_constraint,
                                                          xfb_x,
                                                          eta_x,
-                                                         DataObs,
                                                          zero.infl_model,
                                                          n_samp_com,
                                                          logSigma_com,
                                                          q1_com,
                                                          q2_com,
-                                                         b_fl = b,
-                                                         zone_without_fishing)
+                                                         b)
     
     index_com_i <-  simu_commercial_data_outputs$index_com_i
     y_com_i <- simu_commercial_data_outputs$y_com_i
@@ -302,30 +289,16 @@ simu_commercial_scientific <- function(Results,
       ############
       skip_to_next <- F
       tryCatch({fit_IM_res <- fit_IM(Estimation_model_i,
-                           Samp_process,
-                           EM,
-                           weights_com,
-                           commercial_obs,
-                           Spatial_model,
-                           Use_REML,
-                           Alpha,
-                           b_constraint,
-                           Version,
-                           TmbFile,
-                           ignore.uncertainty,
-                           c_com_x,
-                           y_com_i,
-                           index_com_i,
-                           b_com_i,
-                           VE_i,
-                           catchability_random,
-                           y_sci_i,
-                           index_sci_i,
-                           nb_par_zinfl,
-                           as.matrix(Cov_x[,1]), # 
-                           xfb_x,
-                           mesh,
-                           spde)
+                                     Samp_process,
+                                     EM,
+                                     TmbFile,
+                                     ignore.uncertainty,
+                                     c_com_x,
+                                     y_com_i,
+                                     index_com_i,
+                                     y_sci_i,
+                                     index_sci_i,
+                                     Cov_x)
       
       SD <- fit_IM_res$SD
       Report <- fit_IM_res$Report
@@ -443,7 +416,7 @@ simu_commercial_scientific <- function(Results,
         Results[counter,"Sigma_sci"]=Report$Sigma_sci
         Results[counter,"Bias_Sigma_sci"]=Report$Sigma_sci - exp(logSigma_sci)
         Results[counter,"Sigma_sci_true"]=exp(logSigma_sci)
-        Results[counter,"sci_sampling"]=sci_sampling
+        # Results[counter,"sci_sampling"]=sci_sampling
         Results[counter,"n_samp_sci"]=n_samp_sci
         
         
