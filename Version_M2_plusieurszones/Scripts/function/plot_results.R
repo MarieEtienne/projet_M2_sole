@@ -506,3 +506,102 @@ generation_metriques = function(path_base,
   plot(plot_MSPE)
   dev.off()
 }
+
+
+
+
+
+
+indicateurs = function(path_base,
+                       simu_file,
+                       table,
+                       b,
+                       k,
+                       biaisb,
+                       biaisN,
+                       MSPE){
+  
+  ### On recupère les données
+  
+  path = paste0(path_base, simu_file, "Results.RData")
+  load(path)
+  
+  # On filtre pour avoir seulement les données du b et du k voulus
+  
+  Results %>%
+    filter(b_true == b) -> Results
+  if (k == reallocation[1]){
+    Results = Results %>% filter(reallocation == 0)
+  } else {
+    Results = Results %>% filter(reallocation == 1)
+  }
+  
+  ### Travail sur le tableau Results (issu de plot_simu.R)
+  
+  Results[,"OnBoundary"]=rep(0,nrow(Results))
+  Results[which(abs(Results[,"b_est"])>10),"OnBoundary"]=1
+  Results[,"Converge"]=Results[,"OnBoundary"]+Results[,"Convergence"]
+  Results[which(Results[,"Converge"]==2),"Converge"]=1
+  Converge_table = summaryBy(Converge~b_true+Data_source,data=Results,FUN=sum)
+  WhichFailed <- which(Results[,"Convergence"]!=0)
+  Results_cvg.failed <- Results[WhichFailed,]
+  WhichDone = which(Results[,"Convergence"]==0)
+  Results=Results[WhichDone,]
+  Results[,"RelBias_N"]=(Results[,"N_est"]-Results[,"N_true"])/Results[,"N_true"]
+  Results[,"Bias_b"]=(Results[,"b_est"]-Results[,"b_true"]) / ifelse(Results[,"b_true"] != 0,Results[,"b_true"],1)
+  Which_plot = which(Results[,"type_b"] == "est_b")
+  Results$b_est[which(is.na(Results[,"b_est"]))] <- 0
+  Results <- Results[which(Results[,"b_est"]<10),]
+  Results$Data_source <- factor(Results$Data_source, levels = c("commercial_only"))
+  
+  
+  ### Calcul des indicateurs, remplissage des tableaux
+  
+  Results_x1 = Results %>% filter(x == 1)
+  biaisb[[table]][1, 1] = median(Results_x1$Bias_b)
+  biaisN[[table]][1, 1] = median(Results_x1$RelBias_N)
+  MSPE[[table]][1, 1] = median(Results_x1$MSPE_S)
+  
+  Results_x2 = Results %>% filter(x == 2)
+  biaisb[[table]][2, 1] = median(Results_x2$Bias_b)
+  biaisN[[table]][2, 1] = median(Results_x2$RelBias_N)
+  MSPE[[table]][2, 1] = median(Results_x2$MSPE_S)
+  
+  Results_x3 = Results %>% filter(x == 3)
+  biaisb[[table]][3, 1] = median(Results_x3$Bias_b)
+  biaisN[[table]][3, 1] = median(Results_x3$RelBias_N)
+  MSPE[[table]][3, 1] = median(Results_x3$MSPE_S)
+  
+  Results_x4 = Results %>% filter(x == 4)
+  biaisb[[table]][1, 2] = median(Results_x4$Bias_b)
+  biaisN[[table]][1, 2] = median(Results_x4$RelBias_N)
+  MSPE[[table]][1, 2] = median(Results_x4$MSPE_S)
+  
+  Results_x5 = Results %>% filter(x == 5)
+  biaisb[[table]][2, 2] = median(Results_x5$Bias_b)
+  biaisN[[table]][2, 2] = median(Results_x5$RelBias_N)
+  MSPE[[table]][2, 2] = median(Results_x5$MSPE_S)
+  
+  Results_x6 = Results %>% filter(x == 6)
+  biaisb[[table]][3, 2] = median(Results_x6$Bias_b)
+  biaisN[[table]][3, 2] = median(Results_x6$RelBias_N)
+  MSPE[[table]][3, 2] = median(Results_x6$MSPE_S)
+  
+  Results_x7 = Results %>% filter(x == 7)
+  biaisb[[table]][1, 3] = median(Results_x7$Bias_b)
+  biaisN[[table]][1, 3] = median(Results_x7$RelBias_N)
+  MSPE[[table]][1, 3] = median(Results_x7$MSPE_S)
+  
+  Results_x8 = Results %>% filter(x == 8)
+  biaisb[[table]][2, 3] = median(Results_x8$Bias_b)
+  biaisN[[table]][2, 3] = median(Results_x8$RelBias_N)
+  MSPE[[table]][2, 3] = median(Results_x8$MSPE_S)
+  
+  Results_x9 = Results %>% filter(x == 9)
+  biaisb[[table]][3, 3] = median(Results_x9$Bias_b)
+  biaisN[[table]][3, 3] = median(Results_x9$RelBias_N)
+  MSPE[[table]][3, 3] = median(Results_x9$MSPE_S)
+  
+  res = list(biaisb, biaisN, MSPE)
+  return(res)
+}

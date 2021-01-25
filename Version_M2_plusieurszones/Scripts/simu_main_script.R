@@ -10,7 +10,7 @@ source("Scripts/function/load_packages.R")
 #-----------------------------------------------------------
 
 # Simulation name
-simu_name = "Simu_complete_10801"
+simu_name = "SimuComplete"
 
 #---------------------
 # Simulation scenarios
@@ -27,7 +27,7 @@ grid_dim = c("x"=grid_side_x, "y"=grid_side_y)
 n_cells = grid_dim[1]*grid_dim[2]
 
 # Intercepts and covariates of the latent field
-beta0 = 2 # intercept
+beta0 = 3 # intercept
 beta = c(0,0,0,0,0) # covariates
 # parameters covariates vector : 1st param : continuous variable, 4 nexts : strata_1, strata_2, strata_3, strata_4
 # La premiere covariable est continue et a une structure spatiale
@@ -40,9 +40,10 @@ beta = c(0,0,0,0,0) # covariates
 
 # Correlation structure of the continuous covariate 
 simu_tool <- "MaternCov" # 2 way to simulate latent fields : "RandomFields", "MaternCov"
-range = sqrt(prod(grid_dim))/(5)*2 # --> MaternCov 
+range = sqrt(prod(grid_dim))/(5)*2 # --> MaternCov
 nu = 1  #portée de la covariable continue
-SD_x = 0.5 # ecart type/ variance marginale du processus de la var continue
+SD_x = 2 # ecart type/ variance marginale du processus de la var continue
+# Initialement on avait SD_x = 0.5, la on passe a SD_x = 2 pour avoir plus de variabilité dans le champ latent
 
 #effets spatiaux aléatoires
 SD_delta = SD_eta= 0.5
@@ -69,7 +70,7 @@ q1_sci <- 1
 # Relative catchability
 q2_sci <- 1
 # parameter controling size of the strata
-n_strate <- 9 
+n_strate <- 9
 
 ## Commercial data
 # Number of commercial samples
@@ -284,7 +285,7 @@ dyn.unload( dynlib(paste0(TmbFile,"inst/executables/com_x_sci_data_14_scientific
 
 # D'abord on définit comment accéder aux résultats de la simulation qui nous intéresse
 path_base = "~/ACO/3A/Projet_ingenieur/Projet_soles/GitHub_Baptiste/projet_M2_sole/Version_M2_plusieurszones/results/"
-simu_file = "com_x_sci_data_14_scientific_commercial_simple-2021-01-13_18_30_27_Simu_complete_10801/"
+simu_file = "com_x_sci_data_14_scientific_commercial_simple-2021-01-19_16_05_50_SimuComplete/"
 
 
 # On va commencer par générer les différentes map
@@ -314,4 +315,153 @@ for(i in i0:5){
 # 3ème graphe : MSPE
 for (couplePZ in 1:length(PZ)){
   generation_metriques(path_base, simu_file, couplePZ, b_set)
+}
+
+
+
+# On genere 3 listes :
+# 1. Liste des biais de b :
+# Elle contient 6 tableaux : b = 0, 1, 3 et k = 0, 1
+# Chaque tableau contient le biais median de b pour les 9 situations ZP
+# 2. Liste des biais de N :
+# Idem
+# 3. Liste des MSPE :
+# Idem
+
+
+## On crée les listes
+
+# On crée la liste des biais de b
+
+biaisb_b0_k0 = matrix(ncol = 3, nrow = 3)
+biaisb_b0_k0 = as.data.frame(biaisb_b0_k0)
+colnames(biaisb_b0_k0) = sequencesdepeche_vect # Les colonnes correspondent aux differentes valeurs de P
+rownames(biaisb_b0_k0) = zonespersequence_vect # Les colonnes correspondent aux differentes valeurs de Z
+
+biaisb_b1_k0 = matrix(ncol = 3, nrow = 3)
+biaisb_b1_k0 = as.data.frame(biaisb_b1_k0)
+colnames(biaisb_b1_k0) = sequencesdepeche_vect
+rownames(biaisb_b1_k0) = zonespersequence_vect
+
+biaisb_b3_k0 = matrix(ncol = 3, nrow = 3)
+biaisb_b3_k0 = as.data.frame(biaisb_b3_k0)
+colnames(biaisb_b3_k0) = sequencesdepeche_vect
+rownames(biaisb_b3_k0) = zonespersequence_vect
+
+biaisb_b0_k1 = matrix(ncol = 3, nrow = 3)
+biaisb_b0_k1 = as.data.frame(biaisb_b0_k1)
+colnames(biaisb_b0_k1) = sequencesdepeche_vect
+rownames(biaisb_b0_k1) = zonespersequence_vect
+
+biaisb_b1_k1 = matrix(ncol = 3, nrow = 3)
+biaisb_b1_k1 = as.data.frame(biaisb_b1_k1)
+colnames(biaisb_b1_k1) = sequencesdepeche_vect
+rownames(biaisb_b1_k1) = zonespersequence_vect
+
+biaisb_b3_k1 = matrix(ncol = 3, nrow = 3)
+biaisb_b3_k1 = as.data.frame(biaisb_b3_k1)
+colnames(biaisb_b3_k1) = sequencesdepeche_vect
+rownames(biaisb_b3_k1) = zonespersequence_vect
+
+biaisb = list(biaisb_b0_k0, biaisb_b1_k0, biaisb_b3_k0,
+              biaisb_b0_k1, biaisb_b1_k1, biaisb_b3_k1)
+
+# On crée la liste des biais de N
+
+biaisN_b0_k0 = matrix(ncol = 3, nrow = 3)
+biaisN_b0_k0 = as.data.frame(biaisN_b0_k0)
+colnames(biaisN_b0_k0) = sequencesdepeche_vect # Les colonnes correspondent aux differentes valeurs de P
+rownames(biaisN_b0_k0) = zonespersequence_vect # Les colonnes correspondent aux differentes valeurs de Z
+
+biaisN_b1_k0 = matrix(ncol = 3, nrow = 3)
+biaisN_b1_k0 = as.data.frame(biaisN_b1_k0)
+colnames(biaisN_b1_k0) = sequencesdepeche_vect
+rownames(biaisN_b1_k0) = zonespersequence_vect
+
+biaisN_b3_k0 = matrix(ncol = 3, nrow = 3)
+biaisN_b3_k0 = as.data.frame(biaisN_b3_k0)
+colnames(biaisN_b3_k0) = sequencesdepeche_vect
+rownames(biaisN_b3_k0) = zonespersequence_vect
+
+biaisN_b0_k1 = matrix(ncol = 3, nrow = 3)
+biaisN_b0_k1 = as.data.frame(biaisN_b0_k1)
+colnames(biaisN_b0_k1) = sequencesdepeche_vect
+rownames(biaisN_b0_k1) = zonespersequence_vect
+
+biaisN_b1_k1 = matrix(ncol = 3, nrow = 3)
+biaisN_b1_k1 = as.data.frame(biaisN_b1_k1)
+colnames(biaisN_b1_k1) = sequencesdepeche_vect
+rownames(biaisN_b1_k1) = zonespersequence_vect
+
+biaisN_b3_k1 = matrix(ncol = 3, nrow = 3)
+biaisN_b3_k1 = as.data.frame(biaisN_b3_k1)
+colnames(biaisN_b3_k1) = sequencesdepeche_vect
+rownames(biaisN_b3_k1) = zonespersequence_vect
+
+biaisN = list(biaisN_b0_k0, biaisN_b1_k0, biaisN_b3_k0,
+              biaisN_b0_k1, biaisN_b1_k1, biaisN_b3_k1)
+
+# On crée la liste des MSPE
+
+MSPE_b0_k0 = matrix(ncol = 3, nrow = 3)
+MSPE_b0_k0 = as.data.frame(MSPE_b0_k0)
+colnames(MSPE_b0_k0) = sequencesdepeche_vect # Les colonnes correspondent aux differentes valeurs de P
+rownames(MSPE_b0_k0) = zonespersequence_vect # Les colonnes correspondent aux differentes valeurs de Z
+
+MSPE_b1_k0 = matrix(ncol = 3, nrow = 3)
+MSPE_b1_k0 = as.data.frame(MSPE_b1_k0)
+colnames(MSPE_b1_k0) = sequencesdepeche_vect
+rownames(MSPE_b1_k0) = zonespersequence_vect
+
+MSPE_b3_k0 = matrix(ncol = 3, nrow = 3)
+MSPE_b3_k0 = as.data.frame(MSPE_b3_k0)
+colnames(MSPE_b3_k0) = sequencesdepeche_vect
+rownames(MSPE_b3_k0) = zonespersequence_vect
+
+MSPE_b0_k1 = matrix(ncol = 3, nrow = 3)
+MSPE_b0_k1 = as.data.frame(MSPE_b0_k1)
+colnames(MSPE_b0_k1) = sequencesdepeche_vect
+rownames(MSPE_b0_k1) = zonespersequence_vect
+
+MSPE_b1_k1 = matrix(ncol = 3, nrow = 3)
+MSPE_b1_k1 = as.data.frame(MSPE_b1_k1)
+colnames(MSPE_b1_k1) = sequencesdepeche_vect
+rownames(MSPE_b1_k1) = zonespersequence_vect
+
+MSPE_b3_k1 = matrix(ncol = 3, nrow = 3)
+MSPE_b3_k1 = as.data.frame(MSPE_b3_k1)
+colnames(MSPE_b3_k1) = sequencesdepeche_vect
+rownames(MSPE_b3_k1) = zonespersequence_vect
+
+MSPE = list(MSPE_b0_k0, MSPE_b1_k0, MSPE_b3_k0,
+            MSPE_b0_k1, MSPE_b1_k1, MSPE_b3_k1)
+
+
+## On remplit les différents tableaux
+
+for (table in (1:6)){
+  if (table == 1){
+    b = b_set[1]
+    k = reallocation[1]
+  } else if (table == 2){
+    b = b_set[2]
+    k = reallocation[1]
+  } else if (table == 3) {
+    b = b_set[3]
+    k = reallocation[1]
+  } else if (table == 4){
+    b = b_set[1]
+    k = reallocation[2]
+  } else if (table == 5){
+    b = b_set[2]
+    k = reallocation[2]
+  } else {
+    b = b_set[3]
+    k = reallocation[2]
+  }
+  
+  res = indicateurs(path_base, simu_file, table, b, k, biaisb, biaisN, MSPE)
+  biaisb = res[[1]]
+  biaisN = res[[2]]
+  MSPE = res[[3]]
 }
