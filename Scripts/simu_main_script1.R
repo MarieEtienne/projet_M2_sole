@@ -59,7 +59,6 @@ q1_sci <- 1
 q2_sci <- 1
 # parameter controling size of the strata
 n_strate <- 9 
-sci_sampling <- "0" # Deprecated
 
 ## Commercial data
 # Number of commercial samples
@@ -139,6 +138,7 @@ TMB::compile(paste0(TmbFile,"inst/executables/com_x_sci_data_14_scientific_comme
 #-------------------------------------------------------------
 #------------------- Simulation/Estimation loop --------------
 #-------------------------------------------------------------
+library(TMB)
 
 ################
 # source Scripts
@@ -178,13 +178,6 @@ if(restart_after_crash == T){
 dyn.load( dynlib(paste0(TmbFile,"inst/executables/com_x_sci_data_14_scientific_commercial_simple") ) )
 #dyn.unload( dynlib(paste0(TmbFile,"inst/executables/",Version,"_scientific_commercial") ) )
 ## loop
-
-latent_fields_simu="simulate"
-Alpha=2
-zone_without_fishing=F
-b_constraint=2
-DataObs=2
-
 for(i in i0:n_sim){
 
     res <- simu_commercial_scientific(Results,
@@ -198,19 +191,19 @@ for(i in i0:n_sim){
                                       beta,
                                       simu_tool,
                                       no_eta,
-                                      SpatialScale = NA,
+                                      SpatialScale,
                                       SpatialScale_eta,
                                       range,
                                       range_eta,
                                       nu,
                                       SD_x,
                                       SD_delta,
-                                      SD_xfb = NA,
+                                      SD_xfb,
                                       SD_eta,
                                       beta0_fb,
-                                      beta_fb = NA,
+                                      beta_fb,
                                       DataObs,
-                                      zero.infl_model  = 2,
+                                      zero.infl_model,
                                       nb_par_zinfl,
                                       n_samp_sci,
                                       logSigma_sci,
@@ -227,15 +220,15 @@ for(i in i0:n_sim){
                                       Data_source,
                                       Samp_process,
                                       EM,
-                                      weights_com = 1,
-                                      commercial_obs = 1,
+                                      weights_com,
+                                      commercial_obs,
                                       catchability_random,
                                       b_constraint,
-                                      Spatial_model = "SPDE",
-                                      Use_REML = FALSE,
+                                      Spatial_model,
+                                      Use_REML,
                                       Alpha,
                                       RandomSeed,
-                                      Version = NA,
+                                      Version,
                                       TmbFile,
                                       ignore.uncertainty,
                                       counter,

@@ -276,8 +276,8 @@ simu_commercial_scientific <- function(Results,
     ## Fit model
     ############
     # Create the SPDE/GMRF model, (kappa^2-Delta)(tau x) = W:
-    mesh = inla.mesh.create( loc_x[,c('x','y')] )
-    spde <- (inla.spde2.matern(mesh, alpha=Alpha)$param.inla)[c("M0","M1","M2")]  # define sparse matrices for parametrisation of precision matrix
+    # mesh = inla.mesh.create( loc_x[,c('x','y')] )
+    # spde <- (inla.spde2.matern(mesh, alpha=Alpha)$param.inla)[c("M0","M1","M2")]  # define sparse matrices for parametrisation of precision matrix
     
     # Loop on alternative configuration models
     for(Estimation_model in Data_source){
@@ -288,17 +288,17 @@ simu_commercial_scientific <- function(Results,
       ## Fit Model
       ############
       skip_to_next <- F
-      tryCatch({fit_IM_res <- fit_IM(Estimation_model_i,
-                                     Samp_process,
-                                     EM,
-                                     TmbFile,
-                                     ignore.uncertainty,
-                                     c_com_x,
-                                     y_com_i,
-                                     index_com_i,
-                                     y_sci_i,
-                                     index_sci_i,
-                                     Cov_x)
+      fit_IM_res <- fit_IM(Estimation_model_i,
+                           Samp_process,
+                           EM,
+                           TmbFile,
+                           ignore.uncertainty,
+                           c_com_x,
+                           y_com_i,
+                           index_com_i,
+                           y_sci_i,
+                           index_sci_i,
+                           Cov_x)
       
       SD <- fit_IM_res$SD
       Report <- fit_IM_res$Report
@@ -380,8 +380,8 @@ simu_commercial_scientific <- function(Results,
                          Opt_par = Opt,
                          SD = SD,
                          Report = Report)
-
-
+      
+      
       
       Results[counter,"N_true"]=sum(Strue_x)
       Results[counter,"LogLik"]=-Opt$objective
@@ -393,9 +393,9 @@ simu_commercial_scientific <- function(Results,
       MSPE_S_2_df <- cbind(loc_x,Strue_x,Report$S_x) %>%
         dplyr::mutate(S_x = Report$S_x) %>%
         filter(x < 9 & y < 9)
-
+      
       Results[counter,"MSPE_S_2"] <- sum((MSPE_S_2_df$Strue_x - MSPE_S_2_df$S_x)^2)/(6*6)
-
+      
       Results[counter,"Alpha"]=Alpha
       
       if(Samp_process == 1 & Estimation_model != "scientific_only"){
@@ -439,10 +439,11 @@ simu_commercial_scientific <- function(Results,
       Results[counter,"Convergence"]=Converge
       
       # save data
-      if(!file.exists(simu_file)) dir.create(simu_file)
+      if(!file.exists(simu_file)) dir.create(simu_file, recursive = TRUE)
       save(List_param, file = paste0(simu_file,"/List_param_",counter,".RData"))
       save(Results, file = paste0(simu_file,"/Results.RData"))
-      }, error = function(e) { skip_to_next <<- TRUE})
+      
+      # tryCatch({}, error = function(e) { skip_to_next <<- TRUE})
       # Fill Results --> summary of simulation loops
       Results[counter,"counter"]=counter
       Results[counter,"sim"]=i
@@ -455,7 +456,7 @@ simu_commercial_scientific <- function(Results,
       Results[counter,"b_constraint"]=b_constraint
       Results[counter,"zone_without_fishing"]=zone_without_fishing
       
-      if(skip_to_next) { next }     
+      #if(skip_to_next) { next }     
       
       counter <- counter + 1
     }
