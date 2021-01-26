@@ -48,7 +48,8 @@ simu_commercial_data <- function(loc_x,
                                  q2_com,
                                  b,
                                  sequencesdepeche,
-                                 zonespersequence){
+                                 zonespersequence,
+                                 taillezone){
 
   # Initialisation
   index_com_i_2 = c() # index_com_i : sampled cell for each observation
@@ -110,7 +111,7 @@ simu_commercial_data <- function(loc_x,
     # pour l'objet owin, n_samp_com/(sequencesdepeche*zonespersequence) pour le rpoint,
     # et on passe dans le rpoint Int_ps qui correspond
     # aux lambdas qui dépendent du champ latent
-    win_df_boat <- owin(xrange=c(max(0.5, X$x[centre]-2), min(25.5, X$x[centre]+2)), yrange=c(max(0.5, X$y[centre]-2), min(25.5, X$y[centre]+2)), ystep=1, xstep=1)
+    win_df_boat <- owin(xrange=c(max(0.5, X$x[centre]-taillezone), min(25.5, X$x[centre]+taillezone)), yrange=c(max(0.5, X$y[centre]-taillezone), min(25.5, X$y[centre]+taillezone)), ystep=1, xstep=1)
     X_boat <- rpoint(n_samp_com/(sequencesdepeche*zonespersequence), as.im(Int_ps, win_df_boat))
     # On ajoute les coordonnées de peche obtenues pour le bateau
     boats_x = c(boats_x, X_boat$x)

@@ -1,0 +1,372 @@
+---
+title: "PROJET INGENIEUR <br/> <br/> Etude de l'influence de la réallocation des captures commerciales  sur la performance d'un modèle d'estimation de la distribution spatiale de la sole commune"
+
+author: "<br/> Océane GUITTON, Chloé TELLIER, Juliette THEOLEYRE"
+output:
+  html_document:
+    toc: yes
+    toc_float: yes
+    theme: cerulean
+  pdf_document:
+    toc: yes
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+***
+# I - Introduction
+
+Les travaux de Alglave et al. ont permis de développer un modèle permettant d’inférer la distribution spatiale des espèces d’intérêt halieutique. 
+
+L'objet précis est d'**estimer la distribution spatiale de densités de sole commune dans le golfe de Gascogne**. A terme, l'objectif de la thèse est de décrire la dynamique spatio-temporelle des soles à petite échelle et d'identifier leurs zones fonctionnelles.
+
+Le modèle intègre des données scientifiques et des données commerciales idéales géolocalisées, et prédit l'abondance à partir de ces deux types de données. 
+Ce modèle permet notamment de prendre en compte le biais introduit par le comportement de ciblage des pêcheurs vis-à-vis de la ressource : c'est l’échantillonnage préférentiel des données commerciales.
+
+## A) Les données
+
+
+Les **données scientifiques** sont constituées de relevés de quantités pechées à 50 localisations données, obtenues grâce à un design d'échantillonage aléatoire standardisé. Elles sont issues d'une enquête realisée tous les ans en fin d'année et ne peuvent donc pas être utilisés pour estimer la variabilité au cours de l'année. Ces données sont fiables, géolocalisées et sont utilisées pour fournir des indices d’abondance non biaisés (cf pas d'échantillonage préférentiel) ainsi que pour estimer le stock biologique plutôt que pour d’écrire la distribution des espèces. 
+
+
+Les **données commerciales** sont une source d’information valorisable pour décrire la distribution spatiale des espèces d’intérêt halieutique. La donnée commerciale est caractérisée par une quantité pêchée en un point de pêche. 
+Ces données géolocalisées couvrent souvent une surface bien plus importante que les données scientifiques mais dépendent d'un échantillonage préférentiel qu'il est nécessaire de prendre en compte. En effet, les pêcheurs ciblent les zones de forte abondance en ressource, et si on ne prend pas en compte ce phénomène, cela peut mener à des estimations de la distribution et de l’abondance de l’espèce biaisées. 
+L'ensemble de ces données commerciales constituent un plan à haute résolution de CPUE (catch per unit effort), qui présente des quantités pêchées aux différents points de pêche. 
+
+
+## B) Le modèle
+
+Le modèle proposé par Alglave et al. est un modèle hiérarchique intégré qui peut utiliser soit uniquement les données scientifiques, soit uniquement les données commerciales, soit les deux types de données simultanément. Dès lors que les données commerciales sont intégrées, l'échantillonage préférentiel peut être pris en compte.
+
+Le modèle itère de nombreux schémas de simulation/estimation, afin de comparer les trois scenari possibles (données scientifiques uniquement, données commerciales uniquement, les deux types de données simultanément) selon différentes métriques de performance. Plus précisément, l'idée est d’évaluer la performance des scénari et d’estimer l’influence de chacun des deux types de données dans l’inférence. 
+
+
+Le modèle présente les *trois composantes* suivantes : 
+
+
+- **Champ Latent S** 
+Le champs latent est la densité de biomasse / densité de poissons. Il est modélisé selon champ spatial gaussien (plus précisément « latent log gaussian ») sur un domaine discret. 
+
+Cette densité dépend de covariables (par exemple le type de sol, la profondeur) et d'un effet spatial aléatoire. Le champ latent est exprimé en fonction d'un intercept (alpha_s ou $\alpha_{s}$), de covariables environnementales et des paramètres (betas_s ou $\beta_{s}$) qui leur sont associés (traduisant la relation entre les especes et leur habitat (effets fixes)), et enfin de l'effet spatial aleatoire qui traduit la correlation spatiale des captures ($\delta(x)$).
+
+\begin{equation}
+S(x)=\exp(\alpha_{S}+\Gamma_{S}(x)^{T} \cdot \beta_{S}+\delta(x))
+\end{equation}
+
+\begin{equation}
+    \delta(x) \sim G R F(0, M(x , x': \rho))
+\end{equation}
+
+
+
+- **Processus d'échantillonage** (sampling process)
+
+Désormais, nous nous intéressons au **processus d'échantillonage**, c'est à dire à la **génération des points de pêche** (et de leur distribution spatiale) selon un processus de poisson non homogène. L'intensité des points de pêche dans une zone donnée dépend de l'abondance du champ latent à cet endroit.
+
+Le design d’échantillonage des données scientifiques est indépendant du champ latent S (processus d'échantillonage aléatoire) tandis que le design d’échantillonage des données commerciales est préférentiel et dépend de la connaissance à priori par les pêcheurs de la distribution spatiale de la densité de poisson (champ latent S). 
+
+La localisation des points de pêche peut également dépendre d'autres effets incarnés par des covariables (comme la connaissance de la présence d'espèces non ciblées (cf prises accessoires), les technologies disposées, les contraintes logistiques etc) et enfin d'un effet spatial aléatoire. 
+
+On fait l'hypothèse que les bateaux d'une même flotte présentent un comportement homogène et partagent donc les mêmes paramètres. 
+
+On modélise la distribution spatiale des points de pêche par un processus de Poisson non homogène (l’intensité  $\lambda_{f}(x)$ des points de pêche dans une zone donnée dépend de l’abondance du champ latent à cet endroit-là).
+
+On note $X_{com f}$ les points spatiaux où les bateaux de la flotte f ont peché (ou plutôt ont été identifiés comme étant en train de pecher). $X_{com f}$ est considéré comme un "poisson point process" avec une variation spatiale d'intensité $\lambda_{f}(x)$.
+Cette insensité $\lambda_{f}(x)$ est exprimée en fonction d'un intercept ($\alpha_{Xf}$), d'un paramètre $b_{f}$ (qui traduit un échantillonage préférentiel : si $b_{f}$ vaut 0 on ne prend pas en compte l'échantillonage préférentiel, si $b_{f}$ est différent de 0 on prend en compte l'échantillonage préférentiel), du champ latent S(x) au point considéré, de covariables et de leurs paramètres associés ($\beta_{Xf}$), et enfin de l'effet spatial aléatoire ($\eta{f}(x)$). 
+
+\begin{equation}
+\mathrm{X}_{com \,f} \sim \mathcal{IPP}(\lambda_f(x))
+\end{equation}
+
+
+\begin{equation}
+\lambda_f(x)=\exp\left(\alpha_{X\,f}+b_f . \log(S(x))+\Gamma_{X}(x)^{T} \cdot \beta_{X\,f}+\eta_f(x)\right)
+\end{equation}
+
+
+- **Zero inflated observation model**
+
+Conditionnellement au champs latent S et au processus d’échantillonage commercial $X_{com f}$,  les données scientifiques et commerciales sont modélisées selon des modèles zero-inflated spatialement homogènes. 
+L'objectif est d'attribuer à chaque point de pêche préalablement déterminé avec le processus d'échantillonage la quantité de poissons pêchés, sachant qu'il est possible qu'en certains points de pêche, aucun poisson n'ai été pêché.
+
+On détermine tout d'abord quels sont les points où la pêche a été 'sans succès' et ceux où elle s'est révélée être fructueuse puis on attribue à chaque point de pêche 'fructueux' la quantité de poisson pêchée. Pour cela, on fait appel à un modèle zero-inflated.
+
+La vraisemblance d’une capture 'sans succès' (abscence de capture) est modélisée selon une distribution de Bernoulli de parametre $exp(-e^{\xi_f} \cdot \mu_f(x_{i}))$, où $\mu_f(x_{i})$ est la capture positive attendue au point $x_{i}$ et $\xi_f$ est le paramètre controllant l'intensité de pêches 'sans succès' pour la flotte f. La capture positive attendue $\mu_f(x_{i})$ est définie par l'expression suivante : $\mu_f(x_i) = q_f\cdot S(x_{i})$, où $q_f$ est le paramètre de capturabilité relative spécifique à chaque flotte et configuration. 
+
+La vraisemblance d’une capture 'fructueuse' $y_i$ (présence de capture) est définie comme le produit de la probabilité d'obtenir une capture fructueuse $(1-exp(-e^{\xi_f} \cdot \mu_f(x_{i})))$ et d'une distribution lognormale positive continue L de moyenne attendue $\frac{\mu_f(x_i)}{(1-exp(-e^{\xi_f} \cdot \mu_f(x_i)))}$ et d'écart type $\sigma_f$. 
+
+On considère le modèle zero-inflated spatialement homogène suivant : 
+
+\begin{equation}
+\operatorname{P}\left(Y_i=y_{i} | x_i, S(x_i) \right) =
+\left\{
+    \begin{array}{ll}
+        \exp \left(- e^{\xi_f} \cdot \mu_f(x_{i})\right) & \text { if } y_{i}=0 \\
+        \left(1-\exp \left(-e^{\xi_f} \cdot \mu_f(x_{i})\right)\right) \cdot \operatorname{L}\left(y_{i },\frac{\mu_f(x_{i})}{\left(1 - \exp \left(-e^{\xi_f} \cdot \mu_f(x_{i})\right)\right)},\sigma_f^{2} \right) & \text { if } y_{i} > 0
+    \end{array}
+\right.
+\end{equation}
+
+On dispose dès lors de la quantité pêchée $y_i$ en chaque point de pêche. 
+
+## C) Problématisation
+
+Les **données commerciales** intégrées dans le modèle d'Alglave et al. sont en fait des données fictives idéales et n'existent pas. 
+
+En effet, les pêcheurs ne déclarent en réalité ni la localisation de leurs points de pêche, ni la quantité de poisson qu'ils y pêchent. Chaque bateau de pêche déclare seulement chaque jour la quantité totale pêchée à l'échelle d'un **carré statistique**, un carré statistique étant une zone fictive délimitée et référencée (il en existe plusieurs au sein du golfe de Gascogne). Ces quantités de pêche déclarées chaque jour par les pêcheurs à l'échelle de chaque carré statistique sont ce que l'on appelle les **données de capture (ou de déclaration)** (ou données des carnets de bord). Ces données de capture, contrairement aux données commerciales idéales sont non géolocalisées. 
+
+Parallèlement à ces données de capture, pour un bateau de pêche donné et un jour donné, on dispose des **données VMS (Vessel Monitoring System) de localisation**. 
+L'idée est de déterminer quelles sont les *données VMS de localisation* qui correspondent à une activité de pêche afin de déterminer des **points de pêche**, la plupart du temps à l'aide de données de vitesse des bateaux. 
+
+Les **données commerciales réellement disponnibles** (quantités pêchées à l'échelle du carré statistique) **sont donc moins précises que les données commerciales intégrées dans le modèle d'Alglave et al.** (quantités pêchées $y_i$ à l'échelle de chaque point de pêche).
+
+Les données de déclarations (logbooks) peuvent être croisées avec les données de position des navires (VMS) pour obtenir la distribution des captures à une résolution spatio-temporelle très fine.
+
+Afin de pouvoir utiliser une information à l'échelle de chaque point de pêche dans le cadre de l'estimation de la distribution spatiale de densités de poissons, on cherche à obtenir une quantité pêchée $y_i$ en chaque point de pêche au sein du carré statistique, grâce à de la **réallocation uniforme**. 
+
+Ainsi, pour chaque bateau de pêche et pour une journée donnée, on **réalloue uniformément** les données de captures déclarées pour un carré statistique à l'ensemble des points de pêches identifiés du carré (à l'aide des données VMS). 
+
+
+L'objet de notre projet ingénieur est de traiter la problématique de cette **réallocation uniforme**. 
+
+La **réallocation uniforme** consiste à diviser la quantité pêchée déclarée à l'échelle du carré statistique par un bateau donné (et pour un jour donné) par le nombre de points de ses points de pêche identifiés dans ce carré statistique : on obtient alors la quantité pêchée $y_i$, qui est la **même en chacun des points de pêche du carré statistique considéré**. 
+
+On ne sait pas à quel point cette réallocation des captures pourrait déteriorer les performances du modèle. 
+
+L'objectif est de **comprendre et quantifier l'effet de la réallocation sur les estimations**. On atteint cet objectif par une étude par simulation.
+
+
+On se demande alors : 
+
+<span style="color:green">*La réallocation produit - elle un biais dans l'estimation des coefficients du modèle, et notamment dans l'estimation de l'abondance des poissons ? Si oui, dans quelle mesure ?*</span>
+
+<span style="color:green">*Dans quelle mesure la situation idéale fictive, utilisée jusqu'alors par le modèle de la thèse, avec des quantitées pêchées $y_i$ différentes en chacun des points de pêche du carré statistique, est-elle éloignée de la situation réelle où l'on dispose de données recensées moins précises ?*</span>
+
+
+On peut faire l'hypothèse que la réallocation entrainera une moins bonne estimation des coefficients et un biais plus important des métriques de performance : en effet, les $y_i$ après réallocation sont des données moins précises que les $y_i$ sans réallocation. 
+
+
+# II - Matériel et méthode
+
+
+On se place dans un cadre simplifié et suffisant pour étudier l'effet de la réallocation uniforme.
+
+On se place à l'échelle d' **un seul carré statistique**, incarné par une grille discrète fictive de taille 25*25 qui comporte 625 cellules. L'étude à l'échelle d'un carré statistique pourra être généralisée et étendue à l'ensemble des carrés statistiques du Golfe de Gascogne. 
+
+On décrit dans cette partie le modèle simplifié utilisé pour étudier l'impact de la réallocation uniforme, ainsi que les deux étapes clés du modèle : la simulation des données puis l'estimation des paramètres. 
+
+
+## A) Modèle simplifié
+
+On **simplifie le modèle hiérarchique intégré** de la manière suivante :  
+
+- on ne considère pour le champ latent S qu'une covariable continue qui a une structure spatiale. 
+
+- on ne prend pas en compte les effets spatiaux aléatoire du champs latent S ($\delta(x)$) et de l'inténsité $\lambda_{f}(x)$ du processus d'échantillonage ($\eta{f}(x)$). 
+
+- la localisation des points de pêche ne dépend pas d'autres effets incarnés par des covariables (prises accessoires, technologies disposées, les contraintes logistiques etc)
+
+Ainsi, les **équations finales à considérer dans le cadre de notre application** sont les suivantes : 
+
+\begin{equation}
+S(x)=\exp(\alpha_{S}+\Gamma_{S}(x)^{T} \cdot \beta_{S})
+\end{equation}
+
+
+\begin{equation}
+\mathrm{X}_{com \,f} \sim \mathcal{IPP}(\lambda_f(x))
+\end{equation}
+
+\begin{equation}
+\lambda_f(x)=\exp\left(\alpha_{X\,f}+b_f . \log(S(x))\right)
+\end{equation}
+
+\begin{equation}
+\operatorname{P}\left(Y_i=y_{i} | x_i, S(x_i) \right) =
+\left\{
+    \begin{array}{ll}
+        \exp \left(- e^{\xi_f} \cdot \mu_f(x_{i})\right) & \text { if } y_{i}=0 \\
+        \left(1-\exp \left(-e^{\xi_f} \cdot \mu_f(x_{i})\right)\right) \cdot \operatorname{L}\left(y_{i },\frac{\mu_f(x_{i})}{\left(1 - \exp \left(-e^{\xi_f} \cdot \mu_f(x_{i})\right)\right)},\sigma_f^{2} \right) & \text { if } y_{i} > 0
+    \end{array}
+\right.
+\end{equation}
+
+Finalement, la **simplification du modèle** peut être résumée de la manière suivante : **on ne prend en compte qu'une seule covariable pour le champ latent et il n'y a pas de corrélation spatiale dans l'abondance et l'échantillonage**. 
+
+## B) Etape de simulation
+
+On considère uniquement des **données commerciales**, le nombre de points de pêche scientifiques à l'échelle d'un carré statistique étant très faible. Le nombre de données commerciales (qui est égal au nombre de points de pêche) générées est de **150** (ordre de grandeur raisonnable à l'échelle d'un carré statistique).
+
+Par ailleurs, on cherche à estimer les conséquences de la prise en compte ou non de l’**échantillonage préférentiel** sur les capacités du modèle. Pour cela, on introduit le paramètre **b** qui peut prendre trois valeurs : 0 (pas d'échantillonage préférentiel), 3 (échantillonage préférentiel moyen) et 10 (échantillonage préférentiel important).
+
+En outre, on définit une **séquence de pêche** comme une **combinaison bateau de pêche / jour de pêche donnée**. 
+
+La **séquence de pêche** est l'échelle de déclaration. 
+En terme de données commerciales réelles, une *séquence de pêche* correspond à plusieurs captures effectives déclarées (une par carré statistique du Golfe de Gascogne).
+En terme de données commerciales fictives, une *séquence de pêche* présente une capture $y_i$ en chacun de ses points de pêche identifiés.
+
+Le modèle hiérarchique intégré va simuler des **données commerciales fictives idéales** pour chacune des *séquences de pêche* considérées. Ces **quantités capturées $y_i$ idéales en chaque point de pêche** sont nommées **captures $y_i$ exactes**. 
+
+
+
+On introduit les paramètres **P**, **Z**, **X**, **W** et **V**. 
+
+On définit **P** comme le **nombre de séquences de pêche** considérées qui peut valoir 2, 5 et 10.
+
+On définit **Z** comme le **nombre moyen de zones de pêche visitées par séquence de pêche** qui peut valoir 1, 3 et 5. 
+
+Toutes les séquences de pêches ne visitent pas forcément le même nombre de zones de pêche. Par exemple, si le nombre moyen de zones de pêche visitées Z vaut 3 et qu'on considère 2 séquences de pêche, l'une des séquences de pêche peut visiter 2 zones et l'autre 4 zones. 
+
+On définit **X** comme la **combinaison de P et Z considérée**. 
+
+On définit **W** comme le **nombre de zones de pêches visitées par l'ensemble des séquences de pêche**, et donc le **nombre total de centres de zones de pêche** à générer. Pour un couple (P,Z) fixé, **W** est le produit de P et Z : on a { W = P . Z }.
+
+On définit **V** comme le **nombre de points de pêche par zone de pêche pour chacune des séquences de pêche**. **V** est fixe et on a {V = 150 / W}. 
+
+
+Pour un couple (P,Z) fixé, les W **centres de zones de pêche sont générés selon un processus de poisson non homogène**. De la sorte, l'intensité des centres de zones de pêche dans une zone donnée du carré statistique dépend de l'abondance du champ latent à cet endroit. Plus b est grand (et donc plus l'échantillonage préférentiel est pris en compte), plus les centres de zones de pêches seront propices à être situés dans les zones du carré statistique de forte abondance en poissons. 
+
+Ensuite, les centres de zones de pêche sont attribués à l'ensemble des séquences de pêche : tout d'abord, chacune des séquences de pêche se voit attribuer un centre puis le reste des centres sont attribués aléatoirement aux séquences de pêche. Ainsi, toutes les séquences de pêche ont au moins une zone de pêche, et le nombre de zones de pêche par séquence de pêche varie. 
+
+Une fois les centres de zones de pêche générés et attribués, on définit une **zone de pêche rectangulaire** autour de chacun des centres de zone de pêche, et les ** V points de pêche sont générés dans chacune des zones de pêche selon un processus de poisson non homogène**. Ainsi, la localisation des points de pêche au sein même des zones de pêche peut également dépendre de l'abondance de poissons. 
+
+
+On considère le **tableau** suivant qui présente l'ensemble des situations possibles pour les couples de (P,Z), ainsi que **deux schémas** illustrant le cas particulier de deux couples (P,Z). 
+
+![](C:/Users/ocean/Documents/Agrocampus_Ouest/3A/projet_ingenieur/projet_M2_sole/projet_M2_sole/Version_M2_plusieurszones/Photos_rapport/schema.png)
+
+COMPLETER L'ESTIMATION DES SCENARIOS : A FAIRE
+
+
+A ce stade, **le modèle génère les *données commerciales fictives idéales* ou  *captures $y_i$ exactes* évoquées précedemment pour chacun des 150 points de pêches totaux**.
+
+La situation fictive idéale, dont on ne dispose pas en réalité, vient d'être simulée. Se pose alors la question de la réallocation uniforme pour se ramener à la situation réelle. 
+
+## C) Etape de réallocation uniforme
+
+On dispose désormais des **quantitées de poissons capturées $y_i$ exactes en chacun des 150 points de pêche**. 
+
+Si on ne fait pas de réallocation uniforme, ce sont ces **captures $y_i$ exactes**, disponibles pour chacun des points de pêche, qui sont ensuite utilisées pour l'**étape d'estimation** du modèle. Il faut noter que ces **captures $y_i$ exactes** sont potentiellement différentes pour tous les points de pêche du carré statistique. 
+
+Si on fait de la réallocation uniforme pour se ramener à la situation réelle, on va disposer en chacun des points de pêche de **captures $y_i$ réallouées**. **Ces *captures $y_i$ réallouées* seront les mêmes pour tous les points de pêche appartenant à la même séquence de pêche**. 
+
+Le protocole de réallocation est détaillé ci-dessous. 
+
+On introduit le paramètre **k** afin d'étudier l'influence de la **réallocation uniforme**: 
+
+- si **k = 0**, on se place dans une configuration **sans réallocation** 
+- si **k = 1**, on se place dans une configuration **avec réallocation**
+
+
+Dans le cas **avec réallocation**, toutes les *captures $y_i$ exactes* obtenues pour les points de pêche d'une séquence de pêche sont **sommées** : on obtient la **quantité pêchée à l'échelle du carré statistique** et on se ramène ainsi à la situation réelle. On divise ensuite cette quantité pêchée à l'échelle du carré statistique par le nombre de points de pêches de la séquence de pêche au sein du carré et on obtient les **captures $y_i$ réallouées**. 
+Les *captures $y_i$ réallouées* sont ensuite utilisés par le modèle pour réaliser l'**étape d'estimation**. 
+
+
+## D) Etape d'estimation
+
+La phase d'**estimation** du modèle se fait à l'aide du **package TMB (Template Model Builder)**, qui s’est révélé très efficace pour maximiser la vraisemblance des modèles hiérarchiques à effets aléatoires. 
+Le package TMB permet d'estimer les paramètres par la méthode du maximum de vraisemblance. En présence de variables cachées, la vraisemblance n'est pas directement disponible et doit être calculée par intégration, ce qui est en général long. Dans TMB, cette intégration ets remplacée par une approximation de Laplace. Une fois la vraisemblance calculée, la recherche du maximum de vraisemblance se fait grâce à des algorithmes de descente de gradient, impliquant le calcul des dérivées première et seconde du gradient par différenciation automatique. 
+
+
+## E) Objectifs
+
+**L'objectif** est d' **étudier trois métriques de performance**, plus précisément le biais de l'abondance, le biais de b (paramètre controlant l'échantillonage préférentiel) et le MSPE (A COMPLETER : LES EXPLIQUER ETC, CF PLAN). 
+Ces métriques sont déja utilisés dans les travaux d'Algave et al. 
+On cherche à comparer les paramètres estimés à l'aide du package TMB avec ceux initialement fixés pour la simulation des données. 
+Le modèle hiérarchique intégré renvoit une représentation graphique (boxplot) des valeurs du MSPE et des biais de l'abondance et de b sur les 100 schémas de simulation/estimation.
+
+On étudie **100 schémas de simulation/estimation** (incarnés par le paramètre **i** qui varie de 1 à 100) afin de capturer la variabilité des métriques de performance. 
+
+Finalement, **pour chacune des 100 simulations, pour chacune des trois valeurs de b (0, 5 et 20), pour chacune des deux valeurs de k (0 pour 'sans réallocation' et 1 pour 'avec réallocation') et pour chacune des 9 combinaisons de (P,Z) possibles (9 valeurs de X possibles), on simule les données puis on estime les paramètres et on renvoie les graphiques pour les trois métriques de performance**. 
+
+Pour une seule séquence de pêche, on connait donc les zones de pêche visitées au sein du carré statistique, les points de pêche (leur nombre V et leur localisation) au sein de chaque zone de pêche et les quantitées pêchées $y_i$ en chacun des points de pêche (**captures $y_i$ exactes** si pas de réallocation et **captures $y_i$ réallouées** si réallocation). 
+
+
+Dès lors, on peut se poser la question suivante : 
+
+<span style="color:green">*Peut on déterminer des situations critiques en terme de nombre de séquences de pêche et de nombre moyen de zones de pêche par séquence de pêche, pour lesquelles la réallocation uniforme n'est plus raisonnable, dans la mesure ou elle introduit un biais trop important dans l'estimation des paramètres, des métriques de performances ?*</span>
+
+
+On peut faire l'hypothèse qu'un couple de (P,Z) tel que P est faible (peu de séquences de pêche) et Z est grand (nombre de zones de pêche par séquence de pêche important en moyenne) incarnera une situation critique. 
+
+
+# III - Focus sur un exemple 
+
+VOIR POUR METTRE CET EXEMPLE EN ANNEXE
+
+Voici ci-dessous un exemple afin de mieux illuster les différentes étapes de la phase de simulation des données. 
+
+Considérons l'exemple où **P = 5** et **Z = 3** et donc où **W = 15** ( = P . Z = 5 . 3) et **V = 10** ( = 150 / W = 150 / 15) 
+
+Finalement, dans cet exemple, nous avons **5 séquences de pêche, 3 zones de pêche par séquence de pêche en moyenne, 15 zones de pêche au total et 10 points de pêche par zone de pêche**. 
+
+On considère notre grille de taille 25 * 25 (625 cellules). 
+
+On y simule tout d'abord le champ latent (densité de poissons), qui dépend uniquement de la covariable continue dans notre cas. 
+
+Voici ci-dessous la **Carte du champ latent**. 
+
+
+
+![](C:/Users/ocean/Documents/Agrocampus_Ouest/3A/projet_ingenieur/projet_M2_sole/projet_M2_sole/Version_M2_plusieurszones/Photos_rapport/latentfield_i1.png)
+
+Les 15 centres de zones de pêche sont ensuite générés selon le processus de poisson non homogène puis attribués à chacune des 5 séquences de pêche. 
+
+Voici ci-dessous la **Carte de localisation des centres de pêche** au sein de notre grille d'étude. La légende rapporte l'appartenance des centres à sa séquence de pêche. 
+
+
+![](C:/Users/ocean/Documents/Agrocampus_Ouest/3A/projet_ingenieur/projet_M2_sole/projet_M2_sole/Version_M2_plusieurszones/Photos_rapport/centres_i1_x5.png)
+
+
+On remarque sur la carte que pour cet exemple : 
+
+- la séquence de pêche 1 a 3 zones de pêche
+- la séquence de pêche 2 a 5 zones de pêche 
+- la séquence de pêche 3 a 2 zones de pêche
+- la séquence de pêche 4 a 1 zone de pêche
+- la séquence de pêche 5 a 3 zones de pêche
+
+Ainsi, les séquences de pêche n'ont pas toutes le même nombre de zones de pêche. 
+
+
+
+Ensuite, 10 points de pêche sont simulés pour chacune des 15 zones de pêche.
+
+Voici ci-dessous la **Carte de localisation des points de pêche au sein de chaque zone de pêche**. La légende rapporte l'appartenance des points de pêche à leur centre et à leur séquence de pêche. 
+
+
+
+![](C:/Users/ocean/Documents/Agrocampus_Ouest/3A/projet_ingenieur/projet_M2_sole/projet_M2_sole/Version_M2_plusieurszones/Photos_rapport/pecheperboat_i1_x5.png)
+
+Puis, les points de pêche sont agrégés à l'échelle de la cellule de la grille la plus proche. 
+
+Voici ci-dessous la **Carte de localisation des cellules pêchées**. La légende rapporte l'appartenance des cellules pêchées à leur séquence de pêche. (( On a ici un probléme de recouvrement de couleur que nous n'avons pas encore réglé)). 
+
+
+
+![](C:/Users/ocean/Documents/Agrocampus_Ouest/3A/projet_ingenieur/projet_M2_sole/projet_M2_sole/Version_M2_plusieurszones/Photos_rapport/pechecell_i1_x5.png)
+
+Enfin, pour toutes les cellules pêchées, une quantité pêchée $y_i$ est calculée, et ce pour les deux situations suivantes : sans réallocation et avec réallocation. 
+
+Voici ci-dessous la **Carte des quantités pêchées par cellules, dans les situations "sans réallocation" et "avec réallocation"**. La légende rapporte l'appartenance des cellules pêchées à leur séquence de pêche.
+
+
+
+![](C:/Users/ocean/Documents/Agrocampus_Ouest/3A/projet_ingenieur/projet_M2_sole/projet_M2_sole/Version_M2_plusieurszones/Photos_rapport/pecheqte_i1_x5.png)
+
+Dans le cas où il n'y a pas de réallocation, les quantités pêchées sont différentes pour tous les points de pêche de la grille. Dans le cas où il y a réallocation, les quantités pêchées sont les mêmes pour toutes les cellules ayant été pêchées par la même séquence de pêche. 
+
+Ces $y_i$ simulés sont les données commerciales qui vont servir de source à l'estimation des paramètres du modèle et donc au calcul des biais des métriques de performance. 
+
+
+
+# IV - Résultats et interprétations
+
+
+
+
+
+
+

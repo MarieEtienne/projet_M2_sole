@@ -98,13 +98,14 @@ simu_commercial_scientific <- function(Results,
                                        xlim,
                                        ylim,
                                        sequencesdepeche,
-                                       zonespersequence){
+                                       zonespersequence,
+                                       taillezone){
 
   ################
   ## Simulate data
   ################
 
-  set.seed( RandomSeed + i ) # for figures : i = 2
+  set.seed( RandomSeed + i )
   
   #---------------
   # Construct grid
@@ -151,25 +152,39 @@ simu_commercial_scientific <- function(Results,
   # beta (fixed parameters for the abundance distribution equation), 
   # delta_x (random effect for the abundance distribution equation), 
   # eta_x (random effect for the sampling process equation)
-  simu_latent_field_outputs <- simu_latent_field(loc_x,
-                                                 latent_fields_simu,
-                                                 latent_field,
-                                                 scientific_data,
-                                                 beta0,
-                                                 beta,
-                                                 simu_tool,
-                                                 range,
-                                                 nu,
-                                                 SD_x,
-                                                 SD_delta,
-                                                 SD_eta)
+  validation = 0
+  wronglatentfield = 1
+  
+  while (validation == 0)
+  {
+    simu_latent_field_outputs <- simu_latent_field(loc_x,
+                                                   latent_fields_simu,
+                                                   latent_field,
+                                                   scientific_data,
+                                                   beta0,
+                                                   beta,
+                                                   simu_tool,
+                                                   range,
+                                                   nu,
+                                                   SD_x,
+                                                   SD_delta,
+                                                   SD_eta)
+    Strue_x <- simu_latent_field_outputs$Strue_x
+    # Contient 625 lignes et une colonne correspondant aux valeurs du champ latent en chacun des points
+    if (max(Strue_x) < 400 & sd(Strue_x) > 10){
+      validation = 1
+    } else{
+      wronglatentfield = wronglatentfield + 1
+      set.seed( RandomSeed - wronglatentfield )
+    }
+  }
+  
+
   
   Cov_x <- simu_latent_field_outputs$Cov_x
   # Cov_x contient une colonne cov_x
   # correspondant à la covariable continue et les 4 colonnes de strates codées
   # binaires pour l'appartenance du point a la strate ou non
-  Strue_x <- simu_latent_field_outputs$Strue_x
-  # Contient 625 lignes et une colonne correspondant aux valeurs du champ latent en chacun des points
   beta <- simu_latent_field_outputs$beta
   # Contient le coefficient beta de lavar continue et les coeff des 4 modalités/strates de la
   # covariable catégorielle
@@ -177,7 +192,7 @@ simu_commercial_scientific <- function(Results,
   # eta_x <- simu_latent_field_outputs$eta_x
   
   # Représentation graphique du champ latent
-  Strue_x_2 = as.data.frame(cbind(x=loc_x$x, y=loc_x$y, Champ_latent=as.vector(Strue_x)))
+  Strue_x_2 = as.data.frame(cbind(x=loc_x$x, y=loc_x$y, Champ_latent_reel=as.vector(Strue_x)))
   # plot_latentfield = ggplot(Strue_x_2) + geom_point(aes(x,y,col=Champ_latent), size=4) + theme_bw() +
   #   scale_color_gradient2(midpoint = mean(Strue_x_2$Champ_latent), low = "#E6F2FC", mid = "#62B4FC",
   #                         high = "#02182C", space = "Lab" ) +
@@ -239,7 +254,8 @@ simu_commercial_scientific <- function(Results,
                                                        q2_com,
                                                        b,
                                                        sequencesdepeche,
-                                                       zonespersequence)
+                                                       zonespersequence,
+                                                       taillezone)
   
   index_com_i <-  simu_commercial_data_outputs$index_com_i
   y_com_i <- simu_commercial_data_outputs$y_com_i
@@ -324,6 +340,7 @@ simu_commercial_scientific <- function(Results,
     Report <- fit_IM_res$Report
     Opt <- fit_IM_res$Opt
     Converge <- fit_IM_res$Converge
+    champ_latent_estime = Report$S_x
     
     # source("Scripts/Simulation/format_outputs.R")
     # format_outputs_res <- format_outputs()
@@ -468,6 +485,7 @@ simu_commercial_scientific <- function(Results,
   # Liste de 4 dataframes : Strue_x_2, centres, peche_com_old et pointsdepeche_com
   # Ces dataframes serviront à construire les 5 maps associées à chaque simulation :
   # champ latent, centres de peche, points de peche, points de peche par cellule, quantite pechee par point de peche
+  Strue_x_2 = cbind(Strue_x_2, "Champ_latent_estime" = champ_latent_estime)
   map_results = list(Strue_x_2, centres, peche_com_old, pointsdepeche_com)
   # On sauvegarde cette liste dans un workspace
   if(! dir.exists(simu_file)) dir.create(simu_file)
