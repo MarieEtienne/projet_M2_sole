@@ -214,7 +214,7 @@ simu_commercial_data <- function(loc_x,
       # y_com_i <- rlnorm(1,meanlog = log(exp_catch), sdlog = exp(logSigma_com))
       # shape <- exp(logSigma_com)^-2
       # y_com_i <-  rgamma(1,shape=shape,scale= exp_catch * exp(logSigma_com)^2)
-      y_com_i <- exp(rnorm(1,mean = log(exp_catch) - exp(logSigma_com)^2/2, sd = exp(logSigma_com)))
+      y_com_i <- exp(rnorm(1,mean = log(exp_catch/prob_encount) - exp(logSigma_com)^2/2, sd = exp(logSigma_com)))
     }else{
       y_com_i <- 0
     }
