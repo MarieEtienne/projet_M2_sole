@@ -249,20 +249,31 @@ simu_commercial_data <- function(loc_x,
   
   b_com_i_2 <- factor(b_com_i_2)
   
-  # Visualisation des points de peche de chaque bateau dans sa zone et de la quantité pechee
-  peche_com_boat = peche_com_old
-  peche_com_boat$x = round(peche_com_boat$x)
-  peche_com_boat$y = round(peche_com_boat$y)
-  peche_com_boat$ncell = rep(0, length(peche_com_boat$boats))
-  for (j in 1:length(peche_com_boat$boats))
-  {
-    peche_com_boat[j, "ncell"] = loc_x$cell[which(loc_x[, "x"] == peche_com_boat[i, "x"] & loc_x[, "y"] == peche_com_boat[j, "y"])]
-  }
-  qte_pechee = as.data.frame(cbind(ncell = index_com_i_2, y_com_i = y_com_i))
-  peche_com_boat = peche_com_boat[order(peche_com_boat$ncell),]
-  qte_pechee = qte_pechee[order(qte_pechee$ncell),]
-  peche_com_boat = cbind(peche_com_boat, y_com_i = qte_pechee$y_com_i)
+  # # Visualisation des points de peche de chaque bateau dans sa zone et de la quantité pechee
+  # peche_com_boat = peche_com_old
+  # peche_com_boat$x = round(peche_com_boat$x)
+  # peche_com_boat$y = round(peche_com_boat$y)
+  # peche_com_boat$ncell = rep(0, length(peche_com_boat$boats))
+  # for (j in 1:length(peche_com_boat$boats))
+  # {
+  #   peche_com_boat[j, "ncell"] = loc_x$cell[which(loc_x[, "x"] == peche_com_boat[i, "x"] & loc_x[, "y"] == peche_com_boat[j, "y"])]
+  # }
+  # qte_pechee = as.data.frame(cbind(ncell = index_com_i, y_com_i = y_com_i))
+  # peche_com_boat = peche_com_boat[order(peche_com_boat$ncell),]
+  # qte_pechee = qte_pechee[order(qte_pechee$ncell),]
+  # peche_com_boat = cbind(peche_com_boat, y_com_i = qte_pechee$y_com_i)
+
   
-  res <- list(index_com_i = peche_com_boat$ncell, y_com_i = peche_com_boat$y_com_i, b_com_i = b_com_i_2, c_com_x = c_com_x_2, boats_number = peche_com_boat$boats, x_com = peche_com_boat$x, y_com = peche_com_boat$y, centres = centres, peche_com_old = peche_com_old)
+  res <- list(index_com_i = index_com_i, y_com_i = y_com_i, b_com_i = b_com_i_2, c_com_x = c_com_x_2, boats_number = boats, x_com = boats_x, y_com = boats_y, centres = centres, peche_com_old = peche_com_old)
   return(res)
 }
+
+
+# test <- data.frame(y_com = y_com_i, cell = index_com_i, boats = boats, coord_x_com = boats_x, coord_y_com = boats_y)
+# test_2 <- full_join(loc_x,test) # il faut qu'il y ait les valeurs du champ latent dans S_x
+# ggplot(test_2)+
+#   # geom_point(aes(x=x,y=y)) +
+#   geom_point(aes(x=x,y=y,col=S_x),size=5,shape=15,alpha=0.2)+
+#   geom_point(aes(x=coord_x_com,y=coord_y_com,size=y_com),col="red")
+
+  

@@ -474,7 +474,7 @@ simu_commercial_scientific <- function(Results,
     
     
     # save data
-    if(! dir.exists(simu_file)) dir.create(simu_file)
+    if(! dir.exists(simu_file)) dir.create(simu_file,recursive = T)
     save(List_param, file = paste0(simu_file,"/List_param_",counter,".RData"))
     save(Results, file = paste0(simu_file,"/Results.RData"))
     
@@ -488,7 +488,7 @@ simu_commercial_scientific <- function(Results,
   Strue_x_2 = cbind(Strue_x_2, "Champ_latent_estime" = champ_latent_estime)
   map_results = list(Strue_x_2, centres, peche_com_old, pointsdepeche_com)
   # On sauvegarde cette liste dans un workspace
-  if(! dir.exists(simu_file)) dir.create(simu_file)
+  if(! dir.exists(simu_file)) dir.create(simu_file,recursive = T)
   path = paste0(simu_file,"/map_results_i",i,"_b",b,"_k",k,"_x",x,".RData")
   save(map_results, file = path)
   
