@@ -170,8 +170,8 @@ simu_commercial_scientific <- function(Results,
     tidyr::pivot_longer(cols = starts_with("strata"),names_to = "strata") %>%
     data.frame() %>% filter(value > 0) -> loc_x_plot
 
-  ggplot(loc_x_plot)+
-  geom_point(aes(x,y,col=strata)) + theme_bw()
+  # ggplot(loc_x_plot)+
+  # geom_point(aes(x,y,col=strata)) + theme_bw()
   
   
   #---------------
@@ -276,8 +276,8 @@ simu_commercial_scientific <- function(Results,
     ## Fit model
     ############
     # Create the SPDE/GMRF model, (kappa^2-Delta)(tau x) = W:
-    mesh = inla.mesh.create( loc_x[,c('x','y')] )
-    spde <- (inla.spde2.matern(mesh, alpha=Alpha)$param.inla)[c("M0","M1","M2")]  # define sparse matrices for parametrisation of precision matrix
+    # mesh = inla.mesh.create( loc_x[,c('x','y')] )
+    # spde <- (inla.spde2.matern(mesh, alpha=Alpha)$param.inla)[c("M0","M1","M2")]  # define sparse matrices for parametrisation of precision matrix
     
     # Loop on alternative configuration models
     for(Estimation_model in Data_source){
@@ -439,7 +439,7 @@ simu_commercial_scientific <- function(Results,
       Results[counter,"Convergence"]=Converge
       
       # save data
-      if(!file.exists(simu_file)) dir.create(simu_file)
+      if(!file.exists(simu_file)) dir.create(simu_file,recursive = T)
       save(List_param, file = paste0(simu_file,"/List_param_",counter,".RData"))
       save(Results, file = paste0(simu_file,"/Results.RData"))
       }, error = function(e) { skip_to_next <<- TRUE})

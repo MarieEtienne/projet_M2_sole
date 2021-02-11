@@ -58,7 +58,7 @@ q1_sci <- 1
 # Relative catchability
 q2_sci <- 1
 # parameter controling size of the strata
-n_strate <- 9 
+n_strate <- 9
 sci_sampling <- "0" # Deprecated
 
 ## Commercial data
