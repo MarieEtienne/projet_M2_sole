@@ -1,0 +1,124 @@
+--- 
+title: "Accounting for commercial data without reallocationg the catches."
+author: "MP Etienne"
+date: "`r Sys.Date()`"
+site: bookdown::bookdown_site
+documentclass: book
+bibliography: [book.bib, packages.bib]
+biblio-style: apalike
+link-citations: yes
+description: "Working at the statistical unit scale."
+---
+
+
+```{r include=FALSE}
+library(tidyverse)
+library(ggplot2)
+library(purrr)
+```
+
+
+# Model presentation
+
+## Log Normal parametrization 
+
+Many different parametrizations of the log normal exist, We have to choose the most convenient for our purpose
+
+### Version 1
+
+\begin{equation} 
+  D \sim \mathcal{LN} (\rho, \sigma^2) \Longleftrightarrow D =e^{\rho + \sigma N}, \ N\sim \mathcal{N}(0,1) .
+  (\#eq:LNv1)
+\end{equation} 
+
+In this parametrization 
+$$E(D) = e^{\rho +\frac{\sigma^2}{2}},\quad Var(D) = \left(e^{\sigma^2}-1\right) e^{2\rho + \sigma^2}$$
+
+### Version 2
+
+\begin{equation} 
+  D \sim \mathcal{LN} (\nu, \sigma^2) \Longleftrightarrow D =\mu e^{\sigma N}, \ N\sim \mathcal{N}(0,1) .
+  (\#eq:LNv2)
+\end{equation} 
+
+In this parametrization 
+$$E(D) = \nu e^{\frac{\sigma^2}{2}},\quad Var(D) = \nu^2 \left(e^{\sigma^2}-1\right) e^{ \sigma^2}$$
+
+### Version 3, the mean of the log normal is the actual parameter
+
+
+
+\begin{equation} 
+  D \sim \mathcal{LN} (\mu, \sigma^2) \Longleftrightarrow D =\mu e^{\sigma N- \frac{\sigma^2}{2}}, \ N\sim \mathcal{N}(0,1) .
+  (\#eq:LNv3)
+\end{equation} 
+
+In this parametrization 
+$$E(D) = \mu ,\quad Var(D) = \mu^2 \left(e^{\sigma^2}-1\right). $$
+With this parametrization, 
+
+$$D \sim\mathcal{LN}\left ( E(D), \ln\left\lbrace Var(D)/E(D)^2 +1\right\rbrace\right ).$$
+We will use this last parametrization throughout the paper. 
+
+## Model
+
+The model proposed by Baptiste has a hierarchical structure with three main components 
+
+
+- the biomass latent field $S$, representing the spatial repartition of biomass:
+
+\begin{equation} 
+  S(x)  = \exp{ \left \lbrace \alpha_S + \Gamma_S(x)^\intercal \beta_S +\delta(x)\right \rbrace}
+  (\#eq:latent)
+\end{equation} 
+
+
+- the preferential sampling density, defined conditionnally to $S$:
+
+\begin{equation} 
+  \lambda(x)  = \exp{ \left \lbrace \alpha_X + b \log{\left \lbrace S(x)\right\rbrace} + \Gamma_X(x)^\intercal \beta_X +\eta(x)\right \rbrace}
+  (\#eq:pref)
+\end{equation} 
+
+- and finally, the observations are defined at the VMS ping scale. $Y_i$ stands for the CPUE at location $x_i$ and is defined conditionnaly on  the Poisson process and the biomass latent field $S$:
+
+\begin{align*} 
+  Y_i  &= C_i Z_i,    (\#eq:obs)\\ 
+  C_i &\sim \mathcal{B}(1-p_i), \mbox{ with } p_i = \exp{ \left \lbrace  - e^{\xi \mu(x_i) }\right \rbrace}, \nonumber  \\
+  Z_i &\sim \mathcal{LN}( \frac{\mu(x_i)}{1-p_i}, \sigma^2),\nonumber \\
+  \mu(x_i) &= q S(x_i).\nonumber \\
+\end{align*} 
+
+
+## Potential limitation
+
+The information regarding the catch is not known at the fishing point level (VMS ping) but at the statistical unit, as recorded in the logbook.
+The available information on the commercial catch is the declaration $D_j$  at the statistical unit level and the VMS ping location $(x_{j1}, \ldots x_{jn_j})$. $D_j$ is the sum of all individuals catch at the $n_j$ visited fishing points:
+
+\begin{equation*}
+  D_{j} = \sum_{i \in  \mathcal{P}_j} Y_i,
+\end{equation*} 
+
+$\mathcal{P}_j$ being the vector of all fishing events associated with the logbook entry $j$. 
+
+This diffculty is currently addressed by reallocating the total catch to individual fishing events with a simple proportionality rule:
+$$\tilde{Y_i} = \frac{1}{|\mathcal{P}_j|} D_j.$$
+
+This is not completely satisfactory as it might introduce some bias is the total biomass estimation as well as its spatial repetition. 
+
+
+## Is is a real limitation ?
+
+A strategy to answer this question would be 
+
+1. Simulation study to understand when this reallocation is problematic
+2. A new observation model at the statitical unit level
+3. Does this new model improves the estimation ?
+
+
+```{r include=FALSE}
+# automatically create a bib database for R packages
+knitr::write_bib(c(
+  .packages(), 'bookdown', 'knitr', 'rmarkdown'
+), 'packages.bib')
+```

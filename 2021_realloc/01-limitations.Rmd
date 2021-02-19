@@ -1,0 +1,4 @@
+# A simulation study to explore the effects of the reallocation {#effects}
+
+
+Put the stats project here
