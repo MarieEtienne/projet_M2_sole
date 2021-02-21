@@ -28,31 +28,53 @@ An alternative would be to fit a delta lognormal model whose proportion of zero 
 
 \begin{align}
 P(D_j = 0 \vert S, X) & = \prod_{i\in \mathcal{P}_j} P(Y_i = 0 \vert S, X),\nonumber \\
-                      & = \exp{ \left \lbrace- \sum_{i\in \mathcal{P}_j} e^{\xi S(x_i)}\right \rbrace}.
+                      & = \exp{ \left \lbrace- \sum_{i\in \mathcal{P}_j} e^{\xi S(x_i)}\right \rbrace} = \pi_j.
 \end{align}
 
 
-The expected catch biomass is defined by $E(D_j) = \sum_{i\in \mathcal{P}_j} E(C_i Z_i).$
-
+The expected catch biomass is defined by $E(D_j) = \sum_{i\in \mathcal{P}_j} E(C_i Z_i),$ while the expected positive catch biomass is defined by 
+$$E(D_j\vert D_j >0) =  \sum_{i\in \mathcal{P}_j} E(C_i Z_i\vert \exists i_0\in\mathcal{P}_j , C_{i_0}=1)$$
 As $C_i$ and $Z_i$ are assumed to be independant 
 
+\begin{align*}
+E(D_j\vert D_j > 0) & = E(D_j 1_{ \left \lbrace D_j > 0\right\rbrace } )  / P\left ( D_j > 0\right ),   \\
+& = E(D_j 1_{ \left \lbrace D_j > 0\right\rbrace } )  / \left (1-\pi_j\right).   \\
+\end{align*}
+
+As $E(D_j 1_{ \left \lbrace D_j > 0\right\rbrace } ) = E(D_j ),$
+
 \begin{align}
-E(D_j) & = \sum_{i\in \mathcal{P}_j} E(C_i Z_i),\nonumber \\
-& = \sum_{i\in \mathcal{P}_j} (1-p_i) \frac{\mu(x_i)}{1-p_i}, \nonumber \\
-& = \sum_{i\in \mathcal{P}_j} \mu(x_i). (\#eq:newobs)
+E(D_j\vert D_j > 0) & = \left (1- \pi_j\right)^{-1} E(D_j)   ,   \nonumber \\
+& \left (1- \pi_j\right)^{-1} \sum_{i\in \mathcal{P}_j} E(C_i Z_i),\nonumber \\
+& = \left (1- \pi_j\right)^{-1} \sum_{i\in \mathcal{P}_j} (1-p_i) \frac{\mu(x_i)}{1-p_i}, \nonumber \\
+& = \left (1- \pi_j\right)^{-1}\sum_{i\in \mathcal{P}_j} \mu(x_i). (\#eq:newobs)
 \end{align}
 
 
 Regarding the variance
 
-$$Var(D_j)  = \sum_{i\in \mathcal{P}_j} Var(C_i Z_i).$$
+$$Var(D_j \vert D_j >0)  = E(D_j^2 \vert D_j >0)- E(D_j \vert D_j >0)^2.$$
+
+But $E(D_j^2 \vert D_j >0) = (1-\pi_j)^{-1} E(D_j^2 1_{\left \lbrace D_j >0\right\rbrace}) = (1-\pi_j)^{-1} E(D_j^2 )$ and
+
+$E(D_j \vert D_j >0)^2 = ((1-\pi_j)^{-1} E(D_j 1_{\left \lbrace D_j >0\right\rbrace}))^2 =  (1-\pi_j)^{-2} E(D_j)^2$.
+
+So that 
+
+$$Var(D_j \vert D_j >0) = (1-\pi_j)^{-1} E(D_j^2 ) - (1-\pi_j)^{-2} E(D_j)^2 = (1-\pi_j)^{-1} Var(D_j) - \frac{\pi_j}{(1-\pi_j)^2} E(D_j)^2.$$
+
+As the $(Y_i )_{i\in \mathcal{p}_j}$ are independent, $Var(D_j) =\sum_{i \in\mathcal{P}_j} Var(Y_i)$.
 
 We are the lead to compute the Variance of $C_i Z_i$. 
 
+
+
 \begin{align*}
-Var(C_i Z_i) & = E( var(C_i Z_i \vert C_i) )  + Var( E(C_i Z_i \vert C_i) ),\\
-& = Var(Z_i) E(C_i^2) + Var ( E(Z_i) C_i),\\
-& = Var(Z_i) (1-p_i) + E(Z_i)^2 p_i (1-p_i)
+Var(C_i Z_i) & = E( C_i^2 Z_i^2 ) - E(C_i Z_i)^2,\\
+& =  E( C_i^2) E(Z_i^2 ) -E(C_i)^2 E(Z_i)^2,\\
+& = p_i E(Z_i^2 ) - p_i^2 E(Z_i)^2 = p_i ( Var(Z_i) + (1-p_i) E(Z_i)^2),\\
+& = p_i\left( \frac{\mu(x_i)^2 }{(1-p_i)^2} (e^{\sigma^2}-1) + (1-p_i) \frac{\mu(x_i)^2 }{(1-p_i)^2}\right),\\
+& = \frac{p_i}{(1-p_i)^2} \mu(x_i)^2  \left(e^{\sigma^2} -p_i \right)  
 \end{align*}
 
 
