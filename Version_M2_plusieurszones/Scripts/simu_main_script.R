@@ -236,7 +236,7 @@ for(i in i0:n_sim){
         zonespersequence = PZ[[x]][2]
         if (x!=10){
           taillezone = 2
-        } else{
+        }else{
           taillezone = 25
         }
         res <- simu_commercial_scientific(Results,

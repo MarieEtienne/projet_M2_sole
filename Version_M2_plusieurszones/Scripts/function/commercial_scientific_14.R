@@ -173,7 +173,7 @@ simu_commercial_scientific <- function(Results,
     # Contient 625 lignes et une colonne correspondant aux valeurs du champ latent en chacun des points
     if (max(Strue_x) < 400 & sd(Strue_x) > 10){
       validation = 1
-    } else{
+    }else{
       wronglatentfield = wronglatentfield + 1
       set.seed( RandomSeed - wronglatentfield )
     }
@@ -265,11 +265,16 @@ simu_commercial_scientific <- function(Results,
   y_com <- simu_commercial_data_outputs$y_com
   centres <- simu_commercial_data_outputs$centres
   peche_com_old <- simu_commercial_data_outputs$peche_com_old
-  
+  y_com_i_ref <- y_com_i
+
+  # par(mfrow = c(3, 1))
+  # plot(Strue_x[index_com_i],(y_com_i_ref),xlab="S_x",ylab="commercial obs. (true)")
   if (k>0){ # Si on fait de la reallocation uniforme (cad k = 1)
     y_com_i <- commercial_reallocation_uniforme(k, xlim, ylim, y_com_i, n_samp_com,
                                                 index_com_i, loc_x, sequencesdepeche, boats_number)
   }
+  # plot(Strue_x[index_com_i],(y_com_i),xlab="S_x",ylab="commercial obs. (reallocated)")
+  # plot(y_com_i,y_com_i_ref,xlab="commercial obs. (true)",ylab="commercial obs. (reallocated)")
   
   
   # Représentation graphique des donnees commerciales (4 graphes)
@@ -334,13 +339,14 @@ simu_commercial_scientific <- function(Results,
                          index_com_i,
                          y_sci_i,
                          index_sci_i,
+                         boats_number,
                          as.matrix(Cov_x[,1]))
     
     SD <- fit_IM_res$SD
     Report <- fit_IM_res$Report
     Opt <- fit_IM_res$Opt
     Converge <- fit_IM_res$Converge
-    champ_latent_estime = Report$S_x
+    champ_latent_estime <- Report$S_x
     
     # source("Scripts/Simulation/format_outputs.R")
     # format_outputs_res <- format_outputs()
@@ -419,8 +425,7 @@ simu_commercial_scientific <- function(Results,
     Results[counter,"Convergence"]=Converge
     Results[counter,"LogLik"]=-Opt$objective
     Results[counter,"MSPE_S"] = sum((Strue_x - Report$S_x)^2)/n_cells
-    Results[counter,"MSPE_S"] = sum((Strue_x - Report$S_x)^2)/n_cells
-    
+
     MSPE_S_2_df <- cbind(loc_x,Strue_x,Report$S_x) %>%
       dplyr::mutate(S_x = Report$S_x) %>%
       filter(x < 9 & y < 9)

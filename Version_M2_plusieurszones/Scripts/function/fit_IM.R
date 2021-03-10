@@ -48,6 +48,7 @@ fit_IM <- function(Estimation_model_i = 1,
                    index_com_i,
                    y_sci_i,
                    index_sci_i,
+                   boats_number,
                    Cov_x){
   
   #----------------------
@@ -138,6 +139,36 @@ fit_IM <- function(Estimation_model_i = 1,
                  "Cov_xk"=array(1,c(list(nrow(Cov_x),1))),
                  "q2_sci" =  1,
                  "q2_com" = 1)
+    
+    Params = list("beta_j"=rep(0,ncol(Data$Cov_xj)), # linear predictor for abundance 
+                  "beta_k"=0, # intercept of fishin intensity
+                  "par_b"=0, # link between abundance and sampling intensity
+                  "logSigma_com"=log(1),
+                  "q1_com"=0,
+                  "k_com" = 1)
+    
+    Map[["k_com"]] <- seq(1:(length(Params$k_com))) # first k is for scientific data
+    Map[["k_com"]][1] <- NA
+    Map[["k_com"]] <- factor(Map[["k_com"]])
+    
+  }else if(Estimation_model_i == 5){ # Commercial model with aggregated data at the level of fishing sequence
+    
+    # commercial model (commercial_only)
+    
+    aggreg_data_df <- data.frame(y_com_i= y_com_i,seq = boats_number) %>%
+      group_by(seq) %>%
+      dplyr::summarise(y_com_i = sum(y_com_i))
+    
+    
+    Data = list( "Options_vec"=Options_vec,
+                 "c_com_x"=c_com_x,
+                 "y_com_i"=aggreg_data_df$y_com_i,
+                 "index_com_i"=index_com_i-1,
+                 "Cov_xj"=cbind(1,Cov_x),
+                 "Cov_xk"=array(1,c(list(nrow(Cov_x),1))),
+                 "q2_sci" =  1,
+                 "q2_com" = 1,
+                 "seq" = boats_number)
     
     Params = list("beta_j"=rep(0,ncol(Data$Cov_xj)), # linear predictor for abundance 
                   "beta_k"=0, # intercept of fishin intensity

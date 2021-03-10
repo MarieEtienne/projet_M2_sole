@@ -104,6 +104,9 @@ simu_commercial_data <- function(loc_x,
   boats_y = numeric()
   # On va stocker les coordonnées de ces 150 points de peche dans ces deux vecteurs
   
+  # On définit un vecteur qui correspond au numéro du bateau associé à chaque point de peche
+  boats = numeric(0)
+  
   # On considère successivement chacune des sequences de peche * zonespersequence, donc chacune des zones de peche
   for (centre in 1:(sequencesdepeche*zonespersequence))
   {
@@ -112,19 +115,21 @@ simu_commercial_data <- function(loc_x,
     # et on passe dans le rpoint Int_ps qui correspond
     # aux lambdas qui dépendent du champ latent
     win_df_boat <- owin(xrange=c(max(0.5, X$x[centre]-taillezone), min(25.5, X$x[centre]+taillezone)), yrange=c(max(0.5, X$y[centre]-taillezone), min(25.5, X$y[centre]+taillezone)), ystep=1, xstep=1)
-    X_boat <- rpoint(n_samp_com/(sequencesdepeche*zonespersequence), as.im(Int_ps, win_df_boat))
+    n_samp <- round(n_samp_com/(sequencesdepeche*zonespersequence))+1 # + 1 --> sinon il manque des échantillons
+    X_boat <- rpoint(n_samp, as.im(Int_ps, win_df_boat))
     # On ajoute les coordonnées de peche obtenues pour le bateau
     boats_x = c(boats_x, X_boat$x)
     boats_y = c(boats_y, X_boat$y)
+    boats = c(boats, rep(centres$boats[centre], n_samp))
+    
   }
   
-  # On définit un vecteur qui correspond au numéro du bateau associé à chaque point de peche
-  boats = numeric(0)
-  for (j in 1:(sequencesdepeche*zonespersequence))
-  {
-    boats = c(boats, rep(centres$boats[j], n_samp_com/(sequencesdepeche*zonespersequence)))
-  }
-  
+  # sample n_samp_com in boats_y, boats_x, boats
+  index_com <- sample(1:(length(boats_y)),n_samp_com,replace = FALSE)
+  boats_x <- boats_x[index_com]
+  boats_y <- boats_y[index_com]
+  boats <- boats[index_com]
+
   # On a donc :
   # boats_x les coordonnées sur l'axe des x des 150 points de peche
   # boats_y les coordonnées sur l'axe des y des 150 points de peche
