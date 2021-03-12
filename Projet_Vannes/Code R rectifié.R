@@ -132,6 +132,7 @@ plot
 
 Mean<-rowMeans (tacsatEflalo_2[,c(23:50)], na.rm = TRUE, dims = 1)
 View(Mean)
+str(Mean)
 
 mapBase <- ne_countries(scale = "medium", returnclass = "sf")
 # mapBase <- map("worldHires", fill = T, plot = F)
@@ -193,12 +194,18 @@ View(table(tacsatEflalo_2$FT_REF))
 
 View(table(tacsatEflalo_2$SI_DATE))
 
+
+# Moyenne et écart-type du nombre de pings par séquence de pêche
+mean(table(tacsatEflalo_2$FT_REF))
+sd(table(tacsatEflalo_2$FT_REF))
+
+
 # barplot(tacsatEflalo_2$SI_DATE)
 
 View(table(tacsatEflalo_2$FT_REF,tacsatEflalo_2$SI_DATE))
 
 head(table(tacsatEflalo_2$FT_REF,tacsatEflalo_2$SI_DATE))
-
+ 
 tacsatEflalo_2.1=data.frame(table(tacsatEflalo_2$FT_REF,tacsatEflalo_2$SI_DATE))
 
 # Création du sous tableau extrait constitué uniquement des données dont la date est au 01/11/2018
@@ -214,7 +221,9 @@ plot_3<-ggplot() +
 
 plot_3  
 
-# Utiliser la fonction over du package sp pour croiser ce qu'on obtient là avec chaque carré statistique.
+# Utiliser la fonction over du package sp pour croiser les données gps avec les carrés statistique, et alors on saura dans quel carré stat, 
+#  tombe chaque ping.
+
 tacsatEflalo_2$SI_STATE
 
 install.packages("raster")
