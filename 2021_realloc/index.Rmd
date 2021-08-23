@@ -12,7 +12,7 @@ description: "Working at the statistical unit scale."
 
 
 ```{r include=FALSE}
-library(tidyverse)
+library(tidyr)
 library(ggplot2)
 library(purrr)
 ```

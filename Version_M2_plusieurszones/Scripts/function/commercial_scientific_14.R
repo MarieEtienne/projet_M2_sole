@@ -87,6 +87,7 @@ simu_commercial_scientific <- function(Results,
                                        Data_source,
                                        Samp_process,
                                        EM,
+                                       aggreg_obs,
                                        RandomSeed,
                                        Version,
                                        TmbFile,
@@ -99,7 +100,12 @@ simu_commercial_scientific <- function(Results,
                                        ylim,
                                        sequencesdepeche,
                                        zonespersequence,
-                                       taillezone){
+                                       taillezone,
+                                       i0,
+                                       i1,
+                                       n_fact,
+                                       cluster_nb,
+                                       n_nodes){
 
   ################
   ## Simulate data
@@ -273,8 +279,8 @@ simu_commercial_scientific <- function(Results,
     y_com_i <- commercial_reallocation_uniforme(k, xlim, ylim, y_com_i, n_samp_com,
                                                 index_com_i, loc_x, sequencesdepeche, boats_number)
   }
-  # plot(Strue_x[index_com_i],(y_com_i),xlab="S_x",ylab="commercial obs. (reallocated)")
-  # plot(y_com_i,y_com_i_ref,xlab="commercial obs. (true)",ylab="commercial obs. (reallocated)")
+  plot(Strue_x[index_com_i],(y_com_i), xlab="S_x",ylab="commercial obs. (reallocated)")
+  plot(x = y_com_i_ref,y= y_com_i,col = boats_number,xlab="true commercial obs.",ylab="reallocated commercial obs.")
   
   
   # Représentation graphique des donnees commerciales (4 graphes)
@@ -339,6 +345,7 @@ simu_commercial_scientific <- function(Results,
                          index_com_i,
                          y_sci_i,
                          index_sci_i,
+                         aggreg_obs,
                          boats_number,
                          as.matrix(Cov_x[,1]))
     
@@ -398,7 +405,12 @@ simu_commercial_scientific <- function(Results,
                                 index_com_i=index_com_i,
                                 y_com_i=y_com_i,
                                 # b_com_i=b_com_i,
-                                c_com_x=c_com_x)
+                                c_com_x=c_com_x,
+                                i0=i0,
+                                i1=i1,
+                                n_fact=n_fact,
+                                cluster_nb=cluster_nb,
+                                n_nodes=n_nodes)
     
     
     # Full outputs list
@@ -416,7 +428,7 @@ simu_commercial_scientific <- function(Results,
     # Ce Results permet de créer rapidement les plots des métriques de performance
     # MSPE  biais sur l’abondance totale, biais sur b
     
-    Results[counter,"counter"]=counter
+    Results[counter,"counter"]=(i0-1)*n_fact+counter
     Results[counter,"sim"]=i
     Results[counter,"Data_source"]=Estimation_model
     # Results[counter,"ObsMod"]=DataObs
@@ -425,12 +437,6 @@ simu_commercial_scientific <- function(Results,
     Results[counter,"Convergence"]=Converge
     Results[counter,"LogLik"]=-Opt$objective
     Results[counter,"MSPE_S"] = sum((Strue_x - Report$S_x)^2)/n_cells
-
-    MSPE_S_2_df <- cbind(loc_x,Strue_x,Report$S_x) %>%
-      dplyr::mutate(S_x = Report$S_x) %>%
-      filter(x < 9 & y < 9)
-    
-    Results[counter,"MSPE_S_2"] <- sum((MSPE_S_2_df$Strue_x - MSPE_S_2_df$S_x)^2)/(6*6)
     
     # Results[counter,"Alpha"]=Alpha
     
@@ -477,11 +483,14 @@ simu_commercial_scientific <- function(Results,
     Results[counter, "x"] = x
     Results[counter, "reallocation"] = k
     
+    Results[counter,"core"]=cluster_nb
+    
     
     # save data
     if(! dir.exists(simu_file)) dir.create(simu_file,recursive = T)
-    save(List_param, file = paste0(simu_file,"/List_param_",counter,".RData"))
-    save(Results, file = paste0(simu_file,"/Results.RData"))
+    save(List_param, file = paste0(simu_file,"/List_param_",(i0-1)*n_fact+counter,".RData"))
+    if(n_nodes == 1) save(Results, file = paste0(simu_file,"/Results.RData"))
+    if(n_nodes > 1) save(Results, file = paste0(simu_file,"/Results",cluster_nb,".RData"))
     
     counter <- counter + 1
   }

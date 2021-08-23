@@ -48,6 +48,7 @@ fit_IM <- function(Estimation_model_i = 1,
                    index_com_i,
                    y_sci_i,
                    index_sci_i,
+                   aggreg_obs,
                    boats_number,
                    Cov_x){
   
@@ -75,7 +76,8 @@ fit_IM <- function(Estimation_model_i = 1,
                    'zero.infl_model' = 2,  # (DEPRECATED)
                    'commercial_obs' = 1, # (DEPRECATED)
                    'b_constraint' = 2, # (DEPRECATED)
-                   'catchability_random' = 0)  # (DEPRECATED)
+                   'catchability_random' = 0, # (DEPRECATED)
+                   'aggreg_obs' = ifelse(aggreg_obs == T,1,0)) 
   
   ## Data & Params
   Map = list() #liste vide : correspond aux paramètres fixés dans l'estimation
@@ -151,36 +153,20 @@ fit_IM <- function(Estimation_model_i = 1,
     Map[["k_com"]][1] <- NA
     Map[["k_com"]] <- factor(Map[["k_com"]])
     
-  }else if(Estimation_model_i == 5){ # Commercial model with aggregated data at the level of fishing sequence
+  }
+  
+  if(aggreg_obs == T){ # Commercial model with aggregated data at the level of fishing sequence
     
     # commercial model (commercial_only)
-    
     aggreg_data_df <- data.frame(y_com_i= y_com_i,seq = boats_number) %>%
       group_by(seq) %>%
       dplyr::summarise(y_com_i = sum(y_com_i))
     
+    Data[["y_com_i"]] = aggreg_data_df$y_com_i
+    Data[["seq_com_i"]] = boats_number - 1
     
-    Data = list( "Options_vec"=Options_vec,
-                 "c_com_x"=c_com_x,
-                 "y_com_i"=aggreg_data_df$y_com_i,
-                 "index_com_i"=index_com_i-1,
-                 "Cov_xj"=cbind(1,Cov_x),
-                 "Cov_xk"=array(1,c(list(nrow(Cov_x),1))),
-                 "q2_sci" =  1,
-                 "q2_com" = 1,
-                 "seq" = boats_number)
-    
-    Params = list("beta_j"=rep(0,ncol(Data$Cov_xj)), # linear predictor for abundance 
-                  "beta_k"=0, # intercept of fishin intensity
-                  "par_b"=0, # link between abundance and sampling intensity
-                  "logSigma_com"=log(1),
-                  "q1_com"=0,
-                  "k_com" = 1)
-    
-    Map[["k_com"]] <- seq(1:(length(Params$k_com))) # first k is for scientific data
-    Map[["k_com"]][1] <- NA
-    Map[["k_com"]] <- factor(Map[["k_com"]])
-    
+  }else{
+    Data[["seq_com_i"]] = c(1:length(index_com_i)) -1
   }
   
   # fix reference level for latent field covariate
@@ -190,6 +176,17 @@ fit_IM <- function(Estimation_model_i = 1,
   
   # no linkeage between sampling process and biomass field
   if( EM=="fix_b" ) Map[["par_b"]] <- factor(rep(NA,length(Params$par_b)))
+  
+  ######################
+  ## Fiw some parameters
+  ######################
+  if(aggreg_obs == T){
+    Params$logSigma_com <- logSigma_com
+    # Map[["logSigma_com"]] <- factor(NA)
+    
+    Params$par_b <- b
+    Map[["par_b"]] <- factor(NA)
+  }
   
   #-----------
   ## Run model
@@ -205,14 +202,8 @@ fit_IM <- function(Estimation_model_i = 1,
   Obj = MakeADFun( data=Data, parameters=Params, map = Map, silent = TRUE,hessian = T)
   Obj$fn( Obj$par )
   
-  # ## Likelihood profile
-  # prof <- tmbprofile(Obj,"logSigma_sci")
-  # plot(prof)
-  # confint(prof)
-  
   # Sys.setenv(PATH="%PATH%;C:/Rtools/mingw64/bin;c:/Rtools/bin")
-  
-  
+
   # # For debugging
   # fixwinpath <- function() {
   #   PATH <- Sys.getenv("PATH")
@@ -259,8 +250,19 @@ fit_IM <- function(Estimation_model_i = 1,
   #La fonction nlminb est l’algorithme qui permet d’optimiser la vraisemblance, 
   #cet algorithme est fait en TMB, avec des méthodes de différentiation automatique
   #pour la descente de gradient
-  Opt = nlminb( start=Obj$par, objective=Obj$fn, gradient=Obj$gr, lower=Lower, upper=Upper, control=list(trace=1, iter.max=100000000))
+  Opt = nlminb( start=Obj$par,
+                objective=Obj$fn,
+                gradient=Obj$gr,
+                lower=Lower,
+                upper=Upper,
+                control=list(trace=1, iter.max=100000000, eval.max = 30000))
+  
   Opt[["diagnostics"]] = data.frame( "Param"=names(Obj$par), "Lower"=-Inf, "Est"=Opt$par, "Upper"=Inf, "gradient"=Obj$gr(Opt$par) )
+
+  # ## Likelihood profile
+  # prof <- tmbprofile(Obj,"q1_com")
+  # plot(prof)
+  # confint(prof)
   
   #Avec cet objet Report, on va chercher dans les sorties de l'algo qui a convergé 
   #ce qui nous intéresse : valeur des paramètres, distribution du champ latent, 

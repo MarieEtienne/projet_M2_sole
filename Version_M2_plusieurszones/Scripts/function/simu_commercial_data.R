@@ -115,8 +115,11 @@ simu_commercial_data <- function(loc_x,
     # et on passe dans le rpoint Int_ps qui correspond
     # aux lambdas qui dépendent du champ latent
     win_df_boat <- owin(xrange=c(max(0.5, X$x[centre]-taillezone), min(25.5, X$x[centre]+taillezone)), yrange=c(max(0.5, X$y[centre]-taillezone), min(25.5, X$y[centre]+taillezone)), ystep=1, xstep=1)
-    n_samp <- round(n_samp_com/(sequencesdepeche*zonespersequence))+1 # + 1 --> sinon il manque des échantillons
+    n_samp <- round(n_samp_com/(sequencesdepeche*zonespersequence)) # + 1 --> sinon il manque des échantillons
     X_boat <- rpoint(n_samp, as.im(Int_ps, win_df_boat))
+    
+    # if()
+    
     # On ajoute les coordonnées de peche obtenues pour le bateau
     boats_x = c(boats_x, X_boat$x)
     boats_y = c(boats_y, X_boat$y)
@@ -124,11 +127,23 @@ simu_commercial_data <- function(loc_x,
     
   }
   
-  # sample n_samp_com in boats_y, boats_x, boats
-  index_com <- sample(1:(length(boats_y)),n_samp_com,replace = FALSE)
-  boats_x <- boats_x[index_com]
-  boats_y <- boats_y[index_com]
-  boats <- boats[index_com]
+  ## Si les chiffres tombent pas ronds, il manquera qql points de données 
+  ## --> on complète et les pings restant sont réalloués de facon aléatoire au bateaux
+  if(length(boats) < n_samp_com){
+    
+    n_samp_comp <- n_samp_com - length(boats)
+    X_boat_comp <- rpoint(n_samp_com - length(boats), as.im(Int_ps, win_df_boat))
+    boats_x = c(boats_x, X_boat_comp$x)
+    boats_y = c(boats_y, X_boat_comp$y)
+    boats = c(boats, sample(boats,n_samp_comp,replace = T))
+
+  }
+  
+  # # sample n_samp_com in boats_y, boats_x, boats
+  # index_com <- sample(1:(length(boats_y)),n_samp_com,replace = FALSE)
+  # boats_x <- boats_x[index_com]
+  # boats_y <- boats_y[index_com]
+  # boats <- boats[index_com]
 
   # On a donc :
   # boats_x les coordonnées sur l'axe des x des 150 points de peche
