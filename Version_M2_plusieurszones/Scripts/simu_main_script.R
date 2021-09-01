@@ -9,11 +9,6 @@ library(parallel)
 # Simulation name
 simu_name = "SimuTest"
 
-# folder name for codes and data
-r_folder <- "/home1/datahome/balglave/projet_M2_sole/Version_M2_plusieurszones"
-data.res_folder <- "/home1/datawork/balglave/reallocation"
-
-
 # Parallel configuration
 n_nodes <- 8
 n_sim <- 8
@@ -31,6 +26,10 @@ x_parallel1 <- clusterEvalQ(cl,{
   library(stringr)
   library(spatstat)
   library(raster)
+
+  # folder name for codes and data
+  r_folder <- "/home1/datahome/balglave/projet_M2_sole/Version_M2_plusieurszones"
+  data.res_folder <- "/home1/datawork/balglave/reallocation"
   
   if(run_datarmor) setwd(data.res_folder)
   
