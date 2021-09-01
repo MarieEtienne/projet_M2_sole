@@ -7,7 +7,7 @@
 library(parallel)
 
 # Simulation name
-simu_name = "SimuComplete"
+simu_name = "SimuTest"
 
 # folder name for codes and data
 r_folder <- "/home1/datahome/balglave/projet_M2_sole/Version_M2_plusieurszones"
@@ -166,18 +166,25 @@ x_parallel1 <- clusterEvalQ(cl,{
   # Reallocation = 0 si pas de reallocation et structuration, = 1 si reallocation et structuration
   
   # Nombre de bateaux ?
-  sequencesdepeche_vect = c(2, 5, 10, 1)
-  zonespersequence_vect = c(1, 3, 5, 1)
-  PZ = list(c(sequencesdepeche_vect[1], zonespersequence_vect[1]),
-            c(sequencesdepeche_vect[1], zonespersequence_vect[2]),
-            c(sequencesdepeche_vect[1], zonespersequence_vect[3]),
-            c(sequencesdepeche_vect[2], zonespersequence_vect[1]),
-            c(sequencesdepeche_vect[2], zonespersequence_vect[2]),
-            c(sequencesdepeche_vect[2], zonespersequence_vect[3]),
-            c(sequencesdepeche_vect[3], zonespersequence_vect[1]),
-            c(sequencesdepeche_vect[3], zonespersequence_vect[2]),
-            c(sequencesdepeche_vect[3], zonespersequence_vect[3]),
-            c(sequencesdepeche_vect[4], zonespersequence_vect[4]))
+  n_samp_com_vect = c(50, 100, 1000)
+  sequencesdepeche_vect = c(1, 10, 100)
+  zonespersequence_vect = c(1, 3, 5)
+  NPZ <- expand.grid(sequencesdepeche = sequencesdepeche_vect,
+                     zonespersequence = zonespersequence_vect)
+  NPZ <- cbind(n_samp_com=n_samp_com_vect,
+               NPZ)
+  
+  
+  # PZ = list(c(sequencesdepeche_vect[1], zonespersequence_vect[1]),
+  #           c(sequencesdepeche_vect[1], zonespersequence_vect[2]),
+  #           c(sequencesdepeche_vect[1], zonespersequence_vect[3]),
+  #           c(sequencesdepeche_vect[2], zonespersequence_vect[1]),
+  #           c(sequencesdepeche_vect[2], zonespersequence_vect[2]),
+  #           c(sequencesdepeche_vect[2], zonespersequence_vect[3]),
+  #           c(sequencesdepeche_vect[3], zonespersequence_vect[1]),
+  #           c(sequencesdepeche_vect[3], zonespersequence_vect[2]),
+  #           c(sequencesdepeche_vect[3], zonespersequence_vect[3]),
+  #           c(sequencesdepeche_vect[4], zonespersequence_vect[4]))
   # x=1 : P=2 et Z=1
   # x=2 : P=2 et Z=3
   # x=3 : P=2 et Z=5
@@ -271,7 +278,7 @@ x_parallel1 <- clusterEvalQ(cl,{
     simu_file <- "results/com_x_sci_data_14/com_x_sci_data_14-2020-08-29_11_59_26_Lognormal_Nsamp"
   }
 
-  n_fact <- 10 * 3 # 3 level of b, 10 combination of p and z
+  n_fact <- length(b_set) * nrow(NPZ) * length(reallocation)  # 3 level of b, 10 combination of p and z
   i0 <- (cluster_nb - 1) * n_sim / n_nodes + 1
   i1 <- (cluster_nb) * n_sim / n_nodes
   
@@ -289,14 +296,19 @@ x_parallel1 <- clusterEvalQ(cl,{
       # reallocation, avec structuration et avec reallocation
       for (k in reallocation){
         # 4ème niveau de boucle : on teste tous les couples P*Z
-        for (x in 1:length(PZ)){
-          sequencesdepeche = PZ[[x]][1]
-          zonespersequence = PZ[[x]][2]
+        for (x in 1:nrow(NPZ)){
+          
+          n_samp_com = NPZ$n_samp_com[x]
+          sequencesdepeche = NPZ$sequencesdepeche[x]
+          zonespersequence = NPZ$zonespersequence[x]
+          
           if (x!=10){
-            taillezone = 2
+            taillezone = 3
           }else{
             taillezone = 25
           }
+          
+          
           res <- simu_commercial_scientific(Results,
                                             simu_file,
                                             run_datarmor,
@@ -347,6 +359,7 @@ x_parallel1 <- clusterEvalQ(cl,{
           Results <- res[[1]]
           List_param <- res[[2]]
           counter <- res[[3]]
+          
           
         }
       }

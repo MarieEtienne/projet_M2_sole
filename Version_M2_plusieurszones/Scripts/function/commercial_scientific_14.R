@@ -282,8 +282,8 @@ simu_commercial_scientific <- function(Results,
     y_com_i <- commercial_reallocation_uniforme(k, xlim, ylim, y_com_i, n_samp_com,
                                                 index_com_i, loc_x, sequencesdepeche, boats_number)
   }
-  plot(Strue_x[index_com_i],(y_com_i), xlab="S_x",ylab="commercial obs. (reallocated)")
-  plot(x = y_com_i_ref,y= y_com_i,col = boats_number,xlab="true commercial obs.",ylab="reallocated commercial obs.")
+  # plot(Strue_x[index_com_i],(y_com_i), xlab="S_x",ylab="commercial obs. (reallocated)")
+  # plot(x = y_com_i_ref,y= y_com_i,col = boats_number,xlab="true commercial obs.",ylab="reallocated commercial obs.")
   
   
   # Représentation graphique des donnees commerciales (4 graphes)
@@ -409,6 +409,11 @@ simu_commercial_scientific <- function(Results,
                                 y_com_i=y_com_i,
                                 # b_com_i=b_com_i,
                                 c_com_x=c_com_x,
+                                aggreg_obs=aggreg_obs,
+                                k=k,
+                                sequencesdepeche=sequencesdepeche,
+                                zonespersequence=zonespersequence,
+                                taillezone=taillezone,
                                 i0=i0,
                                 i1=i1,
                                 n_fact=n_fact,
