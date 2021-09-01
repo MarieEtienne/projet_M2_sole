@@ -9,24 +9,42 @@ library(parallel)
 # Simulation name
 simu_name = "SimuComplete"
 
+# folder name for codes and data
+r_folder <- "/home1/datahome/balglave/projet_M2_sole/Version_M2_plusieurszones"
+data.res_folder <- "/home1/datawork/balglave/reallocation"
+
+
 # Parallel configuration
 n_nodes <- 8
 n_sim <- 8
+run_datarmor <- F
 cl <- makeCluster(n_nodes, outfile = "")
 for(cluster_nb in 1:n_nodes){
-  clusterExport(cl[cluster_nb], c('cluster_nb','n_sim','n_nodes','simu_name'))
+  clusterExport(cl[cluster_nb], c('cluster_nb','n_sim','n_nodes','simu_name','run_datarmor'))
 }
 
 
 x_parallel1 <- clusterEvalQ(cl,{
   
   library(dplyr)
-  # library(INLA)
   library(TMB)
   library(stringr)
   library(spatstat)
   library(raster)
   
+  if(run_datarmor) setwd(data.res_folder)
+  
+  load("results/exploratory_analysis/reallocation/nb_sequence_vs_nb_pings.RData")
+  load("results/exploratory_analysis/reallocation/simulation_scenarios.RData")
+  
+  # file name for savinf outputs
+  Start_time.tot = round(Sys.time(), units = "mins")
+  Start_time.tot_2 <- str_replace_all(Start_time.tot, " ", "_")
+  Start_time.tot_2 <- str_replace_all(Start_time.tot_2, ":", "_")
+  if(n_nodes == 1) simu_file <- paste0("results/com_x_sci_data_14_scientific_commercial_simple-",Start_time.tot_2,"_",simu_name,"/")
+  if(n_nodes > 1) simu_file <- paste0("results/com_x_sci_data_14_scientific_commercial_simple-",Start_time.tot_2,"_",simu_name,"/",cluster_nb)
+  
+  if(run_datarmor) setwd(r_folder)
   
   #-----------------------------------------------------------
   #-------------- Simulation/estimation settings -------------
@@ -139,7 +157,10 @@ x_parallel1 <- clusterEvalQ(cl,{
   # n_sim = 100
   
   RandomSeed = 123456
-  
+
+  ##------------------------------------------------------------
+  ##---------------------- Scenarios ---------------------------
+  ##------------------------------------------------------------
   # Reallocation uniforme ?
   reallocation = c(0,1)
   # Reallocation = 0 si pas de reallocation et structuration, = 1 si reallocation et structuration
@@ -167,6 +188,22 @@ x_parallel1 <- clusterEvalQ(cl,{
   # x=8 : P=10 et Z=3
   # x=9 : P=10 et Z=5
   # x=10 : P=1 et Z=1
+  
+  # ggplot(data=n.seq.rect_n.pings.rect,aes(x=n_seq.rect,y=n_pings.rect))+
+  #   # geom_density_2d(data=n.seq.rect_n.pings.rect,aes(x=log10(n_seq.rect),y=log10(n_pings.rect)))
+  #   stat_density_2d(aes(fill = ..level..), geom = "polygon")+
+  #   scale_fill_continuous(low="lavenderblush", high="red")+
+  #   # geom_jitter(alpha=0.5, size = 1.1)+
+  #   geom_point(alpha = 0.25,shape=16,size=0.25)+
+  #   theme_bw()+theme(legend.position = "none")+
+  #   geom_point(data = scenarios_df_3,aes(x=round(n_seq.rect_discr),
+  #                                        y=round(n_pings.rect_discr),
+  #                                        col=factor(tau)),size=3)+
+  #   scale_y_continuous(trans = "log10")+
+  #   scale_x_continuous(trans = "log10")+
+  #   ylab("Number of pings per ICES rectangle")+
+  #   xlab("Number of sequence per rectangle")
+  
   
   
   ################
@@ -222,14 +259,6 @@ x_parallel1 <- clusterEvalQ(cl,{
   #------------------- Simulation/Estimation loop --------------
   #-------------------------------------------------------------
   
-  # file name for saving outputs
-  # file name for savinf outputs
-  Start_time.tot = round(Sys.time(), units = "mins")
-  Start_time.tot_2 <- str_replace_all(Start_time.tot, " ", "_")
-  Start_time.tot_2 <- str_replace_all(Start_time.tot_2, ":", "_")
-  if(n_nodes == 1) simu_file <- paste0("results/com_x_sci_data_14_scientific_commercial_simple-",Start_time.tot_2,"_",simu_name,"/")
-  if(n_nodes > 1) simu_file <- paste0("results/com_x_sci_data_14_scientific_commercial_simple-",Start_time.tot_2,"_",simu_name,"/",cluster_nb)
-  
   # When simu crashes --> param to re-run the loop.
   # Before re-runing the loop load the last Results_loop list (Results/Simu/)
   restart_after_crash = F
@@ -270,6 +299,9 @@ x_parallel1 <- clusterEvalQ(cl,{
           }
           res <- simu_commercial_scientific(Results,
                                             simu_file,
+                                            run_datarmor,
+                                            data.res_folder,
+                                            r_folder,
                                             grid_dim,
                                             n_cells,
                                             beta0,

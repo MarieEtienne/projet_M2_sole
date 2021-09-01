@@ -65,6 +65,9 @@
 
 simu_commercial_scientific <- function(Results,
                                        simu_file,
+                                       run_datarmor,
+                                       data.res_folder,
+                                       r_folder,
                                        grid_dim,
                                        n_cells,
                                        beta0,
@@ -485,12 +488,15 @@ simu_commercial_scientific <- function(Results,
     
     Results[counter,"core"]=cluster_nb
     
-    
     # save data
+    if(run_datarmor) setwd(data.res_folder)
+    
     if(! dir.exists(simu_file)) dir.create(simu_file,recursive = T)
     save(List_param, file = paste0(simu_file,"/List_param_",(i0-1)*n_fact+counter,".RData"))
     if(n_nodes == 1) save(Results, file = paste0(simu_file,"/Results.RData"))
     if(n_nodes > 1) save(Results, file = paste0(simu_file,"/Results",cluster_nb,".RData"))
+    
+    if(run_datarmor) setwd(r_folder)
     
     counter <- counter + 1
   }
