@@ -276,8 +276,9 @@ x_parallel1 <- clusterEvalQ(cl,{
     List_param <- Results_loop$List_param
     simu_file <- "results/com_x_sci_data_14/com_x_sci_data_14-2020-08-29_11_59_26_Lognormal_Nsamp"
   }
-
-  n_fact <- length(b_set) * nrow(NPZ) * length(reallocation)  # 3 level of b, 10 combination of p and z
+  
+  # levels of b, levels of NPZ, and if reallocation 2 different estimation models (accounting or not for reallocation)
+  n_fact <- length(b_set) * nrow(NPZ) + length(b_set) * nrow(NPZ) * 2
   i0 <- (cluster_nb - 1) * n_sim / n_nodes + 1
   i1 <- (cluster_nb) * n_sim / n_nodes
   
@@ -291,75 +292,85 @@ x_parallel1 <- clusterEvalQ(cl,{
   for(i in i0:n_sim){
     # 2ème niveau de boucle : on teste chaque valeur de b
     for (b in b_set){
-      # 3ème niveau de boucle : on teste sans structuration et sans reallocation, avec structuration et sans
-      # reallocation, avec structuration et avec reallocation
-      for (k in reallocation){
-        # 4ème niveau de boucle : on teste tous les couples P*Z
-        for (x in 1:nrow(NPZ)){
+      
+      # 3ème niveau de boucle : on teste tous les couples P*Z
+      for (x in 1:nrow(NPZ)){
+        
+        # 4ème niveau de boucle : on teste sans structuration et sans reallocation, avec structuration et sans
+        # reallocation, avec structuration et avec reallocation
+        for (k in reallocation){
           
-          n_samp_com = NPZ$n_samp_com[x]
-          sequencesdepeche = NPZ$sequencesdepeche[x]
-          zonespersequence = NPZ$zonespersequence[x]
+          if(k==1) aggreg_obs_moda <- c(T,F)
+          if(k==0) aggreg_obs_moda <- c(F)
           
-          if (x!=10){
+          for(aggreg_obs in aggreg_obs_moda){
+            
+            
+            n_samp_com = NPZ$n_samp_com[x]
+            sequencesdepeche = NPZ$sequencesdepeche[x]
+            zonespersequence = NPZ$zonespersequence[x]
+            
             taillezone = 3
-          }else{
-            taillezone = 25
+            
+            # if (x!=10){
+            #   taillezone = 3
+            # }else{
+            #   taillezone = 25
+            # }
+            
+            
+            res <- simu_commercial_scientific(Results,
+                                              simu_file,
+                                              run_datarmor,
+                                              data.res_folder,
+                                              r_folder,
+                                              grid_dim,
+                                              n_cells,
+                                              beta0,
+                                              beta,
+                                              range,
+                                              nu,
+                                              SD_x,
+                                              SD_delta,
+                                              SD_eta,
+                                              n_samp_sci,
+                                              logSigma_sci,
+                                              q1_sci,
+                                              q2_sci,
+                                              n_strate,
+                                              n_samp_com,
+                                              logSigma_com,
+                                              q1_com,
+                                              q2_com,
+                                              b,
+                                              Data_source,
+                                              Samp_process,
+                                              EM,
+                                              aggreg_obs,
+                                              RandomSeed,
+                                              Version,
+                                              TmbFile,
+                                              ignore.uncertainty,
+                                              counter,
+                                              i,
+                                              n_sim,
+                                              k,
+                                              xlim,
+                                              ylim,
+                                              sequencesdepeche,
+                                              zonespersequence,
+                                              taillezone,
+                                              i0,
+                                              i1,
+                                              n_fact,
+                                              cluster_nb,
+                                              n_nodes)
+            
+            Results <- res[[1]]
+            List_param <- res[[2]]
+            counter <- res[[3]]
+            
           }
-          
-          
-          res <- simu_commercial_scientific(Results,
-                                            simu_file,
-                                            run_datarmor,
-                                            data.res_folder,
-                                            r_folder,
-                                            grid_dim,
-                                            n_cells,
-                                            beta0,
-                                            beta,
-                                            range,
-                                            nu,
-                                            SD_x,
-                                            SD_delta,
-                                            SD_eta,
-                                            n_samp_sci,
-                                            logSigma_sci,
-                                            q1_sci,
-                                            q2_sci,
-                                            n_strate,
-                                            n_samp_com,
-                                            logSigma_com,
-                                            q1_com,
-                                            q2_com,
-                                            b,
-                                            Data_source,
-                                            Samp_process,
-                                            EM,
-                                            aggreg_obs,
-                                            RandomSeed,
-                                            Version,
-                                            TmbFile,
-                                            ignore.uncertainty,
-                                            counter,
-                                            i,
-                                            n_sim,
-                                            k,
-                                            xlim,
-                                            ylim,
-                                            sequencesdepeche,
-                                            zonespersequence,
-                                            taillezone,
-                                            i0,
-                                            i1,
-                                            n_fact,
-                                            cluster_nb,
-                                            n_nodes)
-          
-          Results <- res[[1]]
-          List_param <- res[[2]]
-          counter <- res[[3]]
-          
-          
         }
       }
     }
