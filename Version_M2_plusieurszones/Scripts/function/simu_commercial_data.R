@@ -127,16 +127,28 @@ simu_commercial_data <- function(loc_x,
     
   }
   
-  ## Si les chiffres tombent pas ronds, il manquera qql points de données 
+  ## Si les chiffres tombent pas ronds, il manquera qql points de données
+  ## si pas assez de données simulées
   ## --> on complète et les pings restant sont réalloués de facon aléatoire au bateaux
+  ## Si trop de données
+  ## --> on rééchantillone aléatoirement pour avoir le bon nombre de données
   if(length(boats) < n_samp_com){
     
-    n_samp_comp <- n_samp_com - length(boats)
-    X_boat_comp <- rpoint(n_samp_com - length(boats), as.im(Int_ps, win_df_boat))
+    n_samp_comp <-  n_samp_com - length(boats)
+    X_boat_comp <- rpoint(n_samp_comp, as.im(Int_ps, win_df_boat))
     boats_x = c(boats_x, X_boat_comp$x)
     boats_y = c(boats_y, X_boat_comp$y)
     boats = c(boats, sample(boats,n_samp_comp,replace = T))
 
+  }else if(n_samp_com < length(boats)){
+    
+    n_samp_comp <-  length(boats) - n_samp_com
+    sample_i <- sample(1:n_samp_com,n_samp_com)
+    boats_x = boats_x[sample_i]
+    boats_y = boats_y[sample_i]
+    boats = boats[sample_i]
+    
+    
   }
   
   # # sample n_samp_com in boats_y, boats_x, boats
