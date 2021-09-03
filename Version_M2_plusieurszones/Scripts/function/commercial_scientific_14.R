@@ -426,8 +426,8 @@ simu_commercial_scientific <- function(Results,
     # Les valeurs du champ latent pour chaque simulation sont disponibles dans 
     # List_param (et non dans Results)
     List_param <- list(data.info = list_simu.data.info,
-                       Opt_par = Opt,
-                       SD = SD,
+                       # Opt_par = Opt,
+                       # SD = SD,
                        Report = Report)
     
     
@@ -512,12 +512,12 @@ simu_commercial_scientific <- function(Results,
   # champ latent, centres de peche, points de peche, points de peche par cellule, quantite pechee par point de peche
   Strue_x_2 = cbind(Strue_x_2, "Champ_latent_estime" = champ_latent_estime)
   map_results = list(Strue_x_2, centres, peche_com_old, pointsdepeche_com)
-  # On sauvegarde cette liste dans un workspace
-  if(run_datarmor) setwd(data.res_folder)
-  if(! dir.exists(simu_file)) dir.create(simu_file,recursive = T)
-  path = paste0(simu_file,"/map_results_i",i,"_b",b,"_k",k,"_x",x,".RData")
-  save(map_results, file = path)
-  if(run_datarmor) setwd(r_folder)
+  # # On sauvegarde cette liste dans un workspace
+  # if(run_datarmor) setwd(data.res_folder)
+  # if(! dir.exists(simu_file)) dir.create(simu_file,recursive = T)
+  # path = paste0(simu_file,"/map_results_i",i,"_b",b,"_k",k,"_x",x,".RData")
+  # save(map_results, file = path)
+  # if(run_datarmor) setwd(r_folder)
   
   res <- list(Results, List_param, counter)
   return(res)
