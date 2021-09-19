@@ -241,7 +241,7 @@ x_parallel1 <- clusterEvalQ(cl,{
   
   ## Results dataframe
   n_cov = 5
-  colnames_Results <- c("counter","sim","b_true","Data_source","type_b","Alpha","b_est","ObsMod","Sigma_com_true","Sigma_sci_true","Sigma_com","Sigma_sci","n_samp_com","n_samp_sci","N_true","N_est","SD_N","Convergence","LogLik","MSPE_S","k", "x","reallocation")
+  colnames_Results <- c("counter","sim","b_true","Data_source","type_b","Alpha","b_est","ObsMod","Sigma_com_true","Sigma_sci_true","Sigma_com","Sigma_sci","n_samp_com","n_samp_sci","N_true","N_est","SD_N","Convergence","LogLik","MSPE_S","k", "x","reallocation","aggreg_obs")
   
   Results = data.frame(matrix(NA,1,length(colnames_Results)))
   colnames(Results)=colnames_Results
@@ -289,7 +289,7 @@ x_parallel1 <- clusterEvalQ(cl,{
   
   ## loop
   # 1er niveau de boucle : on repete chaque simulation n_sim fois pour avoir de la variabilité
-  for(i in i0:n_sim){
+  for(i in i0:i1){
     # 2ème niveau de boucle : on teste chaque valeur de b
     for (b in b_set){
       

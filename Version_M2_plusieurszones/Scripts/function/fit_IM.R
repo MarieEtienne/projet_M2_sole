@@ -185,7 +185,7 @@ fit_IM <- function(Estimation_model_i = 1,
     # Map[["logSigma_com"]] <- factor(NA)
     
     Params$par_b <- b
-    Map[["par_b"]] <- factor(NA)
+    # Map[["par_b"]] <- factor(NA)
   }
   
   #-----------

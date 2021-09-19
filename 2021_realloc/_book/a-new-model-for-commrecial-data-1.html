@@ -4,11 +4,11 @@
 
   <meta charset="utf-8" />
   <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-  <title> 3 A new model for commrecial data | Accounting for commercial data without reallocationg the catches.</title>
+  <title> 4 A new model for commrecial data | Accounting for commercial data without reallocationg the catches.</title>
   <meta name="description" content="Working at the statistical unit scale." />
   <meta name="generator" content="bookdown 0.21 and GitBook 2.6.7" />
 
-  <meta property="og:title" content=" 3 A new model for commrecial data | Accounting for commercial data without reallocationg the catches." />
+  <meta property="og:title" content=" 4 A new model for commrecial data | Accounting for commercial data without reallocationg the catches." />
   <meta property="og:type" content="book" />
   
   
@@ -16,7 +16,7 @@
   
 
   <meta name="twitter:card" content="summary" />
-  <meta name="twitter:title" content=" 3 A new model for commrecial data | Accounting for commercial data without reallocationg the catches." />
+  <meta name="twitter:title" content=" 4 A new model for commrecial data | Accounting for commercial data without reallocationg the catches." />
   
   <meta name="twitter:description" content="Working at the statistical unit scale." />
   
@@ -24,14 +24,14 @@
 <meta name="author" content="MP Etienne" />
 
 
-<meta name="date" content="2021-09-10" />
+<meta name="date" content="2021-09-15" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black" />
   
   
-<link rel="prev" href="effects.html"/>
+<link rel="prev" href="a-new-model-for-commrecial-data.html"/>
 
 <script src="libs/jquery-2.2.3/jquery.min.js"></script>
 <link href="libs/gitbook-2.6.7/css/style.css" rel="stylesheet" />
@@ -150,6 +150,17 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <li class="chapter" data-level="3.1.4" data-path="a-new-model-for-commrecial-data.html"><a href="a-new-model-for-commrecial-data.html#what-happens-with-the-addittion-of-some-zero-inflation"><i class="fa fa-check"></i><b>3.1.4</b> What happens with the addittion of some zero inflation</a></li>
 </ul></li>
 </ul></li>
+<li class="chapter" data-level="4" data-path="a-new-model-for-commrecial-data-1.html"><a href="a-new-model-for-commrecial-data-1.html"><i class="fa fa-check"></i><b>4</b> A new model for commrecial data</a><ul>
+<li class="chapter" data-level="4.1" data-path="a-new-model-for-commrecial-data-1.html"><a href="a-new-model-for-commrecial-data-1.html#fitting-a-delta-log-normal-distribution-for-the-catch"><i class="fa fa-check"></i><b>4.1</b> Fitting a Delta Log normal distribution for the catch</a><ul>
+<li class="chapter" data-level="4.1.1" data-path="a-new-model-for-commrecial-data-1.html"><a href="a-new-model-for-commrecial-data-1.html#the-probability-of-an-empty-catch"><i class="fa fa-check"></i><b>4.1.1</b> the probability of an empty catch</a></li>
+</ul></li>
+<li class="chapter" data-level="4.2" data-path="a-new-model-for-commrecial-data-1.html"><a href="a-new-model-for-commrecial-data-1.html#numerical-illustration-1"><i class="fa fa-check"></i><b>4.2</b> Numerical illustration</a><ul>
+<li class="chapter" data-level="4.2.1" data-path="a-new-model-for-commrecial-data-1.html"><a href="a-new-model-for-commrecial-data-1.html#precising-the-notation-1"><i class="fa fa-check"></i><b>4.2.1</b> Precising the notation</a></li>
+<li class="chapter" data-level="4.2.2" data-path="a-new-model-for-commrecial-data-1.html"><a href="a-new-model-for-commrecial-data-1.html#the-sum-of-lognormal-random-variables-is-reasonnably-log-normal-1"><i class="fa fa-check"></i><b>4.2.2</b> The sum of lognormal random variables is reasonnably log normal</a></li>
+<li class="chapter" data-level="4.2.3" data-path="a-new-model-for-commrecial-data-1.html"><a href="a-new-model-for-commrecial-data-1.html#n-5-1"><i class="fa fa-check"></i><b>4.2.3</b> n = 5</a></li>
+<li class="chapter" data-level="4.2.4" data-path="a-new-model-for-commrecial-data-1.html"><a href="a-new-model-for-commrecial-data-1.html#what-happens-with-the-addittion-of-some-zero-inflation-1"><i class="fa fa-check"></i><b>4.2.4</b> What happens with the addittion of some zero inflation</a></li>
+</ul></li>
+</ul></li>
 </ul>
 
       </nav>
@@ -167,20 +178,27 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
           <div class="page-inner">
 
             <section class="normal" id="section-">
-<div id="a-new-model-for-commrecial-data" class="section level1">
-<h1><span class="header-section-number">  3</span> A new model for commrecial data</h1>
+<div id="a-new-model-for-commrecial-data-1" class="section level1">
+<h1><span class="header-section-number">  4</span> A new model for commrecial data</h1>
 <p>As mentionned in the introduction, every commercial catch is reported by statistical area/vessel/gear and correspond potentially to several VMS ping.
 Let’s denote <span class="math inline">\(D_j\)</span> a reported catch associated to <span class="math inline">\(|\mathcal{P}_j|\)</span> VMS ping at positions <span class="math inline">\(\left\lbrace x_i, i\in \mathcal{P}_j \right\rbrace\)</span>. <span class="math inline">\(D_j\)</span> is the sum of all individuals catch at the <span class="math inline">\(n_j\)</span> visited fishing points:</p>
 <p><span class="math display" id="eq:logbook">\[\begin{equation}
   D_{j} = \sum_{i \in  C_j} Y_i,
-  \tag{3.1}
+  \tag{4.1}
 \end{equation}\]</span></p>
 <p><span class="math inline">\(C_j\)</span> begin the vector of all fishing events associated with the logbook entry <span class="math inline">\(j\)</span>.</p>
 <p>This diffculty is currently addressed by reallocating the total catch to individual fishing events with a simple proportionality rule:
 <span class="math display">\[\tilde{Y_i} = \frac{1}{|C_j|} D_j.\]</span></p>
-<p><span class="math inline">\(\tilde{Y}_i\)</span> is the assumed to follow the observation model defined <a href="a-new-model-for-commrecial-data.html#eq:logbook">(3.1)</a>.</p>
+<p><span class="math inline">\(\tilde{Y}_i\)</span> is the assumed to follow the observation model defined <a href="a-new-model-for-commrecial-data-1.html#eq:logbook">(4.1)</a>.</p>
 <p>A more satisfying solution would consist in deriving the distribution of <span class="math inline">\(D_j\)</span> from the distribution of <span class="math inline">\(Y_i\)</span>. However the sum of a mixture of delta lognormal random variables do not resume in a nice known distribution.</p>
 <p>An alternative would be to fit a delta lognormal model whose proportion of zero and the two first moments coincide i.e</p>
+<div id="fitting-a-delta-log-normal-distribution-for-the-catch" class="section level2">
+<h2><span class="header-section-number">4.1</span> Fitting a Delta Log normal distribution for the catch</h2>
+<p>Recals that at the VMS ping level $Y_i = C_i Z_i, $</p>
+<p>with</p>
+<p><span class="math display">\[C_i \sim  mathcal{B}(p_i), \quad p_i = \]</span></p>
+<div id="the-probability-of-an-empty-catch" class="section level3">
+<h3><span class="header-section-number">4.1.1</span> the probability of an empty catch</h3>
 <p><span class="math display">\[\begin{align}
 P(D_j = 0 \vert S, X) &amp; = \prod_{i\in \mathcal{P}_j} P(Y_i = 0 \vert S, X),\nonumber \\
                       &amp; = \exp{ \left \lbrace- \sum_{i\in \mathcal{P}_j} e^{\xi S(x_i)}\right \rbrace} = \pi_j.
@@ -197,7 +215,7 @@ E(D_j\vert D_j &gt; 0) &amp; = E(D_j 1_{ \left \lbrace D_j &gt; 0\right\rbrace }
 E(D_j\vert D_j &gt; 0) &amp; = \left (1- \pi_j\right)^{-1} E(D_j)   ,   \nonumber \\
 &amp; \left (1- \pi_j\right)^{-1} \sum_{i\in \mathcal{P}_j} E(C_i Z_i),\nonumber \\
 &amp; = \left (1- \pi_j\right)^{-1} \sum_{i\in \mathcal{P}_j} (1-p_i) \frac{\mu(x_i)}{1-p_i}, \nonumber \\
-&amp; = \left (1- \pi_j\right)^{-1}\sum_{i\in \mathcal{P}_j} \mu(x_i). \tag{3.2}
+&amp; = \left (1- \pi_j\right)^{-1}\sum_{i\in \mathcal{P}_j} \mu(x_i). \tag{4.2}
 \end{align}\]</span></p>
 <p>Regarding the variance</p>
 <p><span class="math display">\[Var(D_j \vert D_j &gt;0)  = E(D_j^2 \vert D_j &gt;0)- E(D_j \vert D_j &gt;0)^2.\]</span></p>
@@ -210,14 +228,16 @@ E(D_j\vert D_j &gt; 0) &amp; = \left (1- \pi_j\right)^{-1} E(D_j)   ,   \nonumbe
 <p><span class="math display">\[\begin{align*}
 Var(C_i Z_i) &amp; = E( C_i^2 Z_i^2 ) - E(C_i Z_i)^2,\\
 &amp; =  E( C_i^2) E(Z_i^2 ) -E(C_i)^2 E(Z_i)^2,\\
-&amp; = p_i E(Z_i^2 ) - p_i^2 E(Z_i)^2 = p_i ( Var(Z_i) + (1-p_i) E(Z_i)^2),\\
-&amp; = p_i\left( \frac{\mu(x_i)^2 }{(1-p_i)^2} (e^{\sigma^2}-1) + (1-p_i) \frac{\mu(x_i)^2 }{(1-p_i)^2}\right),\\
-&amp; = \frac{p_i}{(1-p_i)^2} \mu(x_i)^2  \left(e^{\sigma^2} -p_i \right)  
+&amp; = (1- p_i) E(Z_i^2 ) - (1-p_i)^2 E(Z_i)^2 = (1-p_i) ( Var(Z_i)  + p_i E(Z_i)^2),\\
+&amp; = (1-p_i)\left( \mu(x_i)^2 (e^{\sigma^2}-1) + p_i \mu(x_i)^2 \right),\\
+&amp; = (1-p_i) \mu(x_i)^2 \left ( e^{\sigma^2}-1  + p_i \right),\\
 \end{align*}\]</span></p>
-<div id="numerical-illustration" class="section level2">
-<h2><span class="header-section-number">3.1</span> Numerical illustration</h2>
-<div id="precising-the-notation" class="section level3">
-<h3><span class="header-section-number">3.1.1</span> Precising the notation</h3>
+</div>
+</div>
+<div id="numerical-illustration-1" class="section level2">
+<h2><span class="header-section-number">4.2</span> Numerical illustration</h2>
+<div id="precising-the-notation-1" class="section level3">
+<h3><span class="header-section-number">4.2.1</span> Precising the notation</h3>
 <p>As mentioned in Equation <a href="#eq:LNv3">(<strong>??</strong>)</a>, <span class="math inline">\(Y\sim \mathcal{LN}(\mu, \sigma^2)\)</span> stands a lognormal distribution such that <span class="math inline">\(E(Y) = \mu\)</span> and <span class="math inline">\(Var(log(Y)) = \sigma^2\)</span>.</p>
 <p>An alternative specification denotes <span class="math inline">\(Y \sim LN(\rho, \sigma)\)</span> if <span class="math inline">\(E(log(Y))=\rho\)</span> and <span class="math inline">\(Var(log(Y)) = \sigma^2\)</span></p>
 <p>The code below is an helper to go back and forth between the different parametrizations.</p>
@@ -242,10 +262,10 @@ Var(C_i Z_i) &amp; = E( C_i^2 Z_i^2 ) - E(C_i Z_i)^2,\\
 <a class="sourceLine" id="cb1-19" title="19">  mu<span class="op">^</span><span class="dv">2</span><span class="op">*</span><span class="st"> </span>(<span class="kw">exp</span>(sigma<span class="op">^</span><span class="dv">2</span>)<span class="op">-</span><span class="dv">1</span>)</a>
 <a class="sourceLine" id="cb1-20" title="20">}</a></code></pre></div>
 </div>
-<div id="the-sum-of-lognormal-random-variables-is-reasonnably-log-normal" class="section level3">
-<h3><span class="header-section-number">3.1.2</span> The sum of lognormal random variables is reasonnably log normal</h3>
-<div id="n-2" class="section level4">
-<h4><span class="header-section-number">3.1.2.1</span> n = 2</h4>
+<div id="the-sum-of-lognormal-random-variables-is-reasonnably-log-normal-1" class="section level3">
+<h3><span class="header-section-number">4.2.2</span> The sum of lognormal random variables is reasonnably log normal</h3>
+<div id="n-2-1" class="section level4">
+<h4><span class="header-section-number">4.2.2.1</span> n = 2</h4>
 <div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb2-1" title="1"><span class="kw">set.seed</span>(<span class="dv">1234</span>)</a>
 <a class="sourceLine" id="cb2-2" title="2">n &lt;-<span class="st"> </span><span class="dv">2</span></a>
 <a class="sourceLine" id="cb2-3" title="3">rho &lt;-<span class="st"> </span><span class="kw">rnorm</span>(n, <span class="dt">mean =</span> <span class="dv">0</span>, <span class="dt">sd =</span> <span class="dv">1</span> )</a>
@@ -255,8 +275,8 @@ Var(C_i Z_i) &amp; = E( C_i^2 Z_i^2 ) - E(C_i Z_i)^2,\\
 <p><img src="2021_realloc_files/figure-html/sample_2_lognorm-1.png" width="672" /></p>
 </div>
 </div>
-<div id="n-5" class="section level3">
-<h3><span class="header-section-number">3.1.3</span> n = 5</h3>
+<div id="n-5-1" class="section level3">
+<h3><span class="header-section-number">4.2.3</span> n = 5</h3>
 <div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb4-1" title="1">n &lt;-<span class="st"> </span><span class="dv">5</span></a>
 <a class="sourceLine" id="cb4-2" title="2">rho &lt;-<span class="st"> </span><span class="kw">rnorm</span>(n, <span class="dt">mean =</span> <span class="dv">0</span>, <span class="dt">sd =</span> <span class="dv">1</span> )</a>
 <a class="sourceLine" id="cb4-3" title="3">sigma &lt;-<span class="st"> </span><span class="dv">01</span></a></code></pre></div>
@@ -265,8 +285,8 @@ Var(C_i Z_i) &amp; = E( C_i^2 Z_i^2 ) - E(C_i Z_i)^2,\\
 <p><img src="2021_realloc_files/figure-html/sample_2_lognorm_n5-1.png" width="672" /></p>
 <p>The expected value equals 8.0908454, while the mean equals 8.02238. The variance equals 55.3231921 and the empiric variance equals 48.7922239.</p>
 </div>
-<div id="what-happens-with-the-addittion-of-some-zero-inflation" class="section level3">
-<h3><span class="header-section-number">3.1.4</span> What happens with the addittion of some zero inflation</h3>
+<div id="what-happens-with-the-addittion-of-some-zero-inflation-1" class="section level3">
+<h3><span class="header-section-number">4.2.4</span> What happens with the addittion of some zero inflation</h3>
 
 </div>
 </div>
@@ -276,7 +296,7 @@ Var(C_i Z_i) &amp; = E( C_i^2 Z_i^2 ) - E(C_i Z_i)^2,\\
           </div>
         </div>
       </div>
-<a href="effects.html" class="navigation navigation-prev navigation-unique" aria-label="Previous page"><i class="fa fa-angle-left"></i></a>
+<a href="a-new-model-for-commrecial-data.html" class="navigation navigation-prev navigation-unique" aria-label="Previous page"><i class="fa fa-angle-left"></i></a>
 
     </div>
   </div>

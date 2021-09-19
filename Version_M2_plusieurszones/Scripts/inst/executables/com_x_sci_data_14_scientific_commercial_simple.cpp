@@ -39,10 +39,14 @@ Type square(Type x){
   return pow(x,2.0);
 }
 
-// dzinfgamma, shape = 1/CV^2, scale = mean*CV^2
-
+// square-root
 template<class Type>
+Type sqrt(Type x){
+  return pow(x,0.5);
+}
 
+// dzinfgamma, shape = 1/CV^2, scale = mean*CV^2
+template<class Type>
 Type dzinfgamma(Type x, Type posmean, Type encounter_prob, Type log_notencounter_prob, Type cv, int give_log=false){
   Type Return;
   if(x==0){
@@ -130,8 +134,8 @@ Type objective_function<Type>::operator() (){
   ///////////////
 
   // Predicted densities
-  vector<Type> S_x(n_x);
-  vector<Type> debug_j(n_j);
+  vector<Type> S_x(n_x);S_x.setZero();
+  vector<Type> debug_j(n_j);debug_j.setZero();
   vector<Type> linpredS_x = Cov_xj * beta_j;
   for(int s=0; s<n_x; s++){
     S_x(s) = exp(linpredS_x(s) );
@@ -179,10 +183,10 @@ Type objective_function<Type>::operator() (){
     if( Options_vec(9) == 1){
       
       vector<Type> Sigma_com = exp(logSigma_com);
-      vector<Type> E_com(n_ping_i);
+      vector<Type> E_com(n_ping_i);E_com.setZero();
       
-      vector<Type> encounterprob_com(n_com_i);
-      vector<Type> log_notencounterprob_com(n_com_i);
+      vector<Type> encounterprob_com(n_com_i);encounterprob_com.setZero();
+      vector<Type> log_notencounterprob_com(n_com_i);log_notencounterprob_com.setZero();
       
       ///////////////////////////////////
       // Non-aggregated observation model
@@ -207,13 +211,13 @@ Type objective_function<Type>::operator() (){
       ///////////////////////////////
       // Aggregated observation model
       ///////////////////////////////
-      vector<Type> E_D_com(n_com_i);
-      vector<Type> log_pi_j(n_com_i);
-      vector<Type> pi_j(n_com_i);
-      vector<Type> sum_mu(n_com_i);
-      vector<Type> Var_D_com(n_com_i);
-      vector<Type> Var_Dsup0_com(n_com_i);
-      vector<Type> p_i(n_ping_i);
+      vector<Type> E_D_com(n_com_i);E_D_com.setZero();
+      vector<Type> log_pi_j(n_com_i);log_pi_j.setZero();
+      vector<Type> pi_j(n_com_i);pi_j.setZero();
+      vector<Type> sum_mu(n_com_i);sum_mu.setZero();
+      vector<Type> Var_D_com(n_com_i);Var_D_com.setZero();
+      vector<Type> Var_Dsup0_com(n_com_i);Var_Dsup0_com.setZero();
+      vector<Type> p_i(n_ping_i);p_i.setZero();
       Type Sigma_D;
       Type log_Sigma_D;
       
@@ -226,9 +230,9 @@ Type objective_function<Type>::operator() (){
           
           if(y_com_i(seq_com_i(i)) > 0){
             
-            p_i(i) = 1 - exp(-1 * E_com(i) * exp(q1_com(0)));
+            p_i(i) = exp(-1 * E_com(i) * exp(q1_com(0)));
             sum_mu(seq_com_i(i)) += q2_com(0) * 1 * S_x(index_com_i(i));
-            Var_D_com(seq_com_i(i)) += p_i(i) / square(1 - p_i(i)) * square(E_com(i)) * (exp(square(Sigma_com(0))) - p_i(i));
+            Var_D_com(seq_com_i(i)) += square(E_com(i)) / (1 - p_i(i)) * (exp(square(Sigma_com(0))) - (1 - p_i(i)));
           
           }
           
@@ -238,13 +242,19 @@ Type objective_function<Type>::operator() (){
         
         for(int j=0; j<n_com_i; j++){
           
+          if( y_com_i(j) == 0 ){
+            
+            jnll_comp(0) -= log_pi_j(j);
+            
+          }
+          
           if( y_com_i(j) > 0 ){
             
             E_D_com(j) = 1 / (1 - pi_j(j)) * sum_mu(j);
             
-            Var_Dsup0_com(j) =  1 / (1 -  pi_j(j)) * Var_D_com(j) - pi_j(j) / square(1 - pi_j(j)) * square(E_D_com(j));
+            Var_Dsup0_com(j) =  Var_D_com(j) / (1 -  pi_j(j)) - pi_j(j) * square(E_D_com(j)) / (1 - pi_j(j)) ;
             
-            Sigma_D = log(Var_Dsup0_com(j) / square(E_D_com(j)) + 1);
+            Sigma_D = sqrt(log(Var_Dsup0_com(j) / square(E_D_com(j)) + 1));
             
             // log_Sigma_D = log(Sigma_D);
             
@@ -255,13 +265,9 @@ Type objective_function<Type>::operator() (){
           
           }
           
-          if( y_com_i(j) == 0 ){
-            
-            jnll_comp(0) -= log_pi_j(j);
-          
-          }
           
         }
+        
       }
       
       REPORT(E_com);
@@ -294,10 +300,10 @@ Type objective_function<Type>::operator() (){
       
       // Derived values
       Type b;
-      vector<Type> linpredR_x(n_x);
-      vector<Type> lambda_x(n_x);
+      vector<Type> linpredR_x(n_x);linpredR_x.setZero();
+      vector<Type> lambda_x(n_x);lambda_x.setZero();
       // matrix<Type> lambda_ref_x(n_x , n_eta );
-      vector<Type> fact_S(n_x);
+      vector<Type> fact_S(n_x);fact_S.setZero();
       
       
       // Poisson point process
@@ -349,9 +355,9 @@ Type objective_function<Type>::operator() (){
     // Observation model
     ////////////////////
     
-    vector<Type> E_sci(n_sci_i);
-    vector<Type> encounterprob_sci(n_sci_i);
-    vector<Type> log_notencounterprob_sci(n_sci_i);
+    vector<Type> E_sci(n_sci_i);E_sci.setZero();
+    vector<Type> encounterprob_sci(n_sci_i);encounterprob_sci.setZero();
+    vector<Type> log_notencounterprob_sci(n_sci_i);log_notencounterprob_sci.setZero();
     
     // Zero-inflated  distribution
     for(int i=0; i<n_sci_i; i++){

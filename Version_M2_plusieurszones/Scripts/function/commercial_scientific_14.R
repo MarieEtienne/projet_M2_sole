@@ -490,6 +490,7 @@ simu_commercial_scientific <- function(Results,
     
     Results[counter, "x"] = x
     Results[counter, "reallocation"] = k
+    Results[counter, "aggreg_obs"] = aggreg_obs
     
     Results[counter,"core"]=cluster_nb
     

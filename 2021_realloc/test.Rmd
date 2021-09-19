@@ -1,0 +1,258 @@
+---
+title: "Untitled"
+author: "Baptiste Alglave"
+date: "15/09/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# A new model for commrecial data
+
+```{r include=FALSE}
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+library(purrr)
+```
+
+As mentionned in the introduction, every  commercial catch is reported by statistical area/vessel/gear and correspond potentially to several VMS ping.
+Let's denote $D_j$  a reported catch associated to $|\mathcal{P}_j|$ VMS ping at positions $\left\lbrace x_i, i\in \mathcal{P}_j \right\rbrace$. $D_j$ is the sum of all individuals catch at the $n_j$ visited fishing points:
+
+\begin{equation}
+  D_{j} = \sum_{i \in  C_j} Y_i,
+  (\#eq:logbook)
+\end{equation} 
+
+$C_j$ begin the vector of all fishing events associated with the logbook entry $j$. 
+
+This diffculty is currently addressed by reallocating the total catch to individual fishing events with a simple proportionality rule:
+$$\tilde{Y_i} = \frac{1}{|C_j|} D_j.$$
+
+$\tilde{Y}_i$ is the assumed to follow the observation model defined  \@ref(eq:logbook).
+
+
+A more satisfying solution would consist in deriving the distribution of $D_j$ from the distribution of $Y_i$. However the sum of a mixture of delta lognormal random variables  do not resume in a nice known distribution. 
+
+An alternative would be to fit a delta lognormal model whose proportion of zero and the two first moments coincide i.e
+
+
+## Fitting a Delta Log normal distribution for the catch
+
+Recals that at the VMS ping level $Y_i = C_i Z_i, $
+
+with 
+
+$$C_i \sim  mathcal{B}(p_i), \quad p_i = $$
+
+### the probability of an empty catch
+
+\begin{align}
+P(D_j = 0 \vert S, X) & = \prod_{i\in \mathcal{P}_j} P(Y_i = 0 \vert S, X),\nonumber \\
+                      & = \exp{ \left \lbrace- \sum_{i\in \mathcal{P}_j} e^{\xi S(x_i)}\right \rbrace} = \pi_j.
+\end{align}
+
+
+The expected catch biomass is defined by $E(D_j) = \sum_{i\in \mathcal{P}_j} E(C_i Z_i),$ while the expected positive catch biomass is defined by 
+$$E(D_j\vert D_j >0) =  \sum_{i\in \mathcal{P}_j} E(C_i Z_i\vert \exists i_0\in\mathcal{P}_j , C_{i_0}=1)$$
+As $C_i$ and $Z_i$ are assumed to be independant 
+
+\begin{align*}
+E(D_j\vert D_j > 0) & = E(D_j 1_{ \left \lbrace D_j > 0\right\rbrace } )  / P\left ( D_j > 0\right ),   \\
+& = E(D_j 1_{ \left \lbrace D_j > 0\right\rbrace } )  / \left (1-\pi_j\right).   \\
+\end{align*}
+
+As $E(D_j 1_{ \left \lbrace D_j > 0\right\rbrace } ) = E(D_j ),$
+
+\begin{align}
+E(D_j\vert D_j > 0) & = \left (1- \pi_j\right)^{-1} E(D_j)   ,   \nonumber \\
+& \left (1- \pi_j\right)^{-1} \sum_{i\in \mathcal{P}_j} E(C_i Z_i),\nonumber \\
+& = \left (1- \pi_j\right)^{-1} \sum_{i\in \mathcal{P}_j} (1-p_i) \frac{\mu(x_i)}{1-p_i}, \nonumber \\
+& = \left (1- \pi_j\right)^{-1}\sum_{i\in \mathcal{P}_j} \mu(x_i). (\#eq:newobs)
+\end{align}
+
+
+Regarding the variance
+
+$$Var(D_j \vert D_j >0)  = E(D_j^2 \vert D_j >0)- E(D_j \vert D_j >0)^2.$$
+
+But $E(D_j^2 \vert D_j >0) = (1-\pi_j)^{-1} E(D_j^2 1_{\left \lbrace D_j >0\right\rbrace}) = (1-\pi_j)^{-1} E(D_j^2 )$ and
+
+$E(D_j \vert D_j >0)^2 = ((1-\pi_j)^{-1} E(D_j 1_{\left \lbrace D_j >0\right\rbrace}))^2 =  (1-\pi_j)^{-2} E(D_j)^2$.
+
+So that 
+
+$$Var(D_j \vert D_j >0) = (1-\pi_j)^{-1} E(D_j^2 ) - (1-\pi_j)^{-2} E(D_j)^2 = (1-\pi_j)^{-1} Var(D_j) - \frac{\pi_j}{(1-\pi_j)^2} E(D_j)^2.$$
+
+As the $(Y_i )_{i\in \mathcal{p}_j}$ are independent, $Var(D_j) =\sum_{i \in\mathcal{P}_j} Var(Y_i)$.
+
+We are the lead to compute the Variance of $C_i Z_i$. 
+
+
+
+\begin{align*}
+Var(C_i Z_i) & = E( C_i^2 Z_i^2 ) - E(C_i Z_i)^2,\\
+& =  E( C_i^2) E(Z_i^2 ) -E(C_i)^2 E(Z_i)^2,\\
+& = (1- p_i) E(Z_i^2 ) - (1-p_i)^2 E(Z_i)^2 = (1-p_i) ( Var(Z_i)  + p_i E(Z_i)^2),\\
+& = (1-p_i)\left( \mu(x_i)^2 (e^{\sigma^2}-1) + p_i \mu(x_i)^2 \right),\\
+& = (1-p_i) \mu(x_i)^2 \left ( e^{\sigma^2}-1  + p_i \right),\\
+\end{align*}
+
+
+
+
+
+## Numerical illustration 
+
+
+### Precising the notation 
+As mentioned in Equation \@ref(eq:LNv3),  $Y\sim \mathcal{LN}(\mu, \sigma^2)$ stands  a lognormal distribution such that $E(Y) = \mu$ and $Var(log(Y)) = \sigma^2$.
+
+An alternative  specification denotes $Y \sim LN(\rho, \sigma)$ if $E(log(Y))=\rho$ and $Var(log(Y)) = \sigma^2$
+
+
+The code below is an helper to go back and forth between the different parametrizations.
+```{r lognomral_moments}
+
+
+LN_variance_v1 <- function(rho, sigma){
+  ( exp(sigma^2) - 1 ) * exp(2* rho  + sigma^2)
+}
+
+
+LN_mean_v1 <- function(rho, sigma){
+   exp( rho + sigma^2/2 )
+}
+
+LN_rho2mu <- function(rho, sigma){
+   LN_mean_v1(rho, sigma)
+}
+
+LN_mu2rho <- function(mu, sigma){
+   log(mu) - sigma^2 /2
+}
+
+LN_variance_v3 <- function(mu, sigma){
+  mu^2* (exp(sigma^2)-1)
+}
+
+
+```
+
+
+### The sum of lognormal random variables is reasonnably log normal 
+
+#### n = 2
+
+```{r sum_lognormal}
+set.seed(1234)
+n <- 2
+rho <- rnorm(n, mean = 0, sd = 1 )
+sigma <- 01
+```
+
+We are ready to look at the sum of `r n` lognormal random variables with mean `r round(LN_mean_v1(rho, sigma),3)`  and variance `r  round(LN_variance_v1(rho, sigma),3)` .
+
+
+```{r sample_2_lognorm, echo = FALSE}
+n_sim <- 1000
+dta <- rho %>% map(function(x){ exp(rnorm(n = n_sim, mean = x, sd = sigma))}) %>% 
+   map_df(
+         ~ tibble(x = .x), 
+         .id = "dist"
+     ) 
+
+
+
+sum_dta <- dta %>% group_by(dist) %>% 
+  mutate(id = row_number()) %>% 
+  pivot_wider(names_from = dist,    names_glue = "dist_{dist}",
+ values_from =x) %>% 
+  mutate( D = rowSums(.[grep("dist_", names(.))]))
+
+p <- sum_dta %>% ggplot() + geom_histogram(aes(x=D, y = ..density..))
+
+mu_sum <- sum(LN_rho2mu(rho, sigma))
+S2_sum <- sum(LN_variance_v1(rho, sigma))
+sigma_sum = sqrt( log(S2_sum/mu_sum^2 +1))
+
+sum_density_LN <- tibble(x  = seq(0.001, max(sum_dta$D)), 0.1) %>% 
+  mutate( log_x= log(x), dens = dnorm(log_x, 
+                         mean=LN_mu2rho(mu_sum, sigma_sum), 
+                         sd = sigma_sum)/x)
+
+p_LN <- p + geom_line(data= sum_density_LN, aes(x=x, y =dens), col = 'blue')
+sum_density_N <- tibble(x  = seq(0.001, max(sum_dta$D), 0.1)) %>% 
+  mutate(dens = dnorm(x, 
+                         mean=mu_sum, 
+                         sd = sqrt(LN_variance_v3(mu_sum, sigma))))
+
+p_N <- p_LN + geom_line(data= sum_density_N, aes(x=x, y =dens), col = 'red')
+p_N
+```
+
+
+
+
+
+### n = 5
+
+```{r sum_lognormal_n5}
+n <- 5
+rho <- rnorm(n, mean = 0, sd = 1 )
+sigma <- 01
+```
+
+We are ready to look at the sum of `r n` lognormal random variables with mean `r round(LN_mean_v1(rho, sigma),3)`  and variance `r  round(LN_variance_v1(rho, sigma),3)` .
+
+
+```{r sample_2_lognorm_n5, echo = FALSE}
+n_sim <- 1000
+dta <- rho %>% map(function(x){ exp(rnorm(n = n_sim, mean = x, sd = sigma))}) %>% 
+   map_df(
+         ~ tibble(x = .x), 
+         .id = "dist"
+     ) 
+
+
+
+sum_dta <- dta %>% group_by(dist) %>% 
+  mutate(id = row_number()) %>% 
+  pivot_wider(names_from = dist,    names_glue = "dist_{dist}",
+ values_from =x) %>% 
+  mutate( D = rowSums(.[grep("dist_", names(.))]))
+
+p <- sum_dta %>% ggplot() + geom_histogram(aes(x=D, y = ..density..))
+
+mu_sum <- sum(LN_rho2mu(rho, sigma))
+S2_sum <- sum(LN_variance_v1(rho, sigma))
+sigma_sum = sqrt( log(S2_sum/mu_sum^2 +1))
+
+sum_density_LN <- tibble(x  = seq(0.001, max(sum_dta$D)), 0.1) %>% 
+  mutate( log_x= log(x), dens = dnorm(log_x, 
+                         mean=LN_mu2rho(mu_sum, sigma_sum), 
+                         sd = sigma_sum)/x)
+
+p_LN <- p + geom_line(data= sum_density_LN, aes(x=exp(log_x), y =dens), col = 'blue')
+
+sum_density_N <- tibble(x  = seq(0.001, max(sum_dta$D), 0.1)) %>% 
+  mutate(dens = dnorm(x, 
+                         mean=mu_sum, 
+                         sd = sqrt(LN_variance_v3(mu_sum, sigma))))
+
+p_N <- p_LN + geom_line(data= sum_density_N, aes(x=x, y =dens), col = 'red')
+p_N
+```
+
+The expected value equals  `r mu_sum`, while the mean equals  `r mean(sum_dta$D)`. The variance equals `r LN_variance_v3(mu_sum, sigma_sum)` and the empiric variance equals `r var(sum_dta$D)`.
+
+
+
+### What happens with the addittion of some zero inflation
+
+
+
+
+

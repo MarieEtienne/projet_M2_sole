@@ -22,3 +22,12 @@ n-5
 what-happens-with-the-addittion-of-some-zero-inflation
 eq:logbook
 eq:newobs
+a-new-model-for-commrecial-data-1
+fitting-a-delta-log-normal-distribution-for-the-catch
+the-probability-of-an-empty-catch
+numerical-illustration-1
+precising-the-notation-1
+the-sum-of-lognormal-random-variables-is-reasonnably-log-normal-1
+n-2-1
+n-5-1
+what-happens-with-the-addittion-of-some-zero-inflation-1
