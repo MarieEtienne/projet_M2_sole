@@ -50,7 +50,11 @@ fit_IM <- function(Estimation_model_i = 1,
                    index_sci_i,
                    aggreg_obs,
                    boats_number,
-                   Cov_x){
+                   Cov_x,
+                   lf_param = "cov",
+                   spde = NULL,
+                   mesh = NULL
+                   ){
   
   #----------------------
   ## Shape models outputs
@@ -77,7 +81,9 @@ fit_IM <- function(Estimation_model_i = 1,
                    'commercial_obs' = 1, # (DEPRECATED)
                    'b_constraint' = 2, # (DEPRECATED)
                    'catchability_random' = 0, # (DEPRECATED)
-                   'aggreg_obs' = ifelse(aggreg_obs == T,1,0)) 
+                   'aggreg_obs' = ifelse(aggreg_obs == T,1,0),
+                   'lf_param'=ifelse(lf_param == "cov",0,1)
+                   )
   
   ## Data & Params
   Map = list() #liste vide : correspond aux paramètres fixés dans l'estimation
@@ -96,7 +102,8 @@ fit_IM <- function(Estimation_model_i = 1,
                  "Cov_xj"=cbind(1,Cov_x),
                  "Cov_xk"=array(1,c(list(nrow(Cov_x),1))),#Cov_xk : pour faire varier b dans l'espace : nous on s'en fiche !
                  "q2_sci" =  1,
-                 "q2_com" = 1 )
+                 "q2_com" = 1,
+                 "spde"=spde)
     
     #les des parametres du modèle a estimer (on les initialise ici)
     Params = list("beta_j"=rep(0,ncol(Data$Cov_xj)), # linear predictor for abundance 
@@ -107,7 +114,11 @@ fit_IM <- function(Estimation_model_i = 1,
                   "q1_sci"=0,
                   "q1_com"=0,
                   "k_com" = 1,
-                  "k_sci" = 1)
+                  "k_sci" = 1,
+                  "deltainput_x"=rep(0,mesh$n),
+                  "logtau"=c(0),
+                  "logkappa"=c(0)
+    )
     #beta_k : effets des covariables qui jouent sur l’échantillonnage, mais ici on n’en prend pas en compte (cf formule 4 du papier de Baptiste)
     #k_com = 1 #capturabilite relative
     
@@ -121,12 +132,17 @@ fit_IM <- function(Estimation_model_i = 1,
                  "y_sci_i"=y_sci_i,
                  "index_sci_i"=index_sci_i-1,
                  "Cov_xj"=cbind(1,Cov_x),
-                 "q2_sci" = 1)
+                 "q2_sci" = 1,
+                 "spde"=spde)
     
     Params = list("beta_j"=rep(0,ncol(Data$Cov_xj)), # linear predictor for abundance 
                   "logSigma_sci"=log(1),
                   "q1_sci"=0,
-                  "k_sci" = 1)
+                  "k_sci" = 1,
+                  "deltainput_x"=rep(0,mesh$n),
+                  "logtau"=c(0),
+                  "logkappa"=c(0)
+    )
     
     Map[["k_sci"]] <- factor(NA)
     
@@ -140,14 +156,19 @@ fit_IM <- function(Estimation_model_i = 1,
                  "Cov_xj"=cbind(1,Cov_x),
                  "Cov_xk"=array(1,c(list(nrow(Cov_x),1))),
                  "q2_sci" =  1,
-                 "q2_com" = 1)
+                 "q2_com" = 1,
+                 "spde"=spde)
     
     Params = list("beta_j"=rep(0,ncol(Data$Cov_xj)), # linear predictor for abundance 
                   "beta_k"=0, # intercept of fishin intensity
                   "par_b"=0, # link between abundance and sampling intensity
                   "logSigma_com"=log(1),
                   "q1_com"=0,
-                  "k_com" = 1)
+                  "k_com" = 1,
+                  "deltainput_x"=rep(0,mesh$n),
+                  "logtau"=c(0),
+                  "logkappa"=c(0)
+    )
     
     Map[["k_com"]] <- seq(1:(length(Params$k_com))) # first k is for scientific data
     Map[["k_com"]][1] <- NA
@@ -177,16 +198,37 @@ fit_IM <- function(Estimation_model_i = 1,
   # no linkeage between sampling process and biomass field
   if( EM=="fix_b" ) Map[["par_b"]] <- factor(rep(NA,length(Params$par_b)))
   
-  ######################
-  ## Fiw some parameters
-  ######################
+  if( Samp_process == 0){
+    Params[["par_b"]] <- NULL
+    Params[["beta_k"]] <- NULL
+    Map[["par_b"]] <- NULL
+    Map[["beta_k"]] <- NULL
+  }
+  
+  # If model accounting for reallocation
   if(aggreg_obs == T){
-    Params$logSigma_com <- logSigma_com
+    # Params$logSigma_com <- logSigma_com
     # Map[["logSigma_com"]] <- factor(NA)
     
     Params$par_b <- b
     # Map[["par_b"]] <- factor(NA)
   }
+  
+  # If no random effect in the latent field
+  if(lf_param=="cov"){
+    
+    Random=NULL
+    Map[["deltainput_x"]] <- factor(rep(NA,mesh$n))
+    Map[["logtau"]] <- Map[["logkappa"]] <- factor(NA)
+    
+  }else if(lf_param=="RE"){
+    
+    Random <- c("deltainput_x")
+    # Map[["logtau"]] <- factor(1)
+    # Map[["logkappa"]] <- factor(1)
+  
+  }
+  
   
   #-----------
   ## Run model
@@ -199,7 +241,7 @@ fit_IM <- function(Estimation_model_i = 1,
   #on cree cet objet pour le TMB qui va contenir tout ce dont on a besoin pour 
   #l'estimation
   #il n'est pas necessaire que l'on comprenne cette fonction
-  Obj = MakeADFun( data=Data, parameters=Params, map = Map, silent = TRUE,hessian = T)
+  Obj = MakeADFun( data=Data, parameters=Params, random = Random, map = Map, silent = TRUE,hessian = T)
   Obj$fn( Obj$par )
   
   # Sys.setenv(PATH="%PATH%;C:/Rtools/mingw64/bin;c:/Rtools/bin")

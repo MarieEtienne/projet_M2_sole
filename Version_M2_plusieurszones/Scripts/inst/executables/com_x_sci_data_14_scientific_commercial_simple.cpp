@@ -88,7 +88,8 @@ template<class Type>
 Type objective_function<Type>::operator() (){
   using namespace Eigen;
   using namespace density;
-  
+  using namespace R_inla;
+
   ///////////////////////////////////////////////////////////////////
   // Inputs definition 
   /////////////////////
@@ -104,30 +105,52 @@ Type objective_function<Type>::operator() (){
   
   //////////////////////////////////// Global /////////////////////////////////////////
   
+  // join likelihood
+  vector<Type> jnll_comp(5);
+  jnll_comp.setZero();
+  
   ////////
   // Data
   ////////
   
   DATA_MATRIX( Cov_xj );  
-
+  DATA_STRUCT( spde, spde_t );
+  
   //////////////
   // Parameters 
   //////////////
 
   PARAMETER_VECTOR(beta_j);
-
+  PARAMETER_VECTOR( deltainput_x );
+  PARAMETER_VECTOR( logtau );
+  PARAMETER_VECTOR( logkappa );
+  
   /////////////////
   // derived values
   /////////////////
-  
+  int n_nodes = deltainput_x.size();
   int n_j = Cov_xj.row(0).size();
   // int n_k = Cov_xk.row(0).size();
   int n_x = Cov_xj.col(0).size();
-
-  // global stuff
-  vector<Type> jnll_comp(5);
-  jnll_comp.setZero();
-
+  int n_gf = logkappa.size();
+  
+  vector<Type> MargSD(n_gf);MargSD.setZero();
+  vector<Type> Range(n_gf);Range.setZero();
+  
+  for( int s=0; s<n_gf; s++){
+    
+    MargSD(s) = 1 / sqrt(4*M_PI) / exp(logtau(s)) / exp(logkappa(s));
+    Range(s) = sqrt(8) / exp( logkappa(s) );
+    
+  }
+  
+  // delta
+  SparseMatrix<Type> Q_delta;
+  Q_delta = Q_spde(spde, exp(logkappa(0)));
+  vector<Type> delta_x( n_nodes );delta_x.setZero();
+  delta_x = deltainput_x / exp(logtau(0)); // Transform random effects
+  if(Options_vec(13)==1) jnll_comp(0) = GMRF(Q_delta)(deltainput_x);
+  
 
   ////////////////
   // Latent field
@@ -138,7 +161,7 @@ Type objective_function<Type>::operator() (){
   vector<Type> debug_j(n_j);debug_j.setZero();
   vector<Type> linpredS_x = Cov_xj * beta_j;
   for(int s=0; s<n_x; s++){
-    S_x(s) = exp(linpredS_x(s) );
+    S_x(s) = exp(linpredS_x(s) + delta_x(s));
   }
 
   
@@ -282,8 +305,8 @@ Type objective_function<Type>::operator() (){
       REPORT(log_Sigma_D);
       REPORT( encounterprob_com);
       
-      REPORT( q1_com );
-      REPORT( Sigma_com );
+      ADREPORT( q1_com );
+      ADREPORT( Sigma_com );
       
     }
     
@@ -295,7 +318,7 @@ Type objective_function<Type>::operator() (){
       
       // Parameter
       PARAMETER_VECTOR(beta_k);
-      PARAMETER_VECTOR( par_b );
+      PARAMETER_VECTOR(par_b);
 
       
       // Derived values
@@ -320,7 +343,6 @@ Type objective_function<Type>::operator() (){
       REPORT( par_b );
       REPORT( linpredR_x );
       
-      ADREPORT(lambda_x);
     }
   }
 
@@ -377,8 +399,8 @@ Type objective_function<Type>::operator() (){
     // Outputs
     //////////
     
-    REPORT( Sigma_sci );
-    REPORT( q1_sci );
+    ADREPORT( Sigma_sci );
+    ADREPORT( q1_sci );
     
   }
 
@@ -392,11 +414,11 @@ Type objective_function<Type>::operator() (){
   for(int i=0; i<n_jnll; i++){
     jnll += jnll_comp(i);
   }
-  
-  
+
   // Reporting
   REPORT( S_x );
-
+  REPORT( delta_x );
+  
   REPORT( total_abundance );
   REPORT( beta_j );
   REPORT( linpredS_x );
@@ -409,12 +431,16 @@ Type objective_function<Type>::operator() (){
   //ADREPORT( beta_abs_j );
   //ADREPORT( beta_pos_j );
   ADREPORT( total_abundance );
+  
+  ADREPORT( beta_j );
+  ADREPORT( MargSD );
+  ADREPORT( Range );
 
+  
   if(Options_vec(4)==1){
     ADREPORT(S_x);
   }
-  
-  
+
   return jnll;
 }
 
