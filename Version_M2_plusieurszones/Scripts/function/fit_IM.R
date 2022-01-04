@@ -51,9 +51,20 @@ fit_IM <- function(Estimation_model_i = 1,
                    aggreg_obs,
                    boats_number,
                    Cov_x,
+                   ref_level = NULL,
                    lf_param = "cov",
                    spde = NULL,
-                   mesh = NULL
+                   mesh = NULL,
+                   n_cells=n_cells,
+                   cov_est = F,
+                   Params_step.est=NULL,
+                   Map_step.est=NULL,
+                   ObsM=F,
+                   y_ObsM_i = NULL,
+                   index_ObsM_i = NULL,
+                   sampling="simulate",
+                   landings=T,
+                   quadratic_cov=NULL
                    ){
   
   #----------------------
@@ -82,11 +93,15 @@ fit_IM <- function(Estimation_model_i = 1,
                    'b_constraint' = 2, # (DEPRECATED)
                    'catchability_random' = 0, # (DEPRECATED)
                    'aggreg_obs' = ifelse(aggreg_obs == T,1,0),
-                   'lf_param'=ifelse(lf_param == "cov",0,1)
+                   'lf_param'=ifelse(lf_param == "cov",0,1),
+                   'ObsM'=ifelse(ObsM == F,0,1),
+                   'landings'=ifelse(landings == F,0,1)
                    )
   
   ## Data & Params
   Map = list() #liste vide : correspond aux paramètres fixés dans l'estimation
+  
+  if(cov_est == F) Cov_x <- as.matrix(rep(0,n_cells))
   
   #Pour chacune des trois configurations de modele (1,2 ou 3 ie les deux, scienti
   #only ou commer only) on définit les données d'entrée, les paramètres à estimer 
@@ -122,10 +137,12 @@ fit_IM <- function(Estimation_model_i = 1,
     #beta_k : effets des covariables qui jouent sur l’échantillonnage, mais ici on n’en prend pas en compte (cf formule 4 du papier de Baptiste)
     #k_com = 1 #capturabilite relative
     
-    Map[["k_com"]] <- seq(1:(length(Params$k_com))) # first k is for scientific data
-    Map[["k_com"]][1] <- NA # reference level is the first fleet
-    Map[["k_com"]] <- factor(Map[["k_com"]])
+    Map[["k_sci"]] <- factor(NA)
     
+    # Map[["k_com"]] <- seq(1:(length(Params$k_com))) # first k is for scientific data
+    # Map[["k_com"]][1] <- NA # reference level is the first fleet
+    # Map[["k_com"]] <- factor(Map[["k_com"]])
+
   }else if(Estimation_model_i == 2){ # scientific model (scientific_only)
     
     Data = list( "Options_vec"=Options_vec,
@@ -193,7 +210,9 @@ fit_IM <- function(Estimation_model_i = 1,
   # fix reference level for latent field covariate
   map_beta_j <- seq(1:ncol(Data$Cov_xj))
   if(exists("ref_level")) map_beta_j[which(colnames(Data$Cov_xj) %in% ref_level)] <- NA
+  if(Estimation_model_i==2) map_beta_j[which(colnames(Data$Cov_xj) == "substr_Rock")] <- NA
   Map[["beta_j"]] = factor(map_beta_j)
+  
   
   # no linkeage between sampling process and biomass field
   if( EM=="fix_b" ) Map[["par_b"]] <- factor(rep(NA,length(Params$par_b)))
@@ -205,14 +224,7 @@ fit_IM <- function(Estimation_model_i = 1,
     Map[["beta_k"]] <- NULL
   }
   
-  # If model accounting for reallocation
-  if(aggreg_obs == T){
-    # Params$logSigma_com <- logSigma_com
-    # Map[["logSigma_com"]] <- factor(NA)
-    
-    Params$par_b <- b
-    # Map[["par_b"]] <- factor(NA)
-  }
+  if(cov_est == F) Map[["beta_j"]] <- factor(c(1,NA))
   
   # If no random effect in the latent field
   if(lf_param=="cov"){
@@ -229,7 +241,32 @@ fit_IM <- function(Estimation_model_i = 1,
   
   }
   
+  if(landings == F){
+    
+    Data$y_com_i <- NULL
+    Data$index_com_i <- NULL
+    Data$seq_com_i <- NULL
+    
+  }
   
+  if(!is.null(Params_step.est)){
+    Params <- Params_step.est
+    Map <- Map_step.est
+  }
+  
+  # If model accounting for reallocation
+  # if(aggreg_obs == T & Estimation_model_i != 2 & sampling == "from_tacsateflalo"){
+  # 
+  # 
+  # }
+  
+  if(ObsM == T){
+    
+    Data[["y_ObsM_i"]] <- y_ObsM_i
+    Data[["index_ObsM_i"]] <- index_ObsM_i-1
+    
+  }
+
   #-----------
   ## Run model
   #-----------
@@ -297,15 +334,16 @@ fit_IM <- function(Estimation_model_i = 1,
                 gradient=Obj$gr,
                 lower=Lower,
                 upper=Upper,
-                control=list(trace=1, iter.max=100000000, eval.max = 30000))
+                rel.tol = 1e-1,
+                control=list(trace=1, iter.max=2000, eval.max = 1000))
   
   Opt[["diagnostics"]] = data.frame( "Param"=names(Obj$par), "Lower"=-Inf, "Est"=Opt$par, "Upper"=Inf, "gradient"=Obj$gr(Opt$par) )
 
   # ## Likelihood profile
-  # prof <- tmbprofile(Obj,"q1_com")
+  # prof <- tmbprofile(Obj,"logSigma_com")
   # plot(prof)
   # confint(prof)
-  
+
   #Avec cet objet Report, on va chercher dans les sorties de l'algo qui a convergé 
   #ce qui nous intéresse : valeur des paramètres, distribution du champ latent, 
   #lambda etc
@@ -378,7 +416,7 @@ fit_IM <- function(Estimation_model_i = 1,
   }else{SD = NULL}
   Opt[["run_time"]] = Sys.time()-Start_time
   
-  res <- list(SD = SD, Opt = Opt, Report = Report,  Converge = Converge,Data = Data, Params = Params, Map = Map)
+  res <- list(SD = SD, Opt = Opt, Obj = Obj, Report = Report,  Converge = Converge,Data = Data, Params = Params, Map = Map)
   return(res)
 }
 

@@ -166,160 +166,194 @@ Type objective_function<Type>::operator() (){
 
   
   //////////////////////////////////// Commercial /////////////////////////////////////////
-  
-  
   if(Options_vec(5) == 3 | Options_vec(5) == 1){
-
+    
     ////////
     // Data
     ////////
-
     DATA_VECTOR( c_com_x );       	// Response (count) for each observation i (commercial data)
-    DATA_VECTOR( y_com_i );       	// Response (0:not surveyed, 1:surveyed) for each site (commercial data)
-    DATA_FACTOR( seq_com_i );       	// Response (0:not surveyed, 1:surveyed) for each site (commercial data)
-    
-    DATA_FACTOR( index_com_i );
-   	DATA_VECTOR( q2_com );
     DATA_MATRIX( Cov_xk );  //design matrix for sampling of commercial data
+    DATA_VECTOR( q2_com );
     
-
     //////////////
     // Parameters
     //////////////
-
     PARAMETER_VECTOR(q1_com);
     PARAMETER_VECTOR(logSigma_com);
-	  PARAMETER_VECTOR( k_com );
-
-	  /////////////////
-    // derived values
-    /////////////////
-
-    int n_com_i = y_com_i.size();
-    int n_ping_i = seq_com_i.size();
+    PARAMETER_VECTOR( k_com );
+    vector<Type> Sigma_com = exp(logSigma_com);
     
 
-    /////////////////////
-    // Observation model
-    ////////////////////
-    
-    if( Options_vec(9) == 1){
+    //////////////////////////////// Landings observations ////////////////////////////////////
+    if( Options_vec(15) == 1 ){
+
+      ////////
+      // Data
+      ////////
+      DATA_VECTOR( y_com_i );       	// Response (0:not surveyed, 1:surveyed) for each site (commercial data)
+      DATA_FACTOR( seq_com_i );       	// Response (0:not surveyed, 1:surveyed) for each site (commercial data)
+      DATA_FACTOR( index_com_i );
+
+      /////////////////
+      // derived values
+      /////////////////
+      int n_com_i = y_com_i.size();
+      int n_ping_i = seq_com_i.size();
       
-      vector<Type> Sigma_com = exp(logSigma_com);
-      vector<Type> E_com(n_ping_i);E_com.setZero();
-      
-      vector<Type> encounterprob_com(n_com_i);encounterprob_com.setZero();
-      vector<Type> log_notencounterprob_com(n_com_i);log_notencounterprob_com.setZero();
-      
-      ///////////////////////////////////
-      // Non-aggregated observation model
-      //////////////////////////////////
-      if( Options_vec(12) == 0 ){
-        for(int i=0; i<n_com_i; i++){
-          if( !isNA(y_com_i(i)) ){
-            
-            E_com(i) = q2_com(0) * 1 * S_x(index_com_i(i));
-            
-            // proba of encountering
-            encounterprob_com(i) = ( 1.0 - exp(-1 * E_com(i) * exp(q1_com(0))) );
-            log_notencounterprob_com(i) = -1 * E_com(i) * exp(q1_com(0));
-            
-            jnll_comp(0) -= dzinflognorm(y_com_i(i), log(E_com(i))-log(encounterprob_com(i)), encounterprob_com(i), log_notencounterprob_com(i), Sigma_com(0), true);
-            // jnll_comp(0) -= dzinfgamma(y_com_i(i), E_com(i)/encounterprob_com(i), encounterprob_com(i), log_notencounterprob_com(i), Sigma_com(0), true);
-            
+      /////////////////////
+      // Observation model
+      ////////////////////
+      if( Options_vec(9) == 1){
+        
+        vector<Type> E_com(n_ping_i);E_com.setZero();
+        
+        vector<Type> encounterprob_com(n_com_i);encounterprob_com.setZero();
+        vector<Type> log_notencounterprob_com(n_com_i);log_notencounterprob_com.setZero();
+        
+        ///////////////////////////////////
+        // Non-aggregated observation model
+        //////////////////////////////////
+        if( Options_vec(12) == 0 ){
+          for(int i=0; i<n_com_i; i++){
+            if( !isNA(y_com_i(i)) ){
+              
+              E_com(i) = q2_com(0) * k_com(0) * S_x(index_com_i(i));
+              
+              // proba of encountering
+              encounterprob_com(i) = ( 1.0 - exp(-1 * E_com(i) * exp(q1_com(0))) );
+              log_notencounterprob_com(i) = -1 * E_com(i) * exp(q1_com(0));
+              
+              jnll_comp(0) -= dzinflognorm(y_com_i(i), log(E_com(i))-log(encounterprob_com(i)), encounterprob_com(i), log_notencounterprob_com(i), Sigma_com(0), true);
+              // jnll_comp(0) -= dzinfgamma(y_com_i(i), E_com(i)/encounterprob_com(i), encounterprob_com(i), log_notencounterprob_com(i), Sigma_com(0), true);
+              
+            }
           }
         }
+        
+        
+        ///////////////////////////////
+        // Aggregated observation model
+        ///////////////////////////////
+        vector<Type> E_D_com(n_com_i);E_D_com.setZero();
+        vector<Type> log_pi_j(n_com_i);log_pi_j.setZero();
+        vector<Type> pi_j(n_com_i);pi_j.setZero();
+        vector<Type> sum_mu(n_com_i);sum_mu.setZero();
+        vector<Type> Var_D_com(n_com_i);Var_D_com.setZero();
+        vector<Type> Var_Dsup0_com(n_com_i);Var_Dsup0_com.setZero();
+        vector<Type> p_i(n_ping_i);p_i.setZero();
+        Type Sigma_D;
+        Type log_Sigma_D;
+        
+        if( Options_vec(12) == 1 ){
+          
+          for(int i=0; i<n_ping_i; i++){
+            
+            E_com(i) = q2_com(0) * k_com(0) * S_x(index_com_i(i));
+            log_pi_j(seq_com_i(i)) += -1 * E_com(i) * exp(q1_com(0));
+            
+            if(y_com_i(seq_com_i(i)) > 0){
+              
+              p_i(i) = exp(-1 * E_com(i) * exp(q1_com(0)));
+              sum_mu(seq_com_i(i)) += q2_com(0) * 1 * S_x(index_com_i(i));
+              Var_D_com(seq_com_i(i)) += square(E_com(i)) / (1 - p_i(i)) * (exp(square(Sigma_com(0))) - (1 - p_i(i)));
+              
+            }
+            
+          }
+          
+          pi_j = exp(log_pi_j);
+          
+          for(int j=0; j<n_com_i; j++){
+            
+            if( y_com_i(j) == 0 ){
+              
+              jnll_comp(0) -= log_pi_j(j);
+              
+            }
+            
+            if( y_com_i(j) > 0 ){
+              
+              E_D_com(j) = 1 / (1 - pi_j(j)) * sum_mu(j);
+              
+              Var_Dsup0_com(j) =  Var_D_com(j) / (1 -  pi_j(j)) - pi_j(j) * square(E_D_com(j)) / (1 - pi_j(j)) ;
+              
+              Sigma_D = sqrt(log(Var_Dsup0_com(j) / square(E_D_com(j)) + 1));
+              
+              // log_Sigma_D = log(Sigma_D);
+              
+              jnll_comp(0) -= dlognorm(y_com_i(j),
+                        log(E_D_com(j)),
+                        Sigma_D,
+                        true);
+              
+            }
+            
+            
+          }
+          
+        }
+        
+        REPORT(E_com);
+        REPORT(E_D_com);
+        REPORT(log_pi_j);
+        REPORT(pi_j);
+        REPORT(sum_mu);
+        REPORT(Var_D_com);
+        REPORT(Var_Dsup0_com);
+        REPORT(p_i);
+        REPORT(Sigma_D);
+        REPORT(log_Sigma_D);
+        REPORT( encounterprob_com);
+        
       }
-      
-      ///////////////////////////////
-      // Aggregated observation model
-      ///////////////////////////////
-      vector<Type> E_D_com(n_com_i);E_D_com.setZero();
-      vector<Type> log_pi_j(n_com_i);log_pi_j.setZero();
-      vector<Type> pi_j(n_com_i);pi_j.setZero();
-      vector<Type> sum_mu(n_com_i);sum_mu.setZero();
-      vector<Type> Var_D_com(n_com_i);Var_D_com.setZero();
-      vector<Type> Var_Dsup0_com(n_com_i);Var_Dsup0_com.setZero();
-      vector<Type> p_i(n_ping_i);p_i.setZero();
-      Type Sigma_D;
-      Type log_Sigma_D;
-      
-      if( Options_vec(12) == 1 ){
-        
-        for(int i=0; i<n_ping_i; i++){
-          
-          E_com(i) = q2_com(0) * 1 * S_x(index_com_i(i));
-          log_pi_j(seq_com_i(i)) += -1 * E_com(i) * exp(q1_com(0));
-          
-          if(y_com_i(seq_com_i(i)) > 0){
-            
-            p_i(i) = exp(-1 * E_com(i) * exp(q1_com(0)));
-            sum_mu(seq_com_i(i)) += q2_com(0) * 1 * S_x(index_com_i(i));
-            Var_D_com(seq_com_i(i)) += square(E_com(i)) / (1 - p_i(i)) * (exp(square(Sigma_com(0))) - (1 - p_i(i)));
-          
-          }
-          
-        }
-        
-        pi_j = exp(log_pi_j);
-        
-        for(int j=0; j<n_com_i; j++){
-          
-          if( y_com_i(j) == 0 ){
-            
-            jnll_comp(0) -= log_pi_j(j);
-            
-          }
-          
-          if( y_com_i(j) > 0 ){
-            
-            E_D_com(j) = 1 / (1 - pi_j(j)) * sum_mu(j);
-            
-            Var_Dsup0_com(j) =  Var_D_com(j) / (1 -  pi_j(j)) - pi_j(j) * square(E_D_com(j)) / (1 - pi_j(j)) ;
-            
-            Sigma_D = sqrt(log(Var_Dsup0_com(j) / square(E_D_com(j)) + 1));
-            
-            // log_Sigma_D = log(Sigma_D);
-            
-            jnll_comp(0) -= dlognorm(y_com_i(j),
-                      log(E_D_com(j)),
-                      Sigma_D,
-                      true);
-          
-          }
-          
-          
-        }
-        
-      }
-      
-      REPORT(E_com);
-      REPORT(E_D_com);
-      REPORT(log_pi_j);
-      REPORT(pi_j);
-      REPORT(sum_mu);
-      REPORT(Var_D_com);
-      REPORT(Var_Dsup0_com);
-      REPORT(p_i);
-      REPORT(Sigma_D);
-      REPORT(log_Sigma_D);
-      REPORT( encounterprob_com);
-      
-      ADREPORT( q1_com );
-      ADREPORT( Sigma_com );
       
     }
+    
+    //////////////////////
+    // ObsMer observations
+    //////////////////////
+    if( Options_vec(14) == 1 ){
+      
+      DATA_VECTOR( y_ObsM_i );
+      DATA_FACTOR( index_ObsM_i );
+      int n_ObsM_i = y_ObsM_i.size();
+      vector<Type> E_ObsM(n_ObsM_i);E_ObsM.setZero();
+      vector<Type> encounterprob_E_ObsM(n_ObsM_i);encounterprob_E_ObsM.setZero();
+      vector<Type> log_notencounterprob_ObsM(n_ObsM_i);log_notencounterprob_ObsM.setZero();
+      
+      for(int i=0; i<n_ObsM_i; i++){
+        if( !isNA(y_ObsM_i(i)) ){
+          
+          E_ObsM(i) = q2_com(0) * k_com(0) * S_x(index_ObsM_i(i));
+          
+          // proba of encountering
+          encounterprob_E_ObsM(i) = ( 1.0 - exp(-1 * E_ObsM(i) * exp(q1_com(0))) );
+          log_notencounterprob_ObsM(i) = -1 * E_ObsM(i) * exp(q1_com(0));
+          
+          jnll_comp(0) -= dzinflognorm(y_ObsM_i(i), log(E_ObsM(i))-log(encounterprob_E_ObsM(i)), encounterprob_E_ObsM(i), log_notencounterprob_ObsM(i), Sigma_com(0), true);
+          // jnll_comp(0) -= dzinfgamma(y_com_i(i), E_com(i)/encounterprob_com(i), encounterprob_com(i), log_notencounterprob_com(i), Sigma_com(0), true);
+          
+        }
+      }
+      
+      REPORT(E_ObsM);
+      
+    }
+    
+    
+    ADREPORT( q1_com );
+    ADREPORT( Sigma_com );
+    ADREPORT( k_com );
+    
     
     //////////////////////////////////////
     // Sampling process of commercial data
     /////////////////////////////////////
-    
     if( Options_vec(7) == 1){
       
       // Parameter
       PARAMETER_VECTOR(beta_k);
       PARAMETER_VECTOR(par_b);
-
       
       // Derived values
       Type b;
@@ -336,7 +370,7 @@ Type objective_function<Type>::operator() (){
         lambda_x(s) = exp( linpredR_x(s) + fact_S(s));
         if(!isNA(c_com_x(s)))   jnll_comp(1)-= (Type(1)-lambda_x(s) + c_com_x(s)*log(lambda_x(s))); // log density of poisson process (see Diggle (2013))
       }
-
+      
       // Outputs
       REPORT( lambda_x );
       REPORT( beta_k );
@@ -344,6 +378,7 @@ Type objective_function<Type>::operator() (){
       REPORT( linpredR_x );
       
     }
+    
   }
 
   //////////////////////////////////// Scientific /////////////////////////////////////////
@@ -401,6 +436,7 @@ Type objective_function<Type>::operator() (){
     
     ADREPORT( Sigma_sci );
     ADREPORT( q1_sci );
+    ADREPORT( k_sci );
     
   }
 

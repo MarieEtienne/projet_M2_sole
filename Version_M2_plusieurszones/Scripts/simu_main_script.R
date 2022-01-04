@@ -7,7 +7,7 @@
 library(parallel)
 
 # Simulation name
-simu_name = "SimuTest"
+simu_name = "SimuRef"
 
 # Parallel configuration
 n_nodes <- 8
@@ -120,7 +120,7 @@ x_parallel1 <- clusterEvalQ(cl,{
   # Relative catchability
   q2_com <- 1
   # Levels of preferential sampling
-  b_set = c(0,1,3)
+  b_set = c(0)
   
   
   
@@ -139,7 +139,7 @@ x_parallel1 <- clusterEvalQ(cl,{
   aggreg_obs = F
   
   # if 1, sampling process is accounted for in estimation
-  Samp_process = 1
+  Samp_process = 0
   
   # TMB model version
   TmbFile = "Scripts/"
@@ -285,7 +285,7 @@ x_parallel1 <- clusterEvalQ(cl,{
   
   # load TMB model
   dyn.load( dynlib(paste0(TmbFile,"inst/executables/com_x_sci_data_14_scientific_commercial_simple") ) )
-  # dyn.unload( dynlib(paste0(TmbFile,"inst/executables/",Version,"_scientific_commercial") ) )
+  # dyn.unload( dynlib(paste0(TmbFile,"inst/executables/com_x_sci_data_14_scientific_commercial_simple") ) )
   
   ## loop
   # 1er niveau de boucle : on repete chaque simulation n_sim fois pour avoir de la variabilité

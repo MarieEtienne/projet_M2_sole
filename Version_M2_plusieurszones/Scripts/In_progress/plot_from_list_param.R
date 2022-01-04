@@ -48,15 +48,32 @@ for(i in 1:10){
 
 library(doBy)
 library(gt)
-summaryBy(Convergence~
+Results_conv <- Results_2
+Results_conv$one <- 1
+Results_conv <- Results_conv %>% 
+  filter(b_true == 0)
+summaryBy(Convergence+one~
             sequencesdepeche+
             # zonespersequence+
             aggreg_obs+
             # b_true+
             n_samp_com+
             reallocation,
-          data=Results_2,
+          data=Results_conv,
           FUN=sum) %>%
+  dplyr::select(n_samp_com,
+                sequencesdepeche,
+                reallocation,
+                aggreg_obs,
+                Convergence.sum,
+                one.sum) %>%
+  dplyr::rename(fishing_sequence = sequencesdepeche,
+                data_realloc = reallocation,
+                lkl_level = aggreg_obs) %>%
+  mutate(lkl_level = ifelse(lkl_level == T,"Dj","Yi"),
+         data_realloc = ifelse(data_realloc == 1,"Yes","No"),
+         perc_convergence = round((1 - Convergence.sum / one.sum)*100,digits = 3)) %>%
+  dplyr::select(-Convergence.sum,-one.sum) %>%
   gt() %>%
   tab_options(
     summary_row.background.color = "#ACEACE80",
@@ -79,6 +96,9 @@ summaryBy(Convergence~
     column_labels.font.weight = "bold"
   )
 
+
+Results <- Results_2 %>%
+  filter(b_true == 0 & Convergence == 0)
 Results[,"RelBias_N"]=(Results[,"N_est"]-Results[,"N_true"])/Results[,"N_true"]
 Results[,"RelBias_beta"]=(Results[,"beta1_est"]-Results[,"beta1_true"])/Results[,"beta1_true"]
 Results[,"Bias_b"]=(Results[,"b_est"]-Results[,"b_true"]) / ifelse(Results[,"b_true"] != 0,Results[,"b_true"],1)
@@ -89,11 +109,8 @@ Results <- Results %>%
 Results$zonespersequence <- as.factor(Results$zonespersequence)
 Results$b_true <- as.factor(Results$b_true)
 
-Results_2 <- Results %>%
-  filter(b_true != 1 & b_true != 3) # & n_samp_com != 50 & relloc_aggreg != "realloc.sim:1_realloc.est:0")
-
 RelBias_N_plot <- ggplot()+
-  geom_boxplot(data = Results_2,
+  geom_boxplot(data = Results,
                aes(x = zonespersequence,
                    y = RelBias_N,
                    fill = relloc_aggreg))+
@@ -102,10 +119,11 @@ RelBias_N_plot <- ggplot()+
   ylab("Relative bias of biomass")+
   facet_wrap(.~factor(n_samp_com))+
   theme(legend.title = element_blank(),
-        legend.position = "bottom")
+        legend.position = "none",
+        aspect.ratio = 1)
 
 RelBias_beta_plot <- ggplot()+
-  geom_boxplot(data = Results_2,
+  geom_boxplot(data = Results,
                aes(x = zonespersequence,
                    y = RelBias_beta,
                    fill = relloc_aggreg))+
@@ -114,7 +132,8 @@ RelBias_beta_plot <- ggplot()+
   ylab("Relative bias of beta1")+
   facet_wrap(.~factor(n_samp_com))+
   theme(legend.title = element_blank(),
-        legend.position = "bottom")
+        legend.position = "none",
+        aspect.ratio = 1)
 
 Bias_b_plot <- ggplot()+
   geom_boxplot(data = Results,
@@ -126,7 +145,8 @@ Bias_b_plot <- ggplot()+
   ylab("Bias of b")+
   facet_wrap(.~factor(n_samp_com))+
   theme(legend.title = element_blank(),
-        legend.position = "bottom")
+        legend.position = "none",
+        aspect.ratio = 1)
 
 MSPE_S_plot <- ggplot()+
   geom_boxplot(data = Results,
@@ -134,19 +154,23 @@ MSPE_S_plot <- ggplot()+
                    y = log(MSPE_S),
                    fill = relloc_aggreg))+
   theme_bw()+
-  ylab("MSPE")+
+  # ylab("MSPE")+
   facet_wrap(.~factor(n_samp_com))+
   theme(legend.title = element_blank(),
-        legend.position = "bottom")
+        legend.position = "none",
+        aspect.ratio = 1)
 
 
 library(cowplot)
 
-x11()
 plot.full <- plot_grid(
   RelBias_N_plot,
-  Bias_b_plot,
   RelBias_beta_plot,
   MSPE_S_plot,ncol = 1)
 
-ggsave(filename = "plot_full.png",width = 10,height = 10)
+
+legend <- ggpubr::as_ggplot(cowplot::get_legend(RelBias_N_plot+theme(legend.position = "bottom", legend.title = element_blank())))
+
+plot.full <- plot_grid(plot.full,legend,ncol=1,rel_heights = c(1,0.1))
+
+ggsave(filename = "plot_full.png",width = 9,height = 9)

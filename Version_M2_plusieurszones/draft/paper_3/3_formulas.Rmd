@@ -1,0 +1,152 @@
+---
+title: "**Formulas for the model built on catch declarations**"
+output: 
+  pdf_document:
+    number_sections: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+# Notations
+
+We model observations at the level of catch declarations $D_j$ as a sum of $Y_{ij}$ lognormal observations each one realised at one fishing position $x_{ij}$.
+
+We note : 
+
+- $\mathcal{P}_j$ : the vector of all fishing positions related to the $j^th$ declaration
+
+- $j \in \{1,...,n\}$ with $n$ the number of declarations
+
+- $i \in \{1,...,m_j\}$ with $m_j$ the number of fishing positions belonging to the $j^{th}$ declaration.
+
+$$D_j=\sum_{i \in \mathcal{P}_j}{Y_{ij}}$$
+
+# Alternative observation models accounting for reallocation
+
+## First assumption about convolution of lognormal random variables
+
+We assume a sum of lognormal random variables is still lognormal and that $D_j \sim \mathcal{LN}(M(D_j),\Phi(D_j))$ with $M(.)$ being a function representing the central value of $D_j$ and $\Phi(.)$ the variance function of $D_j$.
+
+
+## Reparameterization of the lognormal distribution
+
+The standard lognormal distribution is written as :
+
+$D \sim \mathcal{LN}(\rho;\sigma^2)$ with $D=e^{\rho+\sigma N}$ and $N \sim \mathcal{N}(0,1)$
+
+In this case, $E(D)=e^{\rho + \frac{\sigma^2}{2}}$ and $Var(D)=(e^{\sigma^2}-1)e^{2 \rho + \sigma^2}$.
+
+We choose to slightly reparameterize the lognormal distribution so that $E(D)$ and $Var(D)$ have more simple expressions.
+
+Let's define $\rho = ln(\mu) - \frac{sigma^2}{2}$, then :
+
+- $D=\mu e^{\sigma N - \frac{sigma^2}{2}}$
+
+- $E(D)=\mu$
+
+- $Var(D)=\mu^2(e^{\sigma^2} - 1) \Leftrightarrow	\sigma^2=ln(\frac{Var(D)}{E(D)^2} + 1)$
+
+Then, $D \sim\mathcal{LN}(M(D),\Phi(D))$ with $M(D)=E(D)$ and $\Phi(D)=ln(\frac{Var(D)}{E(D)^2} + 1)$.
+
+## $D_j$ probability distribution and moments 
+
+We have to express the probability distribution of $D_j$ and its moments as a function of $Y_{ij}$ with $i \in \mathcal{P}_j$.
+
+Let's assume $Y_{ij} = C_{ij}.Z_{ij}$ is a zero-inflated lognormal distribution with $C_{ij}$ a binary random variable and $Z_{ij}$ a lognormal random variable.
+
+$$C_{ij} \sim \mathcal{B}(1-p_{ij})$$ 
+with $p_{ij}=exp(-e^\xi .S(x_{ij}))$ the probability to obtain a zero value
+
+$$Z_{ij} \sim \mathcal{LN}(\frac{S(x_{ij})}{1-p_{ij}},\sigma^2)$$
+
+Here, $Y_{ij}$, $C_{ij}$ and $Z_{ij}$ are observations of a latent field $S(x_{ij})$ at a sampled point $x_{ij}$.
+
+
+### Probability of obtaining a zero declaration
+
+\begin{align*}
+P(D_j = 0 \vert S, X) & = \prod_{i\in \mathcal{P}_j} P(Y_{ij} = 0 \vert S, X),\nonumber \\
+                      & = \exp{ \left \lbrace- \sum_{i\in \mathcal{P}_j} e^{\xi}. S(x_{ij})\right \rbrace} = \pi_j.
+\end{align*}
+
+
+### Expectancy of a positive declaration 
+
+
+Following calculations are supposed to be conditionnal on $S$ and $X$.
+
+$$E(D_j\vert D_j >0) =  \sum_{i\in \mathcal{P}_j} E(C_{ij} Z_{ij}\vert \exists i\in\mathcal{P}_j , C_{ij}=1)$$
+
+As $C_{ij}$ and $Z_{ij}$ are assumed to be independant.
+
+\begin{align*}
+E(D_j\vert D_j > 0) & = E(D_j 1_{ \left \lbrace D_j > 0\right\rbrace } )  / P\left ( D_j > 0\right ),   \\
+& = E(D_j 1_{ \left \lbrace D_j > 0\right\rbrace } )  / \left (1-\pi_j\right).   \\
+\end{align*}
+
+As $E(D_j 1_{ \left \lbrace D_j > 0\right\rbrace } ) = E(D_j ),$
+
+\begin{align*}
+E(D_j\vert D_j > 0) & = \left (1- \pi_j\right)^{-1} E(D_j)   ,   \nonumber \\
+& = \left (1- \pi_j\right)^{-1} \sum_{i\in \mathcal{P}_j} E(C_{ij} Z_{ij}),\nonumber \\
+& = \left (1- \pi_j\right)^{-1} \sum_{i\in \mathcal{P}_j} (1-p_{ij}) \frac{S(x_{ij})}{1-p_{ij}}, \nonumber \\
+& = \left (1- \pi_j\right)^{-1}\sum_{i\in \mathcal{P}_j} S(x_{ij}).
+\end{align*}
+
+
+### Variance of a positive declaration
+
+$$Var(D_j \vert D_j >0)  = E(D_j^2 \vert D_j >0)- E(D_j \vert D_j >0)^2.$$
+
+$$E(D_j^2 \vert D_j >0) = (1-\pi_j)^{-1} E(D_j^2 1_{\left \lbrace D_j >0\right\rbrace}) = (1-\pi_j)^{-1} E(D_j^2 )$$
+
+$$E(D_j \vert D_j >0)^2 = ((1-\pi_j)^{-1} E(D_j 1_{\left \lbrace D_j >0\right\rbrace}))^2 =  (1-\pi_j)^{-2} E(D_j)^2$$
+
+And then,
+
+$$Var(D_j \vert D_j >0) = (1-\pi_j)^{-1} E(D_j^2 ) - (1-\pi_j)^{-2} E(D_j)^2 = (1-\pi_j)^{-1} Var(D_j) - \frac{\pi_j}{(1-\pi_j)^2} E(D_j)^2.$$
+
+As the $(Y_{ij})_{i\in \mathcal{P}_j}$ are independent, $Var(D_j) =\sum_{i \in\mathcal{P}_j} Var(Y_{ij}) = \sum_{i \in\mathcal{P}_j} Var(C_{ij}.Z_{ij})$.
+
+\begin{align*}
+Var(C_{ij} Z_{ij}) & = E( C_{ij}^2 Z_{ij}^2 ) - E(C_{ij} Z_{ij})^2,\\
+& =  E( C_{ij}^2) E(Z_{ij}^2 ) -E(C_{ij})^2 E(Z_{ij})^2,\\
+& = (1-p_{ij}) E(Z_{ij}^2 ) - (1-p_{ij})^2 E(Z_{ij})^2,\\
+& = (1-p_{ij})(Var(Z_{ij})+E(Z_{ij})^2)-(1-p_{ij})^2E(Z_{ij})^2,\\
+& = \frac{S(x_{ij})^2}{1-p_{ij}}(e^{\sigma^2}-1)+\frac{S(x_{ij})^2}{1-p_{ij}}-S(x_{ij})^2,\\
+& = \frac{S(x_{ij})^2}{1-p_{ij}}(e^{\sigma^2}-(1-p_{ij}))
+\end{align*}
+
+
+### Conclusion
+
+$$P(D_j = 0 \vert S, X) = \exp{ \left \lbrace- \sum_{i\in \mathcal{P}_j} e^{\xi}. S(x_{ij})\right \rbrace} = \pi_j$$
+
+
+$$D_j \vert D_j > 0 \sim \mathcal{LN}(E(D_j \vert D_j > 0); ln(\frac{Var(D_j \vert D_j > 0)}{E(D_j \vert D_j > 0)^2} + 1))$$
+
+$$E(D_j \vert D_j > 0)=\frac{\sum_{i \in \mathcal{P}_j} S(x_{ij})}{1-\pi_j}$$
+
+
+$$Var(D_j \vert D_j > 0) = \frac{\sum_{i \in \mathcal{P}_j} Var(Y_{ij})}{1-\pi_j} - \frac{\pi_j}{(1-\pi_j)^2}E(D_j)^2$$
+
+$$Var(Y_{ij})=\frac{S(x_{ij})^2}{1-p_{ij}}(e^{\sigma^2}-(1-p_{ij}))$$
+
+### Simulations
+
+
+```{r,echo=F,fig.asp=1,fig.width=8,fig.height=2,fig.align='center'}
+
+obs_model <- "zerolognorm"
+q1 <- 2 # zero-inflation parameter (when increases, nb of zero increases)
+SD_obs <- 0.1  # observation error (standard deviation for lognormal distribution, CV for gamma)
+n_obs <- 10 # number of observations per fishing sequence (number of observations over which the catches are summed)
+n_sim <- 1000 # number of replicates for each 'mu' value
+source("r/3_simulations.R")
+
+```
+
+
