@@ -10,8 +10,9 @@ library(parallel)
 simu_name = "SimuRef"
 
 # Parallel configuration
-n_nodes <- 8
-n_sim <- 8
+n_nodes <- 1
+n_sim <- 100
+cluster_nb <- 1
 run_datarmor <- F
 cl <- makeCluster(n_nodes, outfile = "")
 for(cluster_nb in 1:n_nodes){
@@ -22,6 +23,7 @@ for(cluster_nb in 1:n_nodes){
 x_parallel1 <- clusterEvalQ(cl,{
   
   library(dplyr)
+  library(INLA)
   library(TMB)
   library(stringr)
   library(spatstat)
@@ -64,7 +66,7 @@ x_parallel1 <- clusterEvalQ(cl,{
   n_cells = grid_dim[1]*grid_dim[2]
   
   # Intercepts and covariates of the latent field
-  beta0 = 3 # intercept
+  beta0 = 2 # intercept
   beta = c(0,0,0,0,0) # covariates
   # parameters covariates vector : 1st param : continuous variable, 4 nexts : strata_1, strata_2, strata_3, strata_4
   # La premiere covariable est continue et a une structure spatiale
@@ -79,7 +81,7 @@ x_parallel1 <- clusterEvalQ(cl,{
   simu_tool <- "MaternCov" # 2 way to simulate latent fields : "RandomFields", "MaternCov"
   range = sqrt(prod(grid_dim))/(5)*2 # --> MaternCov
   nu = 1  #portée de la covariable continue
-  SD_x = 2 # ecart type/ variance marginale du processus de la var continue
+  SD_x = 0.5 # ecart type/ variance marginale du processus de la var continue
   # Initialement on avait SD_x = 0.5, la on passe a SD_x = 2 pour avoir plus de variabilité dans le champ latent
   
   #effets spatiaux aléatoires
@@ -114,9 +116,9 @@ x_parallel1 <- clusterEvalQ(cl,{
   # n_samp_com = 3000
   n_samp_com = 3000
   # observation error 
-  logSigma_com = log(0.1)
+  logSigma_com = log(1.000001)
   # zero-inflation parameter
-  q1_com <- -3
+  q1_com <- -1
   # Relative catchability
   q2_com <- 1
   # Levels of preferential sampling

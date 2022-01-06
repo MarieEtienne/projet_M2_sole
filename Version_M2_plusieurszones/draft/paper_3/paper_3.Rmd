@@ -66,7 +66,8 @@ output            : papaja::apa6_pdf
 ---
 
 ```{r setup, include = FALSE}
-library("papaja")
+library(ggplot2)
+library(papaja)
 ```
 
 ```{r analysis-preferences}
@@ -99,11 +100,11 @@ See `3_formulas.rmd`.
 
 ### Single-square simulations
 
+How many simulations? 100 or more?
+
 How do we simulate the covariate?
 
-
-How to justify the number of fishing sequence and the number of VMS pings?
-
+Still some lack of convergence.
 
 
 ### Multiple-squares simulations
@@ -117,6 +118,15 @@ How do we simulate the covariate?
 
 
 # Results
+
+## Single square analysis
+
+```{r}
+
+load("res/Results_single_square.RData")
+
+
+```
 
 
 

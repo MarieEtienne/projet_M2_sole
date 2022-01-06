@@ -2,8 +2,12 @@
 ## Plot from List_param
 #----------------------
 
-folder_name <- "C:/Users/balglave/Desktop/com_x_sci_data_14_scientific_commercial_simple-2021-09-19_15_07_00_SimuTest"
+folder_name <- "C:/R_projects/projet_M2_sole/Version_M2_plusieurszones/results/com_x_sci_data_14_scientific_commercial_simple-2022-01-04_18_55_00_SimuRef"
+folder_name <- "C:/R_projects/projet_M2_sole/Version_M2_plusieurszones/results/com_x_sci_data_14_scientific_commercial_simple-2022-01-05_15_15_00_SimuRef"
 
+#-------------
+## If parallel
+#-------------
 for(i in 1:10){
   load(paste0(folder_name,"/",i,"/Results",i,".RData"))
   if(i==1) Results_2 <- Results
@@ -46,9 +50,60 @@ for(i in 1:10){
   
 }
 
+#----------------
+## If no parallel
+#----------------
+load(paste0(folder_name,"/Results.RData"))
+Results_2 <- Results
+
+# Load List_param
+list_file_i <- list.files(paste0(folder_name,"/",i))
+list_file_i <- list_file_i[which(str_detect(list_file_i,"List_param"))]
+  
+Results$aggreg_obs <- NA
+Results$sequencesdepeche <- NA
+Results$zonespersequence <- NA
+Results$n_samp_com <- NA
+Results$rho_S <- NA
+Results$beta1_true <- NA
+Results$beta1_est <- NA
+Results$alpha <- NA
+Results$beta <- NA
+Results$gamma <- NA
+
+# Run over List_param
+for(counter in Results$counter){
+  print(paste0("counter: ",counter))
+  load(paste0(folder_name,"/List_param_",counter,".RData"))
+  Results$aggreg_obs[which(Results$counter == counter)] <- List_param$data.info$aggreg_obs
+  Results$sequencesdepeche[which(Results$counter == counter)] <- List_param$data.info$sequencesdepeche
+  Results$zonespersequence[which(Results$counter == counter)] <- List_param$data.info$zonespersequence
+  Results$n_samp_com[which(Results$counter == counter)] <- List_param$data.info$n_samp_com
+  Results$rho_S[which(Results$counter == counter)] <- cor(List_param$data.info$Strue_x,List_param$Report$S_x)
+  Results$beta1_true[which(Results$counter == counter)] <- List_param$data.info$beta[1]
+  Results$beta1_est[which(Results$counter == counter)] <- List_param$Report$beta_j[2]
+  
+  # SPAEF
+  S_sim <- List_param$data.info$Strue_x
+  S_est <- List_param$Report$S_x
+  alpha <- cor(S_sim,S_est)
+  beta <- (sd(S_sim)/mean(S_sim)) / (sd(S_est)/mean(S_est))
+  
+  max_S <- max(c(S_sim,S_est))
+  seq_S_levels <- seq(from = 0, to = max_S, length.out = 15)
+  hist_S_sim <- hist(S_sim,breaks = seq_S_levels,plot = F)
+  hist_S_est <- hist(S_est,breaks = seq_S_levels,plot = F)
+  gamma <- intersect.dist(hist_S_sim,hist_S_est)
+  
+  Results$alpha[which(Results$counter == counter)] <- alpha
+  Results$beta[which(Results$counter == counter)] <- beta
+  Results$gamma[which(Results$counter == counter)] <- gamma
+  
+}
+
 library(doBy)
 library(gt)
-Results_conv <- Results_2
+Results_conv <- Results
 Results_conv$one <- 1
 Results_conv <- Results_conv %>% 
   filter(b_true == 0)
@@ -63,6 +118,7 @@ summaryBy(Convergence+one~
           FUN=sum) %>%
   dplyr::select(n_samp_com,
                 sequencesdepeche,
+                # zonespersequence,
                 reallocation,
                 aggreg_obs,
                 Convergence.sum,
@@ -97,7 +153,7 @@ summaryBy(Convergence+one~
   )
 
 
-Results <- Results_2 %>%
+Results <- Results %>%
   filter(b_true == 0 & Convergence == 0)
 Results[,"RelBias_N"]=(Results[,"N_est"]-Results[,"N_true"])/Results[,"N_true"]
 Results[,"RelBias_beta"]=(Results[,"beta1_est"]-Results[,"beta1_true"])/Results[,"beta1_true"]
@@ -120,7 +176,8 @@ RelBias_N_plot <- ggplot()+
   facet_wrap(.~factor(n_samp_com))+
   theme(legend.title = element_blank(),
         legend.position = "none",
-        aspect.ratio = 1)
+        aspect.ratio = 1)+
+  ylim(-1,5)
 
 RelBias_beta_plot <- ggplot()+
   geom_boxplot(data = Results,
@@ -135,18 +192,19 @@ RelBias_beta_plot <- ggplot()+
         legend.position = "none",
         aspect.ratio = 1)
 
-Bias_b_plot <- ggplot()+
+Bias_SPAEF_plot <- ggplot()+
   geom_boxplot(data = Results,
                aes(x = zonespersequence,
-                   y = Bias_b,
+                   y = 1 - sqrt( (alpha-1)^2 + (beta-1)^2 + (gamma-1)^2 ),
                    fill = relloc_aggreg))+
   geom_hline(yintercept = 0,linetype="dashed")+
   theme_bw()+
-  ylab("Bias of b")+
+  ylab("SPAEF")+
   facet_wrap(.~factor(n_samp_com))+
   theme(legend.title = element_blank(),
         legend.position = "none",
-        aspect.ratio = 1)
+        aspect.ratio = 1)+
+  ylim(0,1)
 
 MSPE_S_plot <- ggplot()+
   geom_boxplot(data = Results,

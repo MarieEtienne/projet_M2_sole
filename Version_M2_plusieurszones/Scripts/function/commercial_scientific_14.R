@@ -161,32 +161,47 @@ simu_commercial_scientific <- function(Results,
   # beta (fixed parameters for the abundance distribution equation), 
   # delta_x (random effect for the abundance distribution equation), 
   # eta_x (random effect for the sampling process equation)
-  validation = 0
-  wronglatentfield = 1
+
+  simu_latent_field_outputs <- simu_latent_field(loc_x,
+                                                 latent_fields_simu,
+                                                 latent_field,
+                                                 scientific_data,
+                                                 beta0,
+                                                 beta,
+                                                 simu_tool,
+                                                 range,
+                                                 nu,
+                                                 SD_x,
+                                                 SD_delta,
+                                                 SD_eta)
+  Strue_x <- simu_latent_field_outputs$Strue_x
   
-  while (validation == 0)
-  {
-    simu_latent_field_outputs <- simu_latent_field(loc_x,
-                                                   latent_fields_simu,
-                                                   latent_field,
-                                                   scientific_data,
-                                                   beta0,
-                                                   beta,
-                                                   simu_tool,
-                                                   range,
-                                                   nu,
-                                                   SD_x,
-                                                   SD_delta,
-                                                   SD_eta)
-    Strue_x <- simu_latent_field_outputs$Strue_x
-    # Contient 625 lignes et une colonne correspondant aux valeurs du champ latent en chacun des points
-    if (max(Strue_x) < 400 & sd(Strue_x) > 10){
-      validation = 1
-    }else{
-      wronglatentfield = wronglatentfield + 1
-      set.seed( RandomSeed - wronglatentfield )
-    }
-  }
+  # validation = 0
+  # wronglatentfield = 1
+  # 
+  # while (validation == 0)
+  # {
+  #   simu_latent_field_outputs <- simu_latent_field(loc_x,
+  #                                                  latent_fields_simu,
+  #                                                  latent_field,
+  #                                                  scientific_data,
+  #                                                  beta0,
+  #                                                  beta,
+  #                                                  simu_tool,
+  #                                                  range,
+  #                                                  nu,
+  #                                                  SD_x,
+  #                                                  SD_delta,
+  #                                                  SD_eta)
+  #   Strue_x <- simu_latent_field_outputs$Strue_x
+  #   # Contient 625 lignes et une colonne correspondant aux valeurs du champ latent en chacun des points
+  #   if (max(Strue_x) < 400 & sd(Strue_x) > 10){
+  #     validation = 1
+  #   }else{
+  #     wronglatentfield = wronglatentfield + 1
+  #     set.seed( RandomSeed - wronglatentfield )
+  #   }
+  # }
   
 
   
@@ -338,6 +353,8 @@ simu_commercial_scientific <- function(Results,
     ############
     ## Fit Model
     ############
+    mesh <- inla.mesh.create( loc_x[,c('x','y')] )
+    spde <- (inla.spde2.matern(mesh, alpha=2)$param.inla)[c("M0","M1","M2")]  # define sparse matrices for parametrisation of precision matrix
     fit_IM_res <- fit_IM(Estimation_model_i,
                          Samp_process,
                          EM,
@@ -350,7 +367,22 @@ simu_commercial_scientific <- function(Results,
                          index_sci_i,
                          aggreg_obs,
                          boats_number,
-                         as.matrix(Cov_x[,1]))
+                         Cov_x =  as.matrix(Cov_x[,1]),
+                         ref_level = NULL,
+                         lf_param = "cov", # lf_param,
+                         spde=spde,
+                         mesh=mesh,
+                         n_cells=n_cells,
+                         cov_est = T,
+                         Params_step.est=NULL,
+                         Map_step.est=NULL,
+                         ObsM=F,
+                         y_ObsM_i=NULL,
+                         index_ObsM_i=NULL,
+                         sampling = sampling,
+                         landings = T,
+                         quadratic_cov = F)
+    
     
     SD <- fit_IM_res$SD
     Report <- fit_IM_res$Report
@@ -426,8 +458,8 @@ simu_commercial_scientific <- function(Results,
     # Les valeurs du champ latent pour chaque simulation sont disponibles dans 
     # List_param (et non dans Results)
     List_param <- list(data.info = list_simu.data.info,
-                       # Opt_par = Opt,
-                       # SD = SD,
+                       Opt_par = Opt,
+                       SD = SD,
                        Report = Report)
     
     
@@ -476,9 +508,9 @@ simu_commercial_scientific <- function(Results,
       
     }else if(Estimation_model == "commercial_only"){
       Results[counter,"b_true"]= b
-      Results[counter,"Sigma_com"]=Report$Sigma_com
-      Results[counter,"Bias_Sigma_com"]=Report$Sigma_com - exp(logSigma_com)
-      Results[counter,"Sigma_com_true"]=exp(logSigma_com)
+      # Results[counter,"Sigma_com"]=Report$Sigma_com
+      # Results[counter,"Bias_Sigma_com"]=Report$Sigma_com - exp(logSigma_com)
+      # Results[counter,"Sigma_com_true"]=exp(logSigma_com)
       Results[counter,"n_samp_com"]=n_samp_com
       
     }

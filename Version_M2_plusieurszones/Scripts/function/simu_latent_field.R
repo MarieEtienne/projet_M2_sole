@@ -44,9 +44,8 @@ simu_latent_field <- function(loc_x,
   
   # 1st param : continuous variable, 4 nexts : strata_1, strata_2, strata_3, strata_4
   # beta[1] = runif(1,-.5,.5)
-  beta[1] = 0.5
-  # On passe beta[1] à 0.5 pour avoir un champ latent plus "cohérent"
-  
+  beta[1] = 2
+
   # Simulate using Matérn covariance
   Cov_x = sim_GF_Matern(loc_x, nu, range, SD_x^2)[[1]]$y
 
