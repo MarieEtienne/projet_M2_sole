@@ -37,7 +37,7 @@
 \IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
 \IfFileExists{bookmark.sty}{\usepackage{bookmark}}{\usepackage{hyperref}}
 \hypersetup{
-  pdftitle={The title},
+  pdftitle={Can we use reallocated logbooks data to map species distribution habitats?},
   pdfauthor={First Author1 \& Ernst-August Doelle1,2},
   pdfkeywords={keywords},
   hidelinks,
@@ -110,7 +110,7 @@
   {\section*{\protect\normalfont{\@title}}}
   {}{\typeout{Failed to patch title.}}
 \makeatother
-\shorttitle{Title}
+\shorttitle{SHORTTITLE}
 \keywords{keywords\newline\indent Word count: X}
 \DeclareDelayedFloatFlavor{ThreePartTable}{table}
 \DeclareDelayedFloatFlavor{lltable}{table}
@@ -131,7 +131,7 @@
   \usepackage[shorthands=off,main=english]{babel}
 \fi
 
-\title{The title}
+\title{Can we use reallocated logbooks data to map species distribution habitats?}
 \author{First Author\textsuperscript{1} \& Ernst-August Doelle\textsuperscript{1,2}}
 \date{}
 
@@ -198,9 +198,20 @@ See \texttt{3\_formulas.rmd}.
 \hypertarget{single-square-simulations}{%
 \subsubsection{Single-square simulations}\label{single-square-simulations}}
 
+How many simulations? 100 or more?
+
 How do we simulate the covariate?
 
-How to justify the number of fishing sequence and the number of VMS pings?
+Still some lack of convergence.
+
+Number of pings \textbar{} nu:
+1\textbar10
+10\textbar100
+100\textbar1000
+
+Size within a fishing sequence: radius = 3
+
+Number of fishing zones: 1\textbar3\textbar5
 
 \hypertarget{multiple-squares-simulations}{%
 \subsubsection{Multiple-squares simulations}\label{multiple-squares-simulations}}
@@ -212,6 +223,31 @@ How do we simulate the covariate?
 
 \hypertarget{results}{%
 \section{Results}\label{results}}
+
+\hypertarget{single-square-analysis}{%
+\subsection{Single square analysis}\label{single-square-analysis}}
+
+\begin{table}
+
+\caption{\label{tab:unnamed-chunk-1}Percentage of convergence for each simulation/model configuration}
+\centering
+\begin{tabular}[t]{ccccc}
+\toprule
+Nb samples & Fishing sequence & Reallocation & Likelihood level & Convergence (\%)\\
+\midrule
+10 & 1 & No & Yi & 99.668\\
+10 & 1 & Yes & Yi & 0.333\\
+10 & 1 & Yes & Dj & 0.000\\
+100 & 10 & No & Yi & 100.000\\
+100 & 10 & Yes & Yi & 100.000\\
+\addlinespace
+100 & 10 & Yes & Dj & 92.000\\
+1000 & 100 & No & Yi & 100.000\\
+1000 & 100 & Yes & Yi & 100.000\\
+1000 & 100 & Yes & Dj & 97.333\\
+\bottomrule
+\end{tabular}
+\end{table}
 
 \hypertarget{discussion}{%
 \section{Discussion}\label{discussion}}

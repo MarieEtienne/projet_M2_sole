@@ -167,7 +167,7 @@ x_parallel1 <- clusterEvalQ(cl,{
   # Reallocation = 0 si pas de reallocation et structuration, = 1 si reallocation et structuration
   
   # Nombre de bateaux ?
-  n_samp_com_vect = c(50, 100, 1000)
+  n_samp_com_vect = c(10, 100, 1000)
   sequencesdepeche_vect = c(1, 10, 100)
   zonespersequence_vect = c(1, 3, 5)
   NPZ <- expand.grid(sequencesdepeche = sequencesdepeche_vect,

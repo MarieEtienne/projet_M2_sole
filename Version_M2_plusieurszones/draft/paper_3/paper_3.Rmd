@@ -66,7 +66,12 @@ output            : papaja::apa6_pdf
 ---
 
 ```{r setup, include = FALSE}
+library(cowplot)
+library(doBy)
+library(dplyr)
 library(ggplot2)
+library(ggpubr)
+library(kableExtra)
 library(papaja)
 ```
 
@@ -106,6 +111,15 @@ How do we simulate the covariate?
 
 Still some lack of convergence.
 
+Number of pings | nu:
+1|10
+10|100
+100|1000
+
+Size within a fishing sequence: radius = 3
+
+Number of fishing zones: 1|3|5
+
 
 ### Multiple-squares simulations
 
@@ -123,13 +137,124 @@ How do we simulate the covariate?
 
 ```{r}
 
-load("res/Results_single_square.RData")
+load("res/Results_full_single_square.RData")
 
+## Table of convergence
+Results_conv <- Results
+Results_conv$one <- 1
+Results_conv_2 <- summaryBy(Convergence+one~
+                              sequencesdepeche+
+                              # zonespersequence+
+                              aggreg_obs+
+                              # b_true+
+                              n_samp_com+
+                              reallocation,
+                            data=Results_conv,
+                            FUN=sum) %>%
+  dplyr::select(n_samp_com,
+                sequencesdepeche,
+                # zonespersequence,
+                reallocation,
+                aggreg_obs,
+                Convergence.sum,
+                one.sum) %>%
+    mutate(aggreg_obs = ifelse(aggreg_obs == T,"Dj","Yi"),
+           reallocation = ifelse(reallocation == 1,"Yes","No"),
+           perc_convergence = round((1 - Convergence.sum / one.sum)*100,digits = 3))
+
+Results_conv_2$n_samp_com <- as.integer(Results_conv_2$n_samp_com)
+Results_conv_2$sequencesdepeche <- as.integer(Results_conv_2$sequencesdepeche)
+
+Results_conv_2 <- Results_conv_2 %>%
+  dplyr::rename(`Nb samples` = n_samp_com,
+                `Fishing sequence` = sequencesdepeche,
+                `Reallocation` = reallocation,
+                `Likelihood level` = aggreg_obs,
+                `Convergence (%)` = perc_convergence) %>%
+  dplyr::select(-Convergence.sum,-one.sum)
+
+knitr::kable(Results_conv_2,booktabs = T,align = "c",
+                  caption = "Percentage of convergence per simulation/model configuration")
 
 ```
 
 
 
+```{r}
+
+## Plot Performance metric
+Results <- Results %>%
+  filter(b_true == 0 & Convergence == 0)
+Results[,"RelBias_N"]=(Results[,"N_est"]-Results[,"N_true"])/Results[,"N_true"]
+Results[,"RelBias_beta"]=(Results[,"beta1_est"]-Results[,"beta1_true"])/Results[,"beta1_true"]
+Results[,"Bias_b"]=(Results[,"b_est"]-Results[,"b_true"]) / ifelse(Results[,"b_true"] != 0,Results[,"b_true"],1)
+
+Results <- Results %>%
+  mutate(relloc_aggreg = paste0("Reallocation: ",ifelse(reallocation==0,"No","Yes")," -  Likelihood: ",ifelse(aggreg_obs==T,"Dj","Yi")))
+
+Results$zonespersequence <- as.factor(Results$zonespersequence)
+Results$b_true <- as.factor(Results$b_true)
+Results$relloc_aggreg <- factor(Results$relloc_aggreg,
+                                levels = c("Reallocation: No -  Likelihood: Yi",
+                                           "Reallocation: Yes -  Likelihood: Yi",
+                                           "Reallocation: Yes -  Likelihood: Dj"))
+
+Results_2 <- Results %>%
+  filter(n_samp_com > 10)
+
+RelBias_N_plot <- ggplot()+
+  geom_boxplot(data = Results_2,
+               aes(x = zonespersequence,
+                   y = RelBias_N,
+                   fill = relloc_aggreg))+
+  geom_hline(yintercept = 0,linetype="dashed")+
+  theme_bw()+
+  ylab("Relative bias of biomass")+
+  facet_wrap(.~factor(n_samp_com))+
+  theme(legend.title = element_blank(),
+        aspect.ratio = 1,
+        legend.position = 'none')+
+  ylim(-1,2)+
+  ylab("")+xlab("")
+
+RelBias_beta_plot <- ggplot()+
+  geom_boxplot(data = Results_2,
+               aes(x = zonespersequence,
+                   y = RelBias_beta,
+                   fill = relloc_aggreg))+
+  geom_hline(yintercept = 0,linetype="dashed")+
+  theme_bw()+
+  ylab("Relative bias of beta1")+
+  facet_wrap(.~factor(n_samp_com))+
+  theme(legend.title = element_blank(),
+        legend.position = "none",
+        aspect.ratio = 1)+
+  ylab("")+xlab("")
+
+MSPE_S_plot <- ggplot()+
+  geom_boxplot(data = Results_2,
+               aes(x = zonespersequence,
+                   y = log(MSPE_S),
+                   fill = relloc_aggreg))+
+  theme_bw()+
+  # ylab("MSPE")+
+  facet_wrap(.~factor(n_samp_com))+
+  theme(legend.title = element_blank(),
+        legend.position = "none",
+        aspect.ratio = 1)+
+  ylab("")+xlab("")
+
+legend <- as_ggplot(cowplot::get_legend(MSPE_S_plot+theme(legend.position="right",legend.title = element_blank())))
+
+Perf.metric <- plot_grid(RelBias_N_plot,
+                      RelBias_beta_plot,
+                      MSPE_S_plot,
+                      legend,
+                      ncol = 1,rel_heights = c(1,1,1,0.25))
+
+ggsave("images/Perf.metric_single_square.png",width = 7.5/1.5, height = 15/1.5)
+
+```
 
 
 # Discussion
