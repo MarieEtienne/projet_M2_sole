@@ -1,0 +1,23 @@
+\begin{table*}[hbt]
+\ifnextchar[{\eatarg}{}
+
+
+\caption{\label{tab:unnamed-chunk-1}Percentage of convergence for each simulation/model configuration}
+\centering
+\begin{tabular}[t]{ccccc}
+\toprule
+Nb samples & Fishing sequence & Reallocation & Likelihood level & Convergence (\%)\\
+\midrule
+10 & 1 & No & Yi & 99.668\\
+10 & 1 & Yes & Yi & 0.333\\
+10 & 1 & Yes & Dj & 0.000\\
+100 & 10 & No & Yi & 100.000\\
+100 & 10 & Yes & Yi & 100.000\\
+\addlinespace
+100 & 10 & Yes & Dj & 92.000\\
+1000 & 100 & No & Yi & 100.000\\
+1000 & 100 & Yes & Yi & 100.000\\
+1000 & 100 & Yes & Dj & 97.333\\
+\bottomrule
+\end{tabular}
+\end{table*}
