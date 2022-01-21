@@ -97,6 +97,10 @@ knitr::opts_chunk$set(cache.extra = knitr::rand_seed)
 
 ## Model
 
+Commercial data have been proven to bring valuable information to estimate harvested fish spatial distribution [@pennino_fishery-dependent_2016].
+Unlike scientific survey data and with the exceptions of fishing vessels with on on board observers, commercial catch are rarely precisely geolocated. Mostly, catch data are reported at some statistical or management unit, i.e all each vessel reports for each day and each statistical unit the total catch in the logbook.
+
+Many works [@alglave2021integrated] combine VMS data and logbook declaration to associate catch to spatial locations. In a nutshell, a classification rule (for example based on speed limits) is used to identify fishing VMS ping and, for each vessel, each day, an average catch per ping is defined as the  declared  catch divided by the total number of fishing pings. Each fishing pings is then associated to this average catch. This process is referred to as catch reallocation in the following.
 
 See `3_formulas.rmd`.
 
