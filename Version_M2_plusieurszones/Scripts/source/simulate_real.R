@@ -9,11 +9,18 @@ area_df <- loc_x %>%
   mutate(ICESNAME = factor(ICESNAME)) %>%
   arrange(ICESNAME)
 
+## Sampling is null in 1/3 of the statistical rectangles
+if(unsampled_rect) area_df$perc_area[sample(x = 1:nrow(area_df),size = 1/3 * nrow(area_df),replace = F)] <- 0
+
+# area_df <- points_df %>%
+#   group_by(ICESNAME) %>%
+#   dplyr::summarise(area=n()) %>%
+#   mutate(perc_area = area/(sum(area))) %>%
+#   mutate(ICESNAME = factor(ICESNAME)) %>%
+#   arrange(ICESNAME)
+
 ## Sequential sampling (not that there is no preferential sampling)
 # First select a statistical rectangle
-sample_full_rect <- F
-zonesize <- 0.2
-n_zone <- 1 # c(1,3,5)
 samp_df <- do.call(rbind,lapply(1:n_seq_com, function(j){
   
   ## Select a statistical rectangle
@@ -73,9 +80,13 @@ c_com_x <- samp_df %>%
   c() %>% unlist() %>%
   as.matrix()
 
+# test <- cbind(loc_x,c_com_x)
+# 
+# ggplot(test)+
+#   geom_point(aes(x=long,y=lati,col=c_com_x))+scale_color_distiller(palette = "Spectral")
+
+
 ## Simulate catch observations (zero-inflated lognormal distribution)
-q1 <- -1
-SD_obs <- exp(0.3)
 y_i <- do.call(c,lapply(1:length(index_i), function(j){
   exp_catch <- S_x[index_i[j]]
   prob_encount <- 1-exp(- exp(q1) * exp_catch)
@@ -88,7 +99,6 @@ y_i <- do.call(c,lapply(1:length(index_i), function(j){
 }))
 
 ## Reallocation
-k_sim <- 1
 if(k_sim==1){ ## Reallocate data
   mean_y_i <- aggregate(x = y_i, 
                         by = list(unique.values = boats_i),
@@ -119,7 +129,6 @@ if(k_sim==1){ ## Reallocate data
 
 index_sci_i <- c()
 n_cells <- nrow(loc_x)
-n_samp_sci <- 75
 nb_hauls_strata <- loc_x %>% 
   mutate(value=1) %>%
   group_by(strata) %>%
@@ -140,15 +149,13 @@ index_sci_i <- do.call(c,lapply(1:nrow(nb_hauls_strata),function(j){
 #   theme_bw()
 
 # scientific catch data (zero-inflated lognormal)
-q1_sci <- 0
-logSigma_sci <- -0.2
 y_sci_i <- do.call(c,lapply(1:length(index_sci_i), function(j){
   exp_catch <- S_x[index_sci_i[j]]
   prob_encount <- 1-exp(- exp(q1_sci) * exp_catch)
   
   abs_sci_i <- rbinom(1,1,prob_encount)
   if(abs_sci_i>0){
-    y_sci_i <-  exp(rnorm(1,mean = log(exp_catch)-exp(logSigma_sci)^2/2, sd = exp(logSigma_sci)))
+    y_sci_i <-  exp(rnorm(1,mean = log(exp_catch)-Sigma_sci^2/2, sd = Sigma_sci))
   }else{
     y_sci_i <- 0 
   }

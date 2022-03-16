@@ -149,7 +149,7 @@ Type objective_function<Type>::operator() (){
   Q_delta = Q_spde(spde, exp(logkappa(0)));
   vector<Type> delta_x( n_nodes );delta_x.setZero();
   delta_x = deltainput_x / exp(logtau(0)); // Transform random effects
-  if(Options_vec(13)==1) jnll_comp(0) = GMRF(Q_delta)(deltainput_x);
+  if(Options_vec(13)==1) jnll_comp(3) = GMRF(Q_delta)(deltainput_x);
   
 
   ////////////////
@@ -330,7 +330,7 @@ Type objective_function<Type>::operator() (){
           encounterprob_E_ObsM(i) = ( 1.0 - exp(-1 * E_ObsM(i) * exp(q1_com(0))) );
           log_notencounterprob_ObsM(i) = -1 * E_ObsM(i) * exp(q1_com(0));
           
-          jnll_comp(0) -= dzinflognorm(y_ObsM_i(i), log(E_ObsM(i))-log(encounterprob_E_ObsM(i)), encounterprob_E_ObsM(i), log_notencounterprob_ObsM(i), Sigma_com(0), true);
+          jnll_comp(4) -= dzinflognorm(y_ObsM_i(i), log(E_ObsM(i))-log(encounterprob_E_ObsM(i)), encounterprob_E_ObsM(i), log_notencounterprob_ObsM(i), Sigma_com(0), true);
           // jnll_comp(0) -= dzinfgamma(y_com_i(i), E_com(i)/encounterprob_com(i), encounterprob_com(i), log_notencounterprob_com(i), Sigma_com(0), true);
           
         }
@@ -423,7 +423,7 @@ Type objective_function<Type>::operator() (){
         encounterprob_sci(i) = ( 1.0 - exp(-1 * E_sci(i) * exp(q1_sci(0)) ));
         log_notencounterprob_sci(i) = -1 * E_sci(i) * exp(q1_sci(0));
 
-        jnll_comp(0) -= dzinflognorm(y_sci_i(i), log(E_sci(i))-log(encounterprob_sci(i)), encounterprob_sci(i), log_notencounterprob_sci(i), Sigma_sci, true);
+        jnll_comp(2) -= dzinflognorm(y_sci_i(i), log(E_sci(i))-log(encounterprob_sci(i)), encounterprob_sci(i), log_notencounterprob_sci(i), Sigma_sci, true);
         // if(y_sci_i(i) > 0) jnll_comp(0) -= dlognorm(y_sci_i(i), log(E_sci(i)) - square(Sigma_sci)/2, Sigma_sci, true);
         // jnll_comp(0) -= dzinfgamma(y_sci_i(i), E_sci(i)/encounterprob_sci(i), encounterprob_sci(i), log_notencounterprob_sci(i), Sigma_sci, true);
           

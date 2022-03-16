@@ -19,6 +19,7 @@
 #   xlab("")+ylab("")
 
 load("results/case_study/no.realloc_int_df.RData")
+# save(data=fit_IM_res,file="results/case_study/no.realloc_int_df.RData")
 
 no.realloc_df <- data.frame(loc_x,S_x=fit_IM_res$Report$S_x)
 no.realloc_plot <- ggplot(no.realloc_df)+
@@ -32,21 +33,22 @@ no.realloc_plot <- ggplot(no.realloc_df)+
   coord_sf(xlim = c(-6,0), ylim = c(43,48+0.25), expand = FALSE)+
   xlab("")+ylab("")
 
-load("results/case_study/realloc_int_df.RData")
-
-realloc_df <- data.frame(loc_x,S_x=fit_IM_res$Report$S_x)
-realloc_plot <- ggplot(realloc_df)+
-  geom_point(aes(x=x,y=y,col=S_x),shape=15,size=2)+
-  scale_color_distiller(palette = "Spectral",limits=c(0,NA))+
-  ggtitle("Integrated model",subtitle = "Commercial likelihood on Dj")+
-  theme_bw()+
-  theme(plot.title = element_text(hjust = 0.5),
-        plot.subtitle = element_text(hjust = 0.5))+
-  geom_sf(data = mapBase)+
-  coord_sf(xlim = c(-6,0), ylim = c(43,48+0.25), expand = FALSE)+
-  xlab("")+ylab("")
+# load("results/case_study/realloc_int_df.RData")
+# 
+# realloc_df <- data.frame(loc_x,S_x=fit_IM_res$Report$S_x)
+# realloc_plot <- ggplot(realloc_df)+
+#   geom_point(aes(x=x,y=y,col=S_x),shape=15,size=2)+
+#   scale_color_distiller(palette = "Spectral",limits=c(0,NA))+
+#   ggtitle("Integrated model",subtitle = "Commercial likelihood on Dj")+
+#   theme_bw()+
+#   theme(plot.title = element_text(hjust = 0.5),
+#         plot.subtitle = element_text(hjust = 0.5))+
+#   geom_sf(data = mapBase)+
+#   coord_sf(xlim = c(-6,0), ylim = c(43,48+0.25), expand = FALSE)+
+#   xlab("")+ylab("")
 
 load("results/case_study/realloc_int_df_rest.RData")
+# save(data=fit_IM_res,file="results/case_study/realloc_int_df_rest.RData")
 
 realloc_rest_df <- data.frame(loc_x,S_x=fit_IM_res$Report$S_x)
 realloc_rest_plot <- ggplot(realloc_rest_df)+
@@ -62,6 +64,7 @@ realloc_rest_plot <- ggplot(realloc_rest_df)+
 
 
 load("results/case_study/sci_df.RData")
+# save(data=fit_IM_res,file="results/case_study/sci_df.RData")
 
 sci_df <- data.frame(loc_x,S_x=fit_IM_res$Report$S_x)
 sci_plot <- ggplot(sci_df)+
@@ -75,15 +78,15 @@ sci_plot <- ggplot(sci_df)+
   coord_sf(xlim = c(-6,0), ylim = c(43,48+0.25), expand = FALSE)+
   xlab("")+ylab("")
 
-case_study_plot <- plot_grid(sci_plot,no.realloc_plot,realloc_plot,realloc_rest_plot,ncol=2,align="hv")
+case_study_plot <- plot_grid(sci_plot,no.realloc_plot,realloc_rest_plot,ncol=3,align="hv")
 
-ggsave(file="images/case_study/case_study_maps.png",width = 10, height = 10)
+ggsave(file="images/case_study/case_study_maps.png",width = 9, height = 3)
 
 
 ############
 ## Estimates
 ############
-file_vec <- c("no.realloc_int_df","sci_df","realloc_int_df","realloc_int_df_rest")
+file_vec <- c("no.realloc_int_df","sci_df","realloc_int_df_rest") # ,"realloc_int_df"
 for(file_i in file_vec){
   
   print(file_i)
@@ -135,9 +138,8 @@ ref_capt <- "k_com"
 est_par_df_full_2$Model <- factor(est_par_df_full_2$Model,levels = c("Scientific","Integrated","Integrated_rest"))
 est_par_df_full_2$par_names <- factor(est_par_df_full_2$par_names,levels = rev(c("intercept",colnames(fit_IM_res$Data$Cov_xj),"MargSD","Range","q1_sci","Sigma_sci","q1_com","Sigma_com",ref_capt)))
 
-est_par_df_full_2$lkl[which(est_par_df_full_2$lkl == "Yi")] <- "Integrated model - Commercial likelihood on Yi"
-est_par_df_full_2$lkl[which(est_par_df_full_2$lkl == "Dj")] <- "Integrated model - Commercial likelihood on Dj"
-est_par_df_full_2$lkl[which(est_par_df_full_2$lkl == "Dj - r.est")] <- "Integrated model - Commercial likelihood on Dj - step estimation"
+est_par_df_full_2$lkl[which(est_par_df_full_2$lkl == "Yi")] <- "Yi"
+est_par_df_full_2$lkl[which(est_par_df_full_2$lkl == "Dj - r.est")] <- "Dj"
 est_par_df_full_2$lkl[which(est_par_df_full_2$lkl == "Scientific")] <- "Scientific model"
 
 est_par_df_full_3 <- est_par_df_full_2 # %>%
@@ -149,6 +151,8 @@ est_par_df_full_3 <- est_par_df_full_2 # %>%
   #                         "Sigma_com",
   #                         "q1_com"))
 
+
+est_par_df_full_3$lkl <- factor(est_par_df_full_3$lkl,levels = c("Dj","Yi","Scientific model"))
 par_plot <- ggplot(est_par_df_full_3, aes(y=par_val, x=par_names))+
   geom_point(
     aes(color = lkl),
@@ -159,10 +163,9 @@ par_plot <- ggplot(est_par_df_full_3, aes(y=par_val, x=par_names))+
                 position = position_dodge(0.5),width=0.4
   )+
   scale_color_manual(breaks = c("Scientific model",
-                                "Integrated model - Commercial likelihood on Yi",
-                                "Integrated model - Commercial likelihood on Dj",
-                                "Integrated model - Commercial likelihood on Dj - step estimation"),
-                     values=c("black","chartreuse3","cadetblue3","red"))+
+                                "Yi",
+                                "Dj"),
+                     values=c("black","chartreuse3","red"))+
   geom_hline(yintercept=0, linetype="dashed", color = "red",alpha=0.4)+
   xlab("")+ylab("")+
   theme_bw()+

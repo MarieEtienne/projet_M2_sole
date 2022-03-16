@@ -5,6 +5,8 @@
 folder_name <- "C:/R_projects/projet_M2_sole/Version_M2_plusieurszones/results/com_x_sci_data_14_scientific_commercial_simple-2022-01-04_18_55_00_SimuRef"
 folder_name <- "C:/R_projects/projet_M2_sole/Version_M2_plusieurszones/results/com_x_sci_data_14_scientific_commercial_simple-2022-01-05_15_15_00_SimuRef"
 
+library(HistogramTools)
+
 #-------------
 ## If parallel
 #-------------
@@ -57,7 +59,7 @@ load(paste0(folder_name,"/Results.RData"))
 Results_2 <- Results
 
 # Load List_param
-list_file_i <- list.files(paste0(folder_name,"/",i))
+list_file_i <- list.files(paste0(folder_name,"/"))
 list_file_i <- list_file_i[which(str_detect(list_file_i,"List_param"))]
   
 Results$aggreg_obs <- NA
@@ -70,18 +72,48 @@ Results$beta1_est <- NA
 Results$alpha <- NA
 Results$beta <- NA
 Results$gamma <- NA
+Results$mspe <- NA
+Results$mspe <- NA
+Results$sigma_com_true <- NA
+Results$sigma_com_est <- NA
+Results$q1_com_est <- NA
+Results$q1_com_true <- NA
+Results$intercept_est <- NA
+Results$intercept_true <- NA
 
 # Run over List_param
 for(counter in Results$counter){
+  
   print(paste0("counter: ",counter))
   load(paste0(folder_name,"/List_param_",counter,".RData"))
+  
+  ## Config simu
+  Results$aggreg_obs[which(Results$counter == counter)] <- List_param$data.info$aggreg_obs
   Results$aggreg_obs[which(Results$counter == counter)] <- List_param$data.info$aggreg_obs
   Results$sequencesdepeche[which(Results$counter == counter)] <- List_param$data.info$sequencesdepeche
   Results$zonespersequence[which(Results$counter == counter)] <- List_param$data.info$zonespersequence
   Results$n_samp_com[which(Results$counter == counter)] <- List_param$data.info$n_samp_com
+  
+  ## Coefficient de correlation
   Results$rho_S[which(Results$counter == counter)] <- cor(List_param$data.info$Strue_x,List_param$Report$S_x)
+
+  ## MSPE
+  Results$mspe[which(Results$counter == counter)] <- sum((log(List_param$data.info$Strue_x) - log(List_param$Report$S_x))^2) / n_cells
+  
+  ## Observation parameter
+  Results$sigma_com_true[which(Results$counter == counter)] <- exp(List_param$data.info$logSigma_com)
+  if(List_param$Opt_par$convergence == 0) Results$sigma_com_est[which(Results$counter == counter)] <- exp(List_param$SD$par.fixed["logSigma_com"])
+  Results$q1_com_true[which(Results$counter == counter)] <- List_param$data.info$q1_com
+  if(List_param$Opt_par$convergence == 0) Results$q1_com_est[which(Results$counter == counter)] <- List_param$SD$par.fixed["q1_com"]
+  
+  ## Species-habitat relationship
   Results$beta1_true[which(Results$counter == counter)] <- List_param$data.info$beta[1]
   Results$beta1_est[which(Results$counter == counter)] <- List_param$Report$beta_j[2]
+  
+  ## Intercept
+  Results$intercept_true[which(Results$counter == counter)] <- List_param$data.info$beta0
+  Results$intercept_est[which(Results$counter == counter)] <- List_param$Report$beta_j[1]
+  
   
   # SPAEF
   S_sim <- List_param$data.info$Strue_x
@@ -100,6 +132,9 @@ for(counter in Results$counter){
   Results$gamma[which(Results$counter == counter)] <- gamma
   
 }
+
+
+#-----------------------------------------------------------------------------------------------------------
 
 library(doBy)
 library(gt)
@@ -158,12 +193,53 @@ Results <- Results %>%
 Results[,"RelBias_N"]=(Results[,"N_est"]-Results[,"N_true"])/Results[,"N_true"]
 Results[,"RelBias_beta"]=(Results[,"beta1_est"]-Results[,"beta1_true"])/Results[,"beta1_true"]
 Results[,"Bias_b"]=(Results[,"b_est"]-Results[,"b_true"]) / ifelse(Results[,"b_true"] != 0,Results[,"b_true"],1)
+Results[,"Bias_sigma_com"]=(Results[,"sigma_com_est"]-Results[,"sigma_com_true"]) / Results[,"sigma_com_true"]
+Results[,"Bias_q1_com"]=(Results[,"q1_com_est"]-Results[,"q1_com_true"]) / Results[,"q1_com_true"]
+Results[,"Bias_intercept"]=(Results[,"intercept_est"]-Results[,"intercept_true"]) / Results[,"intercept_true"]
 
 Results <- Results %>%
   mutate(relloc_aggreg = paste0("realloc.sim:",reallocation,"_realloc.est:",ifelse(aggreg_obs==T,1,0)))
 
 Results$zonespersequence <- as.factor(Results$zonespersequence)
 Results$b_true <- as.factor(Results$b_true)
+
+#----------------------------------------------------------------------
+df <- Results %>%
+  filter(n_samp_com == 1000)
+ggplot()+
+  geom_boxplot(data = df,
+               aes(x = relloc_aggreg,
+                   y = Bias_q1_com,
+                   fill = relloc_aggreg))+
+  geom_hline(yintercept = 0,linetype="dashed")+
+  theme_bw()+
+  theme(legend.title = element_blank(),
+        legend.position = "none",
+        aspect.ratio = 1)
+
+ggplot()+
+  geom_boxplot(data = df,
+               aes(x = relloc_aggreg,
+                   y = Bias_sigma_com,
+                   fill = relloc_aggreg))+
+  geom_hline(yintercept = 0,linetype="dashed")+
+  theme_bw()+
+  theme(legend.title = element_blank(),
+        legend.position = "none",
+        aspect.ratio = 1)
+
+ggplot()+
+  geom_boxplot(data = df,
+               aes(x = relloc_aggreg,
+                   y = Bias_intercept,
+                   fill = relloc_aggreg))+
+  geom_hline(yintercept = 0,linetype="dashed")+
+  theme_bw()+
+  theme(legend.title = element_blank(),
+        legend.position = "none",
+        aspect.ratio = 1)
+
+#----------------------------------------------------------------------
 
 RelBias_N_plot <- ggplot()+
   geom_boxplot(data = Results,
@@ -192,6 +268,21 @@ RelBias_beta_plot <- ggplot()+
         legend.position = "none",
         aspect.ratio = 1)
 
+
+MSPE_S_plot <- ggplot()+
+  geom_boxplot(data = Results,
+               aes(x = zonespersequence,
+                   y = log(mspe),
+                   fill = relloc_aggreg))+
+  theme_bw()+
+  # ylab("MSPE")+
+  facet_wrap(.~factor(n_samp_com))+
+  theme(legend.title = element_blank(),
+        legend.position = "none",
+        aspect.ratio = 1)
+
+
+
 Bias_SPAEF_plot <- ggplot()+
   geom_boxplot(data = Results,
                aes(x = zonespersequence,
@@ -205,18 +296,6 @@ Bias_SPAEF_plot <- ggplot()+
         legend.position = "none",
         aspect.ratio = 1)+
   ylim(0,1)
-
-MSPE_S_plot <- ggplot()+
-  geom_boxplot(data = Results,
-               aes(x = zonespersequence,
-                   y = log(MSPE_S),
-                   fill = relloc_aggreg))+
-  theme_bw()+
-  # ylab("MSPE")+
-  facet_wrap(.~factor(n_samp_com))+
-  theme(legend.title = element_blank(),
-        legend.position = "none",
-        aspect.ratio = 1)
 
 
 library(cowplot)

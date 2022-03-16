@@ -404,15 +404,10 @@ fit_IM <- function(Estimation_model_i = 1,
   #-------------------------
   
   # SD  --> very long with catchability and I got NANs
-  
-  #dans ce if (on rentre dans la boucle si l'algorithme a convergé),
-  #on calcule la matrice de variance covariance de notre modèle, on récupère les 
-  #écarts types des paramètres/grandeurs du modèle
   if(Converge==0){
     Report = Obj$report()
-    SD = sdreport( Obj,ignore.parm.uncertainty = F)
-    SD$unbiased$value = c("total_abundance"=Report$total_abundance)
-    
+    SD = sdreport( Obj,ignore.parm.uncertainty = F,bias.correct = T)
+
   }else{SD = NULL}
   Opt[["run_time"]] = Sys.time()-Start_time
   
