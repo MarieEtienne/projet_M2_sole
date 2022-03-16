@@ -1,10 +1,10 @@
 .Rproj.user
 .Rhistory
-.RData
 .Ruserdata
 *.so
 *.dll
 *.o
+*.RData
 results
 draft/paper_3/paper_3.pdf
 draft/paper_3/paper_3.tex

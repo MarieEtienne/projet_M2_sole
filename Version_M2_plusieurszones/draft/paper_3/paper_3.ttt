@@ -2,7 +2,7 @@
 \ifnextchar[{\eatarg}{}
 
 
-\caption{\label{tab:unnamed-chunk-1}Percentage of convergence for each simulation/model configuration}
+\caption{\label{tab:unnamed-chunk-2}Percentage of convergence per simulation/model configuration at the level of a single rectangle}
 \centering
 \begin{tabular}[t]{ccccc}
 \toprule
@@ -18,6 +18,24 @@ Nb samples & Fishing sequence & Reallocation & Likelihood level & Convergence (\
 1000 & 100 & No & Yi & 100.000\\
 1000 & 100 & Yes & Yi & 100.000\\
 1000 & 100 & Yes & Dj & 97.333\\
+\bottomrule
+\end{tabular}
+\end{table*}
+\begin{table*}[hbt]
+\ifnextchar[{\eatarg}{}
+
+
+\caption{\label{tab:unnamed-chunk-4}Percentage of convergence per simulation/model configuration at the level of several ICES rectangles}
+\centering
+\begin{tabular}[t]{ccc}
+\toprule
+Model & Likelihood level & Convergence (\%)\\
+\midrule
+Commercial model & Yi & 100.000\\
+Commercial model & Dj & 75.377\\
+Integrated model & Yi & 100.000\\
+Integrated model & Dj & 76.382\\
+Scientific model &  & 100.000\\
 \bottomrule
 \end{tabular}
 \end{table*}
