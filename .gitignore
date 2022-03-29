@@ -4,8 +4,14 @@
 *.so
 *.dll
 *.o
-*.RData
+.RData
 results
 draft/paper_3/paper_3.pdf
 draft/paper_3/paper_3.tex
 
+fit_IM_res_com_Dj.RData
+fit_IM_res_com_Yi.RData
+fit_IM_res_int_Dj.RData
+fit_IM_res_int_Yi.RData
+fit_IM_res_sci.RData
+lkl_prof_beta.RData

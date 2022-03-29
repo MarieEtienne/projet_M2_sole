@@ -6,7 +6,7 @@
 \centering
 \begin{tabular}[t]{ccccc}
 \toprule
-Nb samples & Fishing sequence & Reallocation & Likelihood level & Convergence (\%)\\
+Fishing positions & Declarations & Reallocation & Likelihood level & Convergence (\%)\\
 \midrule
 10 & 1 & No & Yi & 99.668\\
 10 & 1 & Yes & Yi & 0.333\\

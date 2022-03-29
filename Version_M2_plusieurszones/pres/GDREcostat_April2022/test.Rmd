@@ -1,0 +1,55 @@
+---
+title: Peut-on identifier des zones fonctionnelles à l’aide des données de débarquements commerciaux ?
+subtitle : Application à la sole du golfe de Gascogne
+author : Baptiste Alglave, Youen Vermard, Marie-Pierre Etienne,  Mathieu Woillez, Etienne Rivot
+
+fontsize: 10pt
+bibliography : ["ref.bib"]
+csl : ices-journal-of-marine-science.csl
+
+output:
+  beamer_presentation:
+    theme: "Darmstadt"
+    colortheme: "default"
+    slide_level: 3
+    # template: mytemplate.tex
+    includes:
+      in_header: header-simple.tex
+---
+
+```{r setup, include=FALSE}
+
+knitr::opts_chunk$set(echo = TRUE)
+
+library(dplyr)
+library(tidyr)
+library(rnaturalearth)
+library(stringr)
+library(sf)
+library(maps)
+library(ggplot2)
+library(ggspatial)
+library(cowplot)
+
+col_scale <- function(palette = "Spectral", name = "", limits = NULL) {
+  scale_colour_distiller(palette = palette,   # spectral colour scale
+                         guide = "colourbar", # continuous colour bar
+                         name = name,
+                         limits = limits)
+}
+
+```
+
+
+\centering \Large \textcolor{BaptisteGrey}{\textbf{Merci de votre attention !}}
+
+\tiny \vspace{\baselineskip}
+
+\begin{figure}
+    \begin{tabular}{c c}
+    \includegraphics[width=4.5cm]{images/peche_afrique_artisanale.jpg} &
+    \includegraphics[width=4.5cm]{images/peche_artisanale.jpg} \\
+    \includegraphics[width=4.5cm]{images/peche_hauturiere.jpg} &
+    \includegraphics[width=4.5cm]{images/thon_rouge.jpg}
+    \end{tabular}
+\end{figure}

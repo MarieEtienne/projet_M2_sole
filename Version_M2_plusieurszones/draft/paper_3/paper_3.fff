@@ -10,14 +10,14 @@
 
 \centering
 \includegraphics{images/Perf.metric_single_square.png}
-\caption{\label{fig:PerfMetricSingle} Performance metric for single-square simulations. columns: number of commercial pings. x-axis: number of zones visited within each declaration. \enquote{Reallocation:}, data are or are not reallocated in simulations. \enquote{Likelihood:}, the likelihood is computed on reallocated observations \(Y_i\) or on catch declarations \(D_j\). Gold: golden standard. Red: actual situation (\(Y_i\) level). Green: alternative model (\(D_j\) level).}
+\caption{\label{fig:PerfMetricSingle} Performance metric for single-square simulations. columns: number of commercial pings. x-axis: number of zones visited within each declaration. \enquote{Reallocation:}, data are or are not reallocated in simulations. \enquote{Likelihood:}, the likelihood is computed on reallocated observations \(Y_i\) or on catch declarations \(D_j\). Gold: golden standard. Gold: golden standard. Red: uniform reallocation situation. Green: model-based reallocation (declaration-based model). Simulations conducted on 10 fishing positions are not represented as they mostly did not converged for the declaration-based model.}
 \end{figure*}
 \begin{figure*}[hbt]
 \ifnextchar[{\eatarg}{}
 
 \centering
 \includegraphics{images/par_plot_single_square.png}
-\caption{\label{fig:ParBiasSingle} Parameters relative bias for single-square simulations. \enquote{Reallocation:}, data are or are not reallocated in simulations. \enquote{Likelihood:}, the likelihood is computed on reallocated observations \(Y_i\) or on catch declarations \(D_j\). Gold: golden standard. Red: actual situation (\(Y_i\) level). Green: alternative model (\(D_j\) level). Only the simulations with 1000 observations are represented. Black line: zero value. Red line: parameter true value.}
+\caption{\label{fig:ParBiasSingle} Parameters relative bias for single-square simulations. \enquote{Reallocation:}, data are or are not reallocated in simulations. \enquote{Likelihood:}, the likelihood is computed on reallocated observations \(Y_i\) or on catch declarations \(D_j\). Gold: golden standard. Red: uniform reallocation situation. Green: model-based reallocation (declaration-based model). Only the simulations with 1000 fishing positionss are represented. Black line: zero value. Red line: parameter true value.}
 \end{figure*}
 \begin{figure*}[hbt]
 \ifnextchar[{\eatarg}{}
@@ -31,19 +31,19 @@
 
 \centering
 \includegraphics{images/Map_multi_square.png}
-\caption{\label{fig:MapSeveral} Relative distribution of simulated/estimated biomass field. A: Simulated biomass field with scientific samples (red) and rectangles that have not been sampled by commercial data (transparent rectangles). B: simulated biomass field. C: biomass field from the scientific-based model. \(Y_i\): model fitted at the punctual observation level (D, E). \(D_j\): model fitted at the declaration level (F, G).}
+\caption{\label{fig:MapSeveral} Relative distribution of simulated/estimated biomass field. A: Simulated biomass field with scientific samples (red) and rectangles that have not been sampled by commercial data (transparent rectangles). B: simulated biomass field. C: biomass field from the scientific-based model. \(Y_i\): model fitted at the punctual observation level (D, E). \(D_j\): declaration-based model (F, G).}
 \end{figure*}
 \begin{figure*}[hbt]
 \ifnextchar[{\eatarg}{}
 
 \centering
 \includegraphics{images/par_plot.png}
-\caption{\label{fig:CaseStudyPar} Parameters obtained with scientific-based model, the integrated model built on punctual observations \(Y_i\) and the integrated model built on catch declarations \(D_j\).}
+\caption{\label{fig:CaseStudyPar} Parameters obtained with scientific-based model, the integrated model fitted on reallocated catch \(Y_i^*\) and the integrated model fitted on catch declarations \(D_j\).}
 \end{figure*}
 \begin{figure*}[hbt]
 \ifnextchar[{\eatarg}{}
 
 \centering
 \includegraphics{images/case_study_plot.png}
-\caption{\label{fig:CaseStudyMap} Maps obtained from (left) the scientific-based model, (center) the integrated model built on punctual observations \(Y_i\), (right) the integrated model built on catch declarations \(D_j\).}
+\caption{\label{fig:CaseStudyMap} Maps obtained from (left) the scientific-based model, (center) the integrated model fitted on punctual observations \(Y_i^*\), (right) the integrated model fitted on catch declarations \(D_j\).}
 \end{figure*}
