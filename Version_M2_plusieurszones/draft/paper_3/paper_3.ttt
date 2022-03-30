@@ -2,21 +2,44 @@
 \ifnextchar[{\eatarg}{}
 
 
-\caption{\label{tab:unnamed-chunk-2}Percentage of convergence per simulation/model configuration at the level of a single rectangle}
+\caption{\label{tab:unnamed-chunk-2}Parameter values of the simulations}
+\centering
+\begin{tabular}[t]{lcc}
+\toprule
+  &   &  \\
+\midrule
+\$\$\textbackslash{}mu\$\$ & 2 & 2\\
+\$\$\textbackslash{}beta\_S\$\$ & 2 & 2\\
+\$\$\textbackslash{}text\{Range\}\$\$ & -- & 1.5\\
+\$\$\textbackslash{}text\{Marginal variance\}\$\$ & -- & 0.5\\
+\$\$\textbackslash{}xi\_\{com\}\$\$ & -1 & -1\\
+\addlinespace
+\$\$\textbackslash{}sigma\_\{com\}\$\$ & 1 & 1\\
+\$\$k\_\{com\}\$\$ & -- & 1\\
+\$\$\textbackslash{}xi\_\{sci\}\$\$ & -- & 0\\
+\$\$\textbackslash{}sigma\_\{sci\}\$\$ & -- & 0.8\\
+\bottomrule
+\end{tabular}
+\end{table*}
+\begin{table*}[hbt]
+\ifnextchar[{\eatarg}{}
+
+
+\caption{\label{tab:unnamed-chunk-3}Single-square simulations - Percentage of convergence per simulation-estimation configuration.}
 \centering
 \begin{tabular}[t]{ccccc}
 \toprule
 Fishing positions & Declarations & Reallocation & Likelihood level & Convergence (\%)\\
 \midrule
 10 & 1 & No & Yi & 99.668\\
-10 & 1 & Yes & Yi & 0.333\\
+10 & 1 & Yes & Yi* & 0.333\\
 10 & 1 & Yes & Dj & 0.000\\
 100 & 10 & No & Yi & 100.000\\
-100 & 10 & Yes & Yi & 100.000\\
+100 & 10 & Yes & Yi* & 100.000\\
 \addlinespace
 100 & 10 & Yes & Dj & 92.000\\
 1000 & 100 & No & Yi & 100.000\\
-1000 & 100 & Yes & Yi & 100.000\\
+1000 & 100 & Yes & Yi* & 100.000\\
 1000 & 100 & Yes & Dj & 97.333\\
 \bottomrule
 \end{tabular}
@@ -25,15 +48,15 @@ Fishing positions & Declarations & Reallocation & Likelihood level & Convergence
 \ifnextchar[{\eatarg}{}
 
 
-\caption{\label{tab:unnamed-chunk-4}Percentage of convergence per simulation/model configuration at the level of several ICES rectangles}
+\caption{\label{tab:unnamed-chunk-5}Multiple-square simulations - Percentage of convergence per simulation-estimation configuration.}
 \centering
 \begin{tabular}[t]{ccc}
 \toprule
 Model & Likelihood level & Convergence (\%)\\
 \midrule
-Commercial model & Yi & 100.000\\
+Commercial model & Yi* & 100.000\\
 Commercial model & Dj & 75.377\\
-Integrated model & Yi & 100.000\\
+Integrated model & Yi* & 100.000\\
 Integrated model & Dj & 76.382\\
 Scientific model &  & 100.000\\
 \bottomrule

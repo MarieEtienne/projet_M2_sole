@@ -9,78 +9,57 @@ output:
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+**Notations**
 
-# Notations
+We model catch declarations $D_j$ (available at coarse resolution through logbooks data) as a sum of $Y_{i}$ punctual observations (which are unknown i.e. latent variables) each one realised at one fishing position $x_{i}$ (known through VMS data).
 
-We model observations at the level of catch declarations $D_j$ as a sum of $Y_{ij}$ lognormal observations each one realised at one fishing position $x_{ij}$.
+We note: 
 
-We note : 
+- $\mathcal{P}_j$ : the vector of all fishing positions related to the $j^{th}$ declaration.
 
-- $\mathcal{P}_j$ : the vector of all fishing positions related to the $j^th$ declaration
-
-- $j \in \{1,...,n\}$ with $n$ the number of declarations
+- $j \in \{1,...,l\}$ with $l$ the number of declarations.
 
 - $i \in \{1,...,m_j\}$ with $m_j$ the number of fishing positions belonging to the $j^{th}$ declaration.
 
-$$D_j=\sum_{i \in \mathcal{P}_j}{Y_{ij}}$$
+$$D_j=\sum_{i \in \mathcal{P}_j}{Y_{i}}$$
 
-# Alternative observation models accounting for reallocation
+**Reparameterization of the lognormal distribution**
 
-## First assumption about convolution of lognormal random variables
+The lognormal distribution is usually written as $Z \sim \mathcal{LN}(\rho;\sigma^2)$ with $Z=e^{\rho+\sigma N}$ and $N \sim \mathcal{N}(0,1)$. In this case, $E(Z)=e^{\rho + \frac{\sigma^2}{2}}$ and $Var(Z)=(e^{\sigma^2}-1)e^{2 \rho + \sigma^2}$.
 
-We assume a sum of lognormal random variables is still lognormal and that $D_j \sim \mathcal{LN}(M(D_j),\Phi(D_j))$ with $M(.)$ being a function representing the central value of $D_j$ and $\Phi(.)$ the variance function of $D_j$.
+We choose to slightly reparameterize the lognormal distribution. Let's define $\rho = ln(\mu) - \frac{sigma^2}{2}$, then:
 
+- $Z=\mu e^{\sigma N - \frac{sigma^2}{2}}$
 
-## Reparameterization of the lognormal distribution
+- $E(Z)=\mu$
 
-The standard lognormal distribution is written as :
+- $Var(Z)=\mu^2(e^{\sigma^2} - 1) \Leftrightarrow	\sigma^2=ln(\frac{Var(Z)}{E(Z)^2} + 1)$
 
-$D \sim \mathcal{LN}(\rho;\sigma^2)$ with $D=e^{\rho+\sigma N}$ and $N \sim \mathcal{N}(0,1)$
+**$D_j$ probability distribution and moments**
 
-In this case, $E(D)=e^{\rho + \frac{\sigma^2}{2}}$ and $Var(D)=(e^{\sigma^2}-1)e^{2 \rho + \sigma^2}$.
+We have to express the probability distribution of $D_j$ and its moments as a function of $Y_{i}$ and its related moments. Let's assume $Y_{i} = C_{i}.Z_{i}$ is a zero-inflated lognormal distribution with $C_{i}$ a binary random variable and $Z_{i}$ a lognormal random variable.
 
-We choose to slightly reparameterize the lognormal distribution so that $E(D)$ and $Var(D)$ have more simple expressions.
+$$C_{i} \sim \mathcal{B}(1-p_{i})$$ 
+with $p_{i}=exp(-e^\xi .S(x_{i}))$ the probability to obtain a zero value.
 
-Let's define $\rho = ln(\mu) - \frac{sigma^2}{2}$, then :
+$$Z_{i} \sim \mathcal{LN}(\frac{S(x_{i})}{1-p_{i}},\sigma^2)$$
 
-- $D=\mu e^{\sigma N - \frac{sigma^2}{2}}$
-
-- $E(D)=\mu$
-
-- $Var(D)=\mu^2(e^{\sigma^2} - 1) \Leftrightarrow	\sigma^2=ln(\frac{Var(D)}{E(D)^2} + 1)$
-
-Then, $D \sim\mathcal{LN}(M(D),\Phi(D))$ with $M(D)=E(D)$ and $\Phi(D)=ln(\frac{Var(D)}{E(D)^2} + 1)$.
-
-## $D_j$ probability distribution and moments 
-
-We have to express the probability distribution of $D_j$ and its moments as a function of $Y_{ij}$ with $i \in \mathcal{P}_j$.
-
-Let's assume $Y_{ij} = C_{ij}.Z_{ij}$ is a zero-inflated lognormal distribution with $C_{ij}$ a binary random variable and $Z_{ij}$ a lognormal random variable.
-
-$$C_{ij} \sim \mathcal{B}(1-p_{ij})$$ 
-with $p_{ij}=exp(-e^\xi .S(x_{ij}))$ the probability to obtain a zero value
-
-$$Z_{ij} \sim \mathcal{LN}(\frac{S(x_{ij})}{1-p_{ij}},\sigma^2)$$
-
-Here, $Y_{ij}$, $C_{ij}$ and $Z_{ij}$ are observations of a latent field $S(x_{ij})$ at a sampled point $x_{ij}$.
+Here, $Y_{i}$, $C_{i}$ and $Z_{i}$ are observations of a latent field $S(x_{i})$ at a sampled point $x_{i}$.
 
 
-### Probability of obtaining a zero declaration
+**Probability of obtaining a zero declaration**
 
 \begin{align*}
-P(D_j = 0 \vert S, X) & = \prod_{i\in \mathcal{P}_j} P(Y_{ij} = 0 \vert S, X),\nonumber \\
-                      & = \exp{ \left \lbrace- \sum_{i\in \mathcal{P}_j} e^{\xi}. S(x_{ij})\right \rbrace} = \pi_j.
+P(D_j = 0 \vert S, X) & = \prod_{i\in \mathcal{P}_j} P(Y_{i} = 0 \vert S, X),\nonumber \\
+                      & = \exp{ \left \lbrace- \sum_{i\in \mathcal{P}_j} e^{\xi}. S(x_{i})\right \rbrace} = \pi_j.
 \end{align*}
 
 
-### Expectancy of a positive declaration 
-
+**Expectancy of a positive declaration**
 
 Following calculations are supposed to be conditionnal on $S$ and $X$.
 
-$$E(D_j\vert D_j >0) =  \sum_{i\in \mathcal{P}_j} E(C_{ij} Z_{ij}\vert \exists i\in\mathcal{P}_j , C_{ij}=1)$$
-
-As $C_{ij}$ and $Z_{ij}$ are assumed to be independant.
+$$E(D_j\vert D_j >0) =  \sum_{i\in \mathcal{P}_j} E(C_{i} Z_{i}\vert \exists i\in\mathcal{P}_j , C_{i}=1)$$
 
 \begin{align*}
 E(D_j\vert D_j > 0) & = E(D_j 1_{ \left \lbrace D_j > 0\right\rbrace } )  / P\left ( D_j > 0\right ),   \\
@@ -91,13 +70,13 @@ As $E(D_j 1_{ \left \lbrace D_j > 0\right\rbrace } ) = E(D_j ),$
 
 \begin{align*}
 E(D_j\vert D_j > 0) & = \left (1- \pi_j\right)^{-1} E(D_j)   ,   \nonumber \\
-& = \left (1- \pi_j\right)^{-1} \sum_{i\in \mathcal{P}_j} E(C_{ij} Z_{ij}),\nonumber \\
-& = \left (1- \pi_j\right)^{-1} \sum_{i\in \mathcal{P}_j} (1-p_{ij}) \frac{S(x_{ij})}{1-p_{ij}}, \nonumber \\
-& = \left (1- \pi_j\right)^{-1}\sum_{i\in \mathcal{P}_j} S(x_{ij}).
+& = \left (1- \pi_j\right)^{-1} \sum_{i\in \mathcal{P}_j} E(C_{i} Z_{i}),\nonumber \\
+& = \left (1- \pi_j\right)^{-1} \sum_{i\in \mathcal{P}_j} (1-p_{i}) \frac{S(x_{i})}{1-p_{i}}, \nonumber \\
+& = \left (1- \pi_j\right)^{-1}\sum_{i\in \mathcal{P}_j} S(x_{i}).
 \end{align*}
 
 
-### Variance of a positive declaration
+**Variance of a positive declaration**
 
 $$Var(D_j \vert D_j >0)  = E(D_j^2 \vert D_j >0)- E(D_j \vert D_j >0)^2.$$
 
@@ -105,35 +84,36 @@ $$E(D_j^2 \vert D_j >0) = (1-\pi_j)^{-1} E(D_j^2 1_{\left \lbrace D_j >0\right\r
 
 $$E(D_j \vert D_j >0)^2 = ((1-\pi_j)^{-1} E(D_j 1_{\left \lbrace D_j >0\right\rbrace}))^2 =  (1-\pi_j)^{-2} E(D_j)^2$$
 
-And then,
+Then,
 
 $$Var(D_j \vert D_j >0) = (1-\pi_j)^{-1} E(D_j^2 ) - (1-\pi_j)^{-2} E(D_j)^2 = (1-\pi_j)^{-1} Var(D_j) - \frac{\pi_j}{(1-\pi_j)^2} E(D_j)^2.$$
 
-As the $(Y_{ij})_{i\in \mathcal{P}_j}$ are independent, $Var(D_j) =\sum_{i \in\mathcal{P}_j} Var(Y_{ij}) = \sum_{i \in\mathcal{P}_j} Var(C_{ij}.Z_{ij})$.
+As the $(Y_{i})_{i\in \mathcal{P}_j}$ are independent, $Var(D_j) =\sum_{i \in\mathcal{P}_j} Var(Y_{i}) = \sum_{i \in\mathcal{P}_j} Var(C_{i}.Z_{i})$.
 
 \begin{align*}
-Var(C_{ij} Z_{ij}) & = E( C_{ij}^2 Z_{ij}^2 ) - E(C_{ij} Z_{ij})^2,\\
-& =  E( C_{ij}^2) E(Z_{ij}^2 ) -E(C_{ij})^2 E(Z_{ij})^2,\\
-& = (1-p_{ij}) E(Z_{ij}^2 ) - (1-p_{ij})^2 E(Z_{ij})^2,\\
-& = (1-p_{ij})(Var(Z_{ij})+E(Z_{ij})^2)-(1-p_{ij})^2E(Z_{ij})^2,\\
-& = \frac{S(x_{ij})^2}{1-p_{ij}}(e^{\sigma^2}-1)+\frac{S(x_{ij})^2}{1-p_{ij}}-S(x_{ij})^2,\\
-& = \frac{S(x_{ij})^2}{1-p_{ij}}(e^{\sigma^2}-(1-p_{ij}))
+Var(C_{i} Z_{i}) & = E( C_{i}^2 Z_{i}^2 ) - E(C_{i} Z_{i})^2,\\
+& =  E( C_{i}^2) E(Z_{i}^2 ) -E(C_{i})^2 E(Z_{i})^2,\\
+& = (1-p_{i}) E(Z_{i}^2 ) - (1-p_{i})^2 E(Z_{i})^2,\\
+& = (1-p_{i})(Var(Z_{i})+E(Z_{i})^2)-(1-p_{i})^2E(Z_{i})^2,\\
+& = \frac{S(x_{i})^2}{1-p_{i}}(e^{\sigma^2}-1)+\frac{S(x_{i})^2}{1-p_{i}}-S(x_{i})^2,\\
+& = \frac{S(x_{i})^2}{1-p_{i}}(e^{\sigma^2}-(1-p_{i}))
 \end{align*}
 
 
-### Conclusion
+**Sum up of the main formulas**
 
-$$P(D_j = 0 \vert S, X) = \exp{ \left \lbrace- \sum_{i\in \mathcal{P}_j} e^{\xi}. S(x_{ij})\right \rbrace} = \pi_j$$
+$$P(D_j = 0 \vert S, X) = \exp{ \left \lbrace- \sum_{i\in \mathcal{P}_j} e^{\xi}. S(x_{i})\right \rbrace} = \pi_j$$
 
-
-$$D_j \vert D_j > 0 \sim \mathcal{LN}(E(D_j \vert D_j > 0); ln(\frac{Var(D_j \vert D_j > 0)}{E(D_j \vert D_j > 0)^2} + 1))$$
-
-$$E(D_j \vert D_j > 0)=\frac{\sum_{i \in \mathcal{P}_j} S(x_{ij})}{1-\pi_j}$$
+$$E(D_j \vert D_j > 0)=\frac{\sum_{i \in \mathcal{P}_j} S(x_{i})}{1-\pi_j}$$
 
 
-$$Var(D_j \vert D_j > 0) = \frac{\sum_{i \in \mathcal{P}_j} Var(Y_{ij})}{1-\pi_j} - \frac{\pi_j}{(1-\pi_j)^2}E(D_j)^2$$
+$$Var(D_j \vert D_j > 0) = \frac{\sum_{i \in \mathcal{P}_j} Var(Y_{i})}{1-\pi_j} - \frac{\pi_j}{(1-\pi_j)^2}E(D_j)^2$$
 
-$$Var(Y_{ij})=\frac{S(x_{ij})^2}{1-p_{ij}}(e^{\sigma^2}-(1-p_{ij}))$$
+$$Var(Y_{i})=\frac{S(x_{i})^2}{1-p_{j}}(e^{\sigma^2}-(1-p_{i}))$$
+
+Assuming $D_j \vert D_j > 0$ also follows a lognormal distribution we can write:
+
+$$D_j \vert D_j > 0 \sim \mathcal{LN}( \mu_j = E(D_j \vert D_j > 0), \sigma_j^2= ln(\frac{Var(D_j \vert D_j > 0)}{E(D_j \vert D_j > 0)^2} + 1))$$
 
 ### Simulations
 

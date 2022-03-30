@@ -3,35 +3,35 @@
 
 \centering
 \includegraphics{images/realloc.png}
-\caption{\label{fig:ParBiasSingle} Reallocation process.}
+\caption{\label{fig:SchemeRealloc} Scheme of the reallocation process.}
 \end{figure*}
 \begin{figure*}[hbt]
 \ifnextchar[{\eatarg}{}
 
 \centering
 \includegraphics{images/Perf.metric_single_square.png}
-\caption{\label{fig:PerfMetricSingle} Performance metric for single-square simulations. columns: number of commercial pings. x-axis: number of zones visited within each declaration. \enquote{Reallocation:}, data are or are not reallocated in simulations. \enquote{Likelihood:}, the likelihood is computed on reallocated observations \(Y_i\) or on catch declarations \(D_j\). Gold: golden standard. Gold: golden standard. Red: uniform reallocation situation. Green: model-based reallocation (declaration-based model). Simulations conducted on 10 fishing positions are not represented as they mostly did not converged for the declaration-based model.}
+\caption{\label{fig:PerfMetricSingle} Performance metric for single-square simulations. Columns: number of commercial fishing positions. x-axis: number of zones visited within each declaration. \enquote{Reallocation:}, data are or are not reallocated in simulations. \enquote{Likelihood:}, the likelihood is computed on exact punctual observations \(Y_i\), on reallocated observations \(Y_i^*\) or on catch declarations \(D_j\). Gold: golden standard. Red: uniform reallocation (\(Y_i^*\) model). Green: model-based reallocation (\(D_j\) model). Simulations conducted on 10 fishing positions are not represented as they mostly did not converged for the \(D_j\) model (see Table 2).}
 \end{figure*}
 \begin{figure*}[hbt]
 \ifnextchar[{\eatarg}{}
 
 \centering
 \includegraphics{images/par_plot_single_square.png}
-\caption{\label{fig:ParBiasSingle} Parameters relative bias for single-square simulations. \enquote{Reallocation:}, data are or are not reallocated in simulations. \enquote{Likelihood:}, the likelihood is computed on reallocated observations \(Y_i\) or on catch declarations \(D_j\). Gold: golden standard. Red: uniform reallocation situation. Green: model-based reallocation (declaration-based model). Only the simulations with 1000 fishing positionss are represented. Black line: zero value. Red line: parameter true value.}
+\caption{\label{fig:ParBiasSingle} Parameters relative bias for single-square simulations. \enquote{Reallocation:}, data are or are not reallocated in simulations. \enquote{Likelihood:}, the likelihood is computed on exact punctual observations \(Y_i\), on reallocated observations \(Y_i^*\) or on catch declarations \(D_j\). Gold: golden standard. Red: uniform reallocation (\(Y_i^*\) model). Green: model-based reallocation (\(D_j\) model). Only the simulations with 1000 fishing positionss are represented. Black line: zero value. Red line: parameter true value.}
 \end{figure*}
 \begin{figure*}[hbt]
 \ifnextchar[{\eatarg}{}
 
 \centering
 \includegraphics{images/Perf.metric_multiple_square.png}
-\caption{\label{fig:PerfMetricSeveral} Performance metric for several rectangles simulations. columns: commercial data coverage. x-axis: likelihood level. \(1^{st}\) row, red line: true value of \(\beta_S\).}
+\caption{\label{fig:PerfMetricSeveral} Performance metric for the multiple-square simulations. Red line: true value for the range and the species-habitat parameter (\(\beta_S\)). Red: uniform reallocation (\(Y_i^*\) model). Green: model-based reallocation (\(D_j\) model). Blue: scientific-based model.}
 \end{figure*}
 \begin{figure*}[hbt]
 \ifnextchar[{\eatarg}{}
 
 \centering
 \includegraphics{images/Map_multi_square.png}
-\caption{\label{fig:MapSeveral} Relative distribution of simulated/estimated biomass field. A: Simulated biomass field with scientific samples (red) and rectangles that have not been sampled by commercial data (transparent rectangles). B: simulated biomass field. C: biomass field from the scientific-based model. \(Y_i\): model fitted at the punctual observation level (D, E). \(D_j\): declaration-based model (F, G).}
+\caption{\label{fig:MapSeveral} Relative distribution of simulated/estimated biomass field. A: Simulated biomass field with scientific samples (red) and statistical rectangles. The rectangles that have not been sampled by commercial data are the transparent rectangles. They represent 1/3 of the full area. B: simulated biomass field. C: biomass field from the scientific-based model. \(Y_i^*\): \(Y_i^*\) model (D, E). \(D_j\): \(D_j\) model (F, G). Scientific model: model fitted to scientific data only. Commercial model: model fitted to commercial data only. Integratedd model: model fitted to both data sources.}
 \end{figure*}
 \begin{figure*}[hbt]
 \ifnextchar[{\eatarg}{}
@@ -45,5 +45,5 @@
 
 \centering
 \includegraphics{images/case_study_plot.png}
-\caption{\label{fig:CaseStudyMap} Maps obtained from (left) the scientific-based model, (center) the integrated model fitted on punctual observations \(Y_i^*\), (right) the integrated model fitted on catch declarations \(D_j\).}
+\caption{\label{fig:CaseStudyMap} Maps obtained from (left) the scientific-based model, (center) the integrated model fitted on punctual reallocated catch \(Y_i^*\), (right) the integrated model fitted on catch declarations \(D_j\).}
 \end{figure*}
