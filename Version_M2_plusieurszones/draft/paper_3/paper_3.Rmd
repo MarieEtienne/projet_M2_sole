@@ -93,7 +93,7 @@ https://www.sciencedirect.com/science/article/pii/S0006320721001993
 
 # Material and methods
 
-We base our approach on the model developped by @alglave_combining_2022. In this framework, all observations were supposed to be realised at the same scale. Here, we extend the framework to potentially provide fine scale predictions from data that have a coarse resolution (landings data) and potentially combine these data with other (more accurate) datasets such as scientific data.
+We base our approach on the model developped by @alglave_combining_2022. In this framework, all observations were supposed to be realised at a fine scale. Here, we extend the framework to potentially provide fine scale predictions from data that have a coarse resolution (landings data) and combine these data with other fine scale datasets such as scientific data.
 
 ## Defining the problem from a modelling point of view
 
@@ -162,7 +162,7 @@ If we consider $\mathcal{L}_{D_j|D_j>0}$ is lognormal (with parameterization des
 
 The inference is realized through Template Model Builder (TMB), an effective tool to build hierarchical models and perform maximum likelihood estimation through automatic differentiation and Laplace Approximation [@kristensen_tmb_2016].
 
-![(\#fig:SchemeRealloc) Schematic representation of the reallocation process.](images/realloc.png)
+![(\#fig:SchemeRealloc) Schematic representation of the reallocation process. The biomass field (the background field) depends on a covariate and a spatial random effect. The covariate is the $x$ axis. It has a positive effect on biomass values (i.e. biomass is higher on the right of the grid than on the left). The spatial random effect conduct to a hotspot on the bottom-right of the latent field. The study domain is considered as a statistical rectangle (grey square). Fishermen sample catches in areas of poor biomass where the covariate is relatively low (blue points) and in areas of higher biomass where the covariate is higher and eventually in the hotspot of biomass (orange and red points). These catches belong to the same declaration $j$ and are summed to constitute the declaration $D_j=50$. The declaration is declared at the level of the statistical rectangle. From VMS data, we know the fishing positions $x_i$. In standard processing, $D_j$ are then uniformly reallocated over the fishing positions $x_i$. This strongly homogeneizes the catch. In particular, the effect of the habitat is no more evidenced in the reallocated catch $Y_i^*$.](images/realloc.png)
 
 
 ```{r}
@@ -185,7 +185,7 @@ To evaluate the impact of reallocation on model outputs and how our alternative 
 
 First, we conduct basic simulations in order to explore the effect of some key variables on model performance and also the base properties of the alternative models. We assume the study domain is a single statistical rectangle, only commercial data feed the model and the expression of the latent field in both simulation and estimation is simplified (the variability only depends on one covariate, not on a spatial random term). These simulations will be referred as "single-square simulations".
 
-Then, we extend the simulation-estimation study to several rectangles to get closer to a real case study configuration. We add a spatial random effect in the latent field (for both simulation and estimation) and we also simulate scientific data (in addition to commercial data) to explore the contribution of both datasets in inference. These simulations will be referred as multiple-square simulations.
+Then, we extend the simulation-estimation study to several rectangles to get closer to a real case study configuration. We add a spatial random effect in the latent field (for both simulation and estimation) and we also simulate scientific data (in addition to commercial data) to explore the contribution of both datasets in inference. These simulations will be referred as "multiple-square simulations".
 
 In these two sets of simulation-estimation, the covariate is modelled as a continous GRF that we suppose known at each point of the grid. The covariate effect is fixed to $\beta_S=2$ and the intercept is also fixed to $\mu=2$. Regarding commercial data, the number of fishing pings per declaration is fixed to 10 as it is the average number of fishing locations for a single declaration in real data. All parameterizations are detailed in the Table 1.
 
