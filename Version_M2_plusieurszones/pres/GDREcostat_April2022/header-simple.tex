@@ -17,9 +17,8 @@
 \usepackage{array}
 \newcolumntype{P}[1]{>{\centering\arraybackslash}p{#1}}
 \newcolumntype{M}[1]{>{\centering\arraybackslash}m{#1}}
+
 % ----------------------------------------------
-
-
 \usepackage[style=authoryear,sorting=ynt]{biblatex}
 \usepackage[font={small}]{caption}
 
@@ -28,7 +27,7 @@
 \captionsetup[figure]{font=tiny}
 
 \setbeamertemplate{navigation symbols}{}
-\institute{04/2022 - GdR Ecostats}
+\institute{04/2022 - GdR Ecostat}
 
 % logo -----------------------------------------
 \newsavebox{\logoA}
@@ -36,17 +35,22 @@
 \newsavebox{\logoC}
 \savebox{\logoA}{\includegraphics[width=3cm]{images/logo_ifremer.jpg}}
 \savebox{\logoB}{\includegraphics[width=3cm]{images/UMR_DECOD.jpg}}
-% \savebox{\logoC}{\includegraphics[width=2cm]{images/irmar_logo.png}}
+\savebox{\logoC}{\includegraphics[width=3cm]{images/logo_institut_agro.png}}
 
+% \savebox{\logoD}{\includegraphics[width=1.5cm]{images/dtu_logo.jpg}}
+% \newsavebox{\logoD}
 
 \titlegraphic{%
   \raisebox{.5\dimexpr\ht\logoB-\ht\logoA}{\usebox{\logoA}}% raise smaller logo into position
-  \hspace*{5cm}%
+  \hspace*{0.75cm}
+  \usebox{\logoC}
+  \hspace*{0.75cm}%
   % \usebox{\logoC}
   % \hspace*{1cm}%
   \usebox{\logoB}
-
+  
 }
+
 % ----------------------------------------------
 
 \setbeamertemplate{title page}[empty]
@@ -63,6 +67,7 @@
 \definecolor{BaptisteGrey}{HTML}{A6ACAF}
 \definecolor{BaptisteRed}{HTML}{FF2A2A}
 \definecolor{BaptisteBrown}{HTML}{D45500}
+\definecolor{BaptisteDarkGrey}{HTML}{8C9193}
 
 % ---------------------------------------------------------
 % New command

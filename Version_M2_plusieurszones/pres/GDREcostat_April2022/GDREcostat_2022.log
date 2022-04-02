@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.23 (TeX Live 2021/W32TeX) (preloaded format=pdflatex 2022.3.18)  22 MAR 2022 09:07
+This is pdfTeX, Version 3.141592653-2.6-1.40.23 (TeX Live 2021/W32TeX) (preloaded format=pdflatex 2022.3.18)  1 APR 2022 10:48
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -1289,13 +1289,19 @@ Package: blx-case-expl3 2022/02/02 v3.17 expl3 case changing code for biblatex
 <images/logo_ifremer.jpg, id=10, 284.56313pt x 284.56313pt>
 File: images/logo_ifremer.jpg Graphic file (type jpg)
 <use images/logo_ifremer.jpg>
-Package pdftex.def Info: images/logo_ifremer.jpg  used on input line 126.
+Package pdftex.def Info: images/logo_ifremer.jpg  used on input line 125.
 (pdftex.def)             Requested size: 85.35826pt x 85.35657pt.
 <images/UMR_DECOD.jpg, id=11, 722.7pt x 406.51875pt>
 File: images/UMR_DECOD.jpg Graphic file (type jpg)
 <use images/UMR_DECOD.jpg>
-Package pdftex.def Info: images/UMR_DECOD.jpg  used on input line 127.
+Package pdftex.def Info: images/UMR_DECOD.jpg  used on input line 126.
 (pdftex.def)             Requested size: 85.35826pt x 48.01097pt.
+<images/logo_institut_agro.png, id=12, 72.27pt x 29.8716pt>
+File: images/logo_institut_agro.png Graphic file (type png)
+<use images/logo_institut_agro.png>
+Package pdftex.def Info: images/logo_institut_agro.png  used on input line 127.
+
+(pdftex.def)             Requested size: 85.35826pt x 35.28325pt.
 
 Package biblatex Warning: 'babel/polyglossia' detected but 'csquotes' missing.
 (biblatex)                Loading 'csquotes' recommended.
@@ -1305,24 +1311,24 @@ Package biblatex Warning: 'babel/polyglossia' detected but 'csquotes' missing.
 (./GDREcostat_2022.aux)
 \openout1 = `GDREcostat_2022.aux'.
 
-LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 204.
-LaTeX Font Info:    ... okay on input line 204.
-LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 204.
-LaTeX Font Info:    ... okay on input line 204.
-LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 204.
-LaTeX Font Info:    ... okay on input line 204.
-LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 204.
-LaTeX Font Info:    ... okay on input line 204.
-LaTeX Font Info:    Checking defaults for TS1/cmr/m/n on input line 204.
-LaTeX Font Info:    ... okay on input line 204.
-LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 204.
-LaTeX Font Info:    ... okay on input line 204.
-LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 204.
-LaTeX Font Info:    ... okay on input line 204.
-LaTeX Font Info:    Checking defaults for PD1/pdf/m/n on input line 204.
-LaTeX Font Info:    ... okay on input line 204.
-LaTeX Font Info:    Checking defaults for PU/pdf/m/n on input line 204.
-LaTeX Font Info:    ... okay on input line 204.
+LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 209.
+LaTeX Font Info:    ... okay on input line 209.
+LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 209.
+LaTeX Font Info:    ... okay on input line 209.
+LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 209.
+LaTeX Font Info:    ... okay on input line 209.
+LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 209.
+LaTeX Font Info:    ... okay on input line 209.
+LaTeX Font Info:    Checking defaults for TS1/cmr/m/n on input line 209.
+LaTeX Font Info:    ... okay on input line 209.
+LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 209.
+LaTeX Font Info:    ... okay on input line 209.
+LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 209.
+LaTeX Font Info:    ... okay on input line 209.
+LaTeX Font Info:    Checking defaults for PD1/pdf/m/n on input line 209.
+LaTeX Font Info:    ... okay on input line 209.
+LaTeX Font Info:    Checking defaults for PU/pdf/m/n on input line 209.
+LaTeX Font Info:    ... okay on input line 209.
 *geometry* driver: auto-detecting
 *geometry* detected driver: pdftex
 *geometry* verbose mode - [ preamble ] result:
@@ -1369,7 +1375,7 @@ topdf-sys.cfg
 File: epstopdf-sys.cfg 2010/07/13 v1.3 Configuration of (r)epstopdf for TeX Liv
 e
 ))
-Package hyperref Info: Link coloring OFF on input line 204.
+Package hyperref Info: Link coloring OFF on input line 209.
 
 (c:/Users/balglave/AppData/Roaming/TinyTeX/texmf-dist/tex/latex/hyperref/namere
 f.sty
@@ -1385,59 +1391,59 @@ Package: gettitlestring 2019/12/15 v1.6 Cleanup title references (HO)
 )
 \c@section@level=\count479
 )
-LaTeX Info: Redefining \ref on input line 204.
-LaTeX Info: Redefining \pageref on input line 204.
-LaTeX Info: Redefining \nameref on input line 204.
+LaTeX Info: Redefining \ref on input line 209.
+LaTeX Info: Redefining \pageref on input line 209.
+LaTeX Info: Redefining \nameref on input line 209.
 (./GDREcostat_2022.out) (./GDREcostat_2022.out)
 \@outlinefile=\write6
 \openout6 = `GDREcostat_2022.out'.
 
 LaTeX Font Info:    Overwriting symbol font `operators' in version `normal'
-(Font)                  OT1/lmr/m/n --> OT1/cmss/m/n on input line 204.
+(Font)                  OT1/lmr/m/n --> OT1/cmss/m/n on input line 209.
 LaTeX Font Info:    Overwriting symbol font `operators' in version `bold'
-(Font)                  OT1/lmr/bx/n --> OT1/cmss/b/n on input line 204.
+(Font)                  OT1/lmr/bx/n --> OT1/cmss/b/n on input line 209.
 LaTeX Font Info:    Overwriting symbol font `operators' in version `normal'
-(Font)                  OT1/cmss/m/n --> OT1/lmss/m/n on input line 204.
+(Font)                  OT1/cmss/m/n --> OT1/lmss/m/n on input line 209.
 LaTeX Font Info:    Overwriting symbol font `operators' in version `bold'
-(Font)                  OT1/cmss/b/n --> OT1/lmss/b/n on input line 204.
+(Font)                  OT1/cmss/b/n --> OT1/lmss/b/n on input line 209.
 \symnumbers=\mathgroup7
 \sympureletters=\mathgroup8
 LaTeX Font Info:    Overwriting math alphabet `\mathrm' in version `normal'
-(Font)                  OT1/lmss/m/n --> T1/lmr/m/n on input line 204.
-LaTeX Font Info:    Redeclaring math alphabet \mathbf on input line 204.
+(Font)                  OT1/lmss/m/n --> T1/lmr/m/n on input line 209.
+LaTeX Font Info:    Redeclaring math alphabet \mathbf on input line 209.
 LaTeX Font Info:    Overwriting math alphabet `\mathbf' in version `normal'
-(Font)                  OT1/lmr/bx/n --> T1/lmss/b/n on input line 204.
+(Font)                  OT1/lmr/bx/n --> T1/lmss/b/n on input line 209.
 LaTeX Font Info:    Overwriting math alphabet `\mathbf' in version `bold'
-(Font)                  OT1/lmr/bx/n --> T1/lmss/b/n on input line 204.
-LaTeX Font Info:    Redeclaring math alphabet \mathsf on input line 204.
+(Font)                  OT1/lmr/bx/n --> T1/lmss/b/n on input line 209.
+LaTeX Font Info:    Redeclaring math alphabet \mathsf on input line 209.
 LaTeX Font Info:    Overwriting math alphabet `\mathsf' in version `normal'
-(Font)                  OT1/lmss/m/n --> T1/lmss/m/n on input line 204.
+(Font)                  OT1/lmss/m/n --> T1/lmss/m/n on input line 209.
 LaTeX Font Info:    Overwriting math alphabet `\mathsf' in version `bold'
-(Font)                  OT1/lmss/bx/n --> T1/lmss/m/n on input line 204.
-LaTeX Font Info:    Redeclaring math alphabet \mathit on input line 204.
+(Font)                  OT1/lmss/bx/n --> T1/lmss/m/n on input line 209.
+LaTeX Font Info:    Redeclaring math alphabet \mathit on input line 209.
 LaTeX Font Info:    Overwriting math alphabet `\mathit' in version `normal'
-(Font)                  OT1/lmr/m/it --> T1/lmss/m/it on input line 204.
+(Font)                  OT1/lmr/m/it --> T1/lmss/m/it on input line 209.
 LaTeX Font Info:    Overwriting math alphabet `\mathit' in version `bold'
-(Font)                  OT1/lmr/bx/it --> T1/lmss/m/it on input line 204.
-LaTeX Font Info:    Redeclaring math alphabet \mathtt on input line 204.
+(Font)                  OT1/lmr/bx/it --> T1/lmss/m/it on input line 209.
+LaTeX Font Info:    Redeclaring math alphabet \mathtt on input line 209.
 LaTeX Font Info:    Overwriting math alphabet `\mathtt' in version `normal'
-(Font)                  OT1/lmtt/m/n --> T1/lmtt/m/n on input line 204.
+(Font)                  OT1/lmtt/m/n --> T1/lmtt/m/n on input line 209.
 LaTeX Font Info:    Overwriting math alphabet `\mathtt' in version `bold'
-(Font)                  OT1/lmtt/m/n --> T1/lmtt/m/n on input line 204.
+(Font)                  OT1/lmtt/m/n --> T1/lmtt/m/n on input line 209.
 LaTeX Font Info:    Overwriting symbol font `numbers' in version `bold'
-(Font)                  T1/lmss/m/n --> T1/lmss/b/n on input line 204.
+(Font)                  T1/lmss/m/n --> T1/lmss/b/n on input line 209.
 LaTeX Font Info:    Overwriting symbol font `pureletters' in version `bold'
-(Font)                  T1/lmss/m/it --> T1/lmss/b/it on input line 204.
+(Font)                  T1/lmss/m/it --> T1/lmss/b/it on input line 209.
 LaTeX Font Info:    Overwriting math alphabet `\mathrm' in version `bold'
-(Font)                  OT1/lmss/b/n --> T1/lmr/b/n on input line 204.
+(Font)                  OT1/lmss/b/n --> T1/lmr/b/n on input line 209.
 LaTeX Font Info:    Overwriting math alphabet `\mathbf' in version `bold'
-(Font)                  T1/lmss/b/n --> T1/lmss/b/n on input line 204.
+(Font)                  T1/lmss/b/n --> T1/lmss/b/n on input line 209.
 LaTeX Font Info:    Overwriting math alphabet `\mathsf' in version `bold'
-(Font)                  T1/lmss/m/n --> T1/lmss/b/n on input line 204.
+(Font)                  T1/lmss/m/n --> T1/lmss/b/n on input line 209.
 LaTeX Font Info:    Overwriting math alphabet `\mathit' in version `bold'
-(Font)                  T1/lmss/m/it --> T1/lmss/b/it on input line 204.
+(Font)                  T1/lmss/m/it --> T1/lmss/b/it on input line 209.
 LaTeX Font Info:    Overwriting math alphabet `\mathtt' in version `bold'
-(Font)                  T1/lmtt/m/n --> T1/lmtt/b/n on input line 204.
+(Font)                  T1/lmtt/m/n --> T1/lmtt/b/n on input line 209.
 
 (c:/Users/balglave/AppData/Roaming/TinyTeX/texmf-dist/tex/latex/translator/tran
 slator-basic-dictionary-English.dict
@@ -1463,12 +1469,12 @@ Dictionary: translator-numbers-dictionary, Language: English
 slator-theorem-dictionary-English.dict
 Dictionary: translator-theorem-dictionary, Language: English 
 )
-LaTeX Info: Redefining \microtypecontext on input line 204.
-Package microtype Info: Applying patch `item' on input line 204.
-Package microtype Info: Applying patch `toc' on input line 204.
-Package microtype Info: Applying patch `eqnum' on input line 204.
+LaTeX Info: Redefining \microtypecontext on input line 209.
+Package microtype Info: Applying patch `item' on input line 209.
+Package microtype Info: Applying patch `toc' on input line 209.
+Package microtype Info: Applying patch `eqnum' on input line 209.
 
-Package microtype Warning: Unable to apply patch `footnote' on input line 204.
+Package microtype Warning: Unable to apply patch `footnote' on input line 209.
 
 Package microtype Info: Generating PDF output.
 Package microtype Info: Character protrusion enabled (level 2).
@@ -1476,7 +1482,7 @@ Package microtype Info: Using protrusion set `basicmath'.
 Package microtype Info: Automatic font expansion enabled (level 2),
 (microtype)             stretch: 20, shrink: 20, step: 1, non-selected.
 Package microtype Info: Using default expansion set `alltext-nott'.
-LaTeX Info: Redefining \showhyphens on input line 204.
+LaTeX Info: Redefining \showhyphens on input line 209.
 Package microtype Info: No adjustment of tracking.
 Package microtype Info: No adjustment of interword spacing.
 Package microtype Info: No adjustment of character kerning.
@@ -1501,23 +1507,19 @@ Package biblatex Info: Automatic encoding selection.
 Package biblatex Info: Trying to load bibliographic data...
 Package biblatex Info: ... file 'GDREcostat_2022.bbl' not found.
 No file GDREcostat_2022.bbl.
-Package biblatex Info: Reference section=0 on input line 204.
-Package biblatex Info: Reference segment=0 on input line 204.
+Package biblatex Info: Reference section=0 on input line 209.
+Package biblatex Info: Reference segment=0 on input line 209.
 (./GDREcostat_2022.nav)
-Overfull \hbox (5.69043pt too wide) in paragraph at lines 205--205
- [][]| [] 
- []
-
-
-Overfull \vbox (15.15303pt too high) detected at line 205
+Overfull \vbox (15.15303pt too high) detected at line 210
  []
 
 [1{c:/Users/balglave/AppData/Roaming/TinyTeX/texmf-var/fonts/map/pdftex/updmap/
 pdftex.map}
 
- <./images/logo_ifremer.jpg> <./images/UMR_DECOD.jpg>]
+ <./images/logo_ifremer.jpg> <./images/logo_institut_agro.png> <./images/UMR_DE
+COD.jpg>]
 LaTeX Font Info:    Trying to load font information for OT1+lmss on input line 
-303.
+308.
 (c:/Users/balglave/AppData/Roaming/TinyTeX/texmf-dist/tex/latex/lm/ot1lmss.fd
 File: ot1lmss.fd 2015/05/01 v1.6.1 Font defs for Latin Modern
 )
@@ -1526,27 +1528,27 @@ Package microtype Info: Loading generic protrusion settings for font family
 (microtype)             For optimal results, create family-specific settings.
 (microtype)             See the microtype manual for details.
 LaTeX Font Info:    Trying to load font information for OML+lmm on input line 3
-03.
+08.
 (c:/Users/balglave/AppData/Roaming/TinyTeX/texmf-dist/tex/latex/lm/omllmm.fd
 File: omllmm.fd 2015/05/01 v1.6.1 Font defs for Latin Modern
 )
 LaTeX Font Info:    Trying to load font information for OMS+lmsy on input line 
-303.
+308.
 (c:/Users/balglave/AppData/Roaming/TinyTeX/texmf-dist/tex/latex/lm/omslmsy.fd
 File: omslmsy.fd 2015/05/01 v1.6.1 Font defs for Latin Modern
 )
 LaTeX Font Info:    Trying to load font information for OMX+lmex on input line 
-303.
+308.
 (c:/Users/balglave/AppData/Roaming/TinyTeX/texmf-dist/tex/latex/lm/omxlmex.fd
 File: omxlmex.fd 2015/05/01 v1.6.1 Font defs for Latin Modern
 )
 LaTeX Font Info:    External font `lmex10' loaded for size
-(Font)              <10> on input line 303.
+(Font)              <10> on input line 308.
 LaTeX Font Info:    External font `lmex10' loaded for size
-(Font)              <7> on input line 303.
+(Font)              <7> on input line 308.
 LaTeX Font Info:    External font `lmex10' loaded for size
-(Font)              <5> on input line 303.
-LaTeX Font Info:    Trying to load font information for U+msa on input line 303
+(Font)              <5> on input line 308.
+LaTeX Font Info:    Trying to load font information for U+msa on input line 308
 .
 
 (c:/Users/balglave/AppData/Roaming/TinyTeX/texmf-dist/tex/latex/amsfonts/umsa.f
@@ -1557,7 +1559,7 @@ File: umsa.fd 2013/01/14 v3.01 AMS symbols A
 a.cfg
 File: mt-msa.cfg 2006/02/04 v1.1 microtype config. file: AMS symbols (a) (RS)
 )
-LaTeX Font Info:    Trying to load font information for U+msb on input line 303
+LaTeX Font Info:    Trying to load font information for U+msb on input line 308
 .
 
 (c:/Users/balglave/AppData/Roaming/TinyTeX/texmf-dist/tex/latex/amsfonts/umsb.f
@@ -1569,63 +1571,67 @@ b.cfg
 File: mt-msb.cfg 2005/06/01 v1.0 microtype config. file: AMS symbols (b) (RS)
 )
 LaTeX Font Info:    Trying to load font information for U+wasy on input line 30
-3.
+8.
 
 (c:/Users/balglave/AppData/Roaming/TinyTeX/texmf-dist/tex/latex/wasysym/uwasy.f
 d
 File: uwasy.fd 2020/01/19 v2.4 Wasy-2 symbol font definitions
 )
 LaTeX Font Info:    Font shape `T1/lmss/m/it' in size <10> not available
-(Font)              Font shape `T1/lmss/m/sl' tried instead on input line 303.
+(Font)              Font shape `T1/lmss/m/sl' tried instead on input line 308.
 LaTeX Font Info:    Font shape `T1/lmss/m/it' in size <7> not available
-(Font)              Font shape `T1/lmss/m/sl' tried instead on input line 303.
+(Font)              Font shape `T1/lmss/m/sl' tried instead on input line 308.
 LaTeX Font Info:    Font shape `T1/lmss/m/it' in size <5> not available
-(Font)              Font shape `T1/lmss/m/sl' tried instead on input line 303.
+(Font)              Font shape `T1/lmss/m/sl' tried instead on input line 308.
 
-Overfull \hbox (2.84639pt too wide) in paragraph at lines 303--303
+Overfull \hbox (2.84639pt too wide) in paragraph at lines 308--308
  \T1/lmss/bx/n/8 (-20) Examples 
  []
 
-<images/EVHOE_stations.jpg, id=102, 384.6735pt x 484.866pt>
+<images/EVHOE_stations.jpg, id=112, 384.6735pt x 484.866pt>
 File: images/EVHOE_stations.jpg Graphic file (type jpg)
 <use images/EVHOE_stations.jpg>
-Package pdftex.def Info: images/EVHOE_stations.jpg  used on input line 303.
+Package pdftex.def Info: images/EVHOE_stations.jpg  used on input line 308.
 (pdftex.def)             Requested size: 56.9055pt x 71.72057pt.
-<images/bird_apps.jpg, id=103, 857.2025pt x 481.8pt>
+<images/bird_apps.jpg, id=113, 857.2025pt x 481.8pt>
 File: images/bird_apps.jpg Graphic file (type jpg)
 <use images/bird_apps.jpg>
-Package pdftex.def Info: images/bird_apps.jpg  used on input line 303.
+Package pdftex.def Info: images/bird_apps.jpg  used on input line 308.
 (pdftex.def)             Requested size: 85.35826pt x 47.96962pt.
-<images/harvest_picture.PNG, id=104, 187.45032pt x 176.15813pt>
+<images/harvest_picture.PNG, id=114, 187.45032pt x 176.15813pt>
 File: images/harvest_picture.PNG Graphic file (type png)
 <use images/harvest_picture.PNG>
-Package pdftex.def Info: images/harvest_picture.PNG  used on input line 303.
+Package pdftex.def Info: images/harvest_picture.PNG  used on input line 308.
 (pdftex.def)             Requested size: 71.13188pt x 66.8467pt.
 [2
 
  <./images/EVHOE_stations.jpg> <./images/bird_apps.jpg> <./images/harvest_pictu
-re.PNG>] [3
+re.PNG>]
+LaTeX Font Info:    Font shape `T1/lmss/bx/it' in size <7> not available
+(Font)              Font shape `T1/lmss/bx/sl' tried instead on input line 331.
+
+[3
 
 ] [4
 
 ]
-<images/logbooks_data.png, id=164, 361.35pt x 361.35pt>
+<images/logbooks_data.png, id=179, 361.35pt x 361.35pt>
 File: images/logbooks_data.png Graphic file (type png)
 <use images/logbooks_data.png>
-Package pdftex.def Info: images/logbooks_data.png  used on input line 384.
+Package pdftex.def Info: images/logbooks_data.png  used on input line 387.
 (pdftex.def)             Requested size: 142.26378pt x 142.26578pt.
 
-Overfull \hbox (3.98428pt too wide) in paragraph at lines 384--384
+Overfull \hbox (3.98428pt too wide) in paragraph at lines 387--387
 [][]  
  []
 
-<images/vms_data.png, id=165, 361.35pt x 361.35pt>
+<images/vms_data.png, id=180, 361.35pt x 361.35pt>
 File: images/vms_data.png Graphic file (type png)
 <use images/vms_data.png>
-Package pdftex.def Info: images/vms_data.png  used on input line 384.
+Package pdftex.def Info: images/vms_data.png  used on input line 387.
 (pdftex.def)             Requested size: 142.26378pt x 142.26578pt.
 
-Overfull \hbox (3.98428pt too wide) in paragraph at lines 384--384
+Overfull \hbox (3.98428pt too wide) in paragraph at lines 387--387
 [][]  
  []
 
@@ -1636,122 +1642,129 @@ stination with the same identifier (name{commercial-catch-declarations-data-in-
 fishery-science}) has been already used, duplicate ignored
 <to be read again> 
                    \relax 
-l.384 \end{frame}
+l.387 \end{frame}
                  
 File: images/logbooks_data.png Graphic file (type png)
 <use images/logbooks_data.png>
-Package pdftex.def Info: images/logbooks_data.png  used on input line 384.
+Package pdftex.def Info: images/logbooks_data.png  used on input line 387.
 (pdftex.def)             Requested size: 142.26378pt x 142.26578pt.
 
-Overfull \hbox (3.98428pt too wide) in paragraph at lines 384--384
+Overfull \hbox (3.98428pt too wide) in paragraph at lines 387--387
 [][]  
  []
 
 File: images/vms_data.png Graphic file (type png)
 <use images/vms_data.png>
-Package pdftex.def Info: images/vms_data.png  used on input line 384.
+Package pdftex.def Info: images/vms_data.png  used on input line 387.
 (pdftex.def)             Requested size: 142.26378pt x 142.26578pt.
 
-Overfull \hbox (3.98428pt too wide) in paragraph at lines 384--384
+Overfull \hbox (3.98428pt too wide) in paragraph at lines 387--387
 [][]  
  []
 
 [6
 
 ]
-<images/realloc.png, id=205, 942.2402pt x 416.8373pt>
+<images/realloc.png, id=221, 942.2402pt x 416.8373pt>
 File: images/realloc.png Graphic file (type png)
 <use images/realloc.png>
-Package pdftex.def Info: images/realloc.png  used on input line 420.
+Package pdftex.def Info: images/realloc.png  used on input line 423.
 (pdftex.def)             Requested size: 312.9803pt x 138.4599pt.
 
-Overfull \hbox (5.69043pt too wide) in paragraph at lines 420--420
+Overfull \hbox (5.69043pt too wide) in paragraph at lines 423--423
  [] 
  []
 
 
-Overfull \hbox (13.23767pt too wide) in paragraph at lines 420--420
+Overfull \hbox (13.23767pt too wide) in paragraph at lines 423--423
  [] 
  []
 
 
-Overfull \hbox (25.23766pt too wide) in paragraph at lines 420--420
+Overfull \hbox (25.23766pt too wide) in paragraph at lines 423--423
  [] 
  []
 
 [7
 
  <./images/realloc.png>]pdfTeX warning (ext4): destination with the same identi
-fier (name{modelling-change-of-support}) has been already used, duplicate ignor
-ed
+fier (name{two-alternative-procedures-to-reallocate-catches}) has been already 
+used, duplicate ignored
 <to be read again> 
                    \relax 
-l.420 \end{frame}
+l.423 \end{frame}
                  
 File: images/realloc.png Graphic file (type png)
 <use images/realloc.png>
-Package pdftex.def Info: images/realloc.png  used on input line 420.
+Package pdftex.def Info: images/realloc.png  used on input line 423.
 (pdftex.def)             Requested size: 312.9803pt x 138.4599pt.
 
-Overfull \hbox (5.69043pt too wide) in paragraph at lines 420--420
+Overfull \hbox (5.69043pt too wide) in paragraph at lines 423--423
  [] 
  []
 
 
-Overfull \hbox (13.23767pt too wide) in paragraph at lines 420--420
+Overfull \hbox (13.23767pt too wide) in paragraph at lines 423--423
  [] 
  []
 
 
-Overfull \hbox (25.23766pt too wide) in paragraph at lines 420--420
+Overfull \hbox (25.23766pt too wide) in paragraph at lines 423--423
  [] 
  []
 
 [8
 
-]pdfTeX warning (ext4): destination with the same identifier (name{modelling-ch
-ange-of-support}) has been already used, duplicate ignored
+]pdfTeX warning (ext4): destination with the same identifier (name{two-alternat
+ive-procedures-to-reallocate-catches}) has been already used, duplicate ignored
+
 <to be read again> 
                    \relax 
-l.420 \end{frame}
+l.423 \end{frame}
                  
 File: images/realloc.png Graphic file (type png)
 <use images/realloc.png>
-Package pdftex.def Info: images/realloc.png  used on input line 420.
+Package pdftex.def Info: images/realloc.png  used on input line 423.
 (pdftex.def)             Requested size: 312.9803pt x 138.4599pt.
 
-Overfull \hbox (5.69043pt too wide) in paragraph at lines 420--420
+Overfull \hbox (5.69043pt too wide) in paragraph at lines 423--423
  [] 
  []
 
 
-Overfull \hbox (13.23767pt too wide) in paragraph at lines 420--420
+Overfull \hbox (13.23767pt too wide) in paragraph at lines 423--423
  [] 
  []
 
 
-Overfull \hbox (25.23766pt too wide) in paragraph at lines 420--420
+Overfull \hbox (25.23766pt too wide) in paragraph at lines 423--423
  [] 
  []
 
 [9
 
 ]
-<images/data_plot.png, id=268, 361.35pt x 361.35pt>
+<images/data_plot.png, id=286, 361.35pt x 361.35pt>
 File: images/data_plot.png Graphic file (type png)
 <use images/data_plot.png>
-Package pdftex.def Info: images/data_plot.png  used on input line 528.
+Package pdftex.def Info: images/data_plot.png  used on input line 534.
 (pdftex.def)             Requested size: 85.35826pt x 85.35835pt.
 
-Overfull \hbox (16.21852pt too wide) in paragraph at lines 528--528
+Overfull \hbox (16.21852pt too wide) in paragraph at lines 534--534
 [][]  
  []
 
-<images/solea_solea.png, id=271, 115.632pt x 53.9616pt>
+LaTeX Font Info:    Font shape `T1/lmss/b/n' in size <7> not available
+(Font)              Font shape `T1/lmss/bx/n' tried instead on input line 534.
+LaTeX Font Info:    Font shape `T1/lmss/b/n' in size <5> not available
+(Font)              Font shape `T1/lmss/bx/n' tried instead on input line 534.
+<images/solea_solea.png, id=289, 115.632pt x 53.9616pt>
 File: images/solea_solea.png Graphic file (type png)
 <use images/solea_solea.png>
-Package pdftex.def Info: images/solea_solea.png  used on input line 528.
+Package pdftex.def Info: images/solea_solea.png  used on input line 534.
 (pdftex.def)             Requested size: 56.9055pt x 26.55585pt.
+LaTeX Font Info:    Font shape `T1/lmss/b/n' in size <10> not available
+(Font)              Font shape `T1/lmss/bx/n' tried instead on input line 534.
 [10
 
  <./images/data_plot.png (PNG copy)> <./images/solea_solea.png>]pdfTeX warning 
@@ -1759,20 +1772,20 @@ Package pdftex.def Info: images/solea_solea.png  used on input line 528.
 se-study}) has been already used, duplicate ignored
 <to be read again> 
                    \relax 
-l.528 \end{frame}
+l.534 \end{frame}
                  
 File: images/data_plot.png Graphic file (type png)
 <use images/data_plot.png>
-Package pdftex.def Info: images/data_plot.png  used on input line 528.
+Package pdftex.def Info: images/data_plot.png  used on input line 534.
 (pdftex.def)             Requested size: 85.35826pt x 85.35835pt.
 
-Overfull \hbox (16.21852pt too wide) in paragraph at lines 528--528
+Overfull \hbox (16.21852pt too wide) in paragraph at lines 534--534
 [][]  
  []
 
 File: images/solea_solea.png Graphic file (type png)
 <use images/solea_solea.png>
-Package pdftex.def Info: images/solea_solea.png  used on input line 528.
+Package pdftex.def Info: images/solea_solea.png  used on input line 534.
 (pdftex.def)             Requested size: 56.9055pt x 26.55585pt.
 [11
 
@@ -1780,20 +1793,20 @@ Package pdftex.def Info: images/solea_solea.png  used on input line 528.
 stimation-and-case-study}) has been already used, duplicate ignored
 <to be read again> 
                    \relax 
-l.528 \end{frame}
+l.534 \end{frame}
                  
 File: images/data_plot.png Graphic file (type png)
 <use images/data_plot.png>
-Package pdftex.def Info: images/data_plot.png  used on input line 528.
+Package pdftex.def Info: images/data_plot.png  used on input line 534.
 (pdftex.def)             Requested size: 85.35826pt x 85.35835pt.
 
-Overfull \hbox (16.21852pt too wide) in paragraph at lines 528--528
+Overfull \hbox (16.21852pt too wide) in paragraph at lines 534--534
 [][]  
  []
 
 File: images/solea_solea.png Graphic file (type png)
 <use images/solea_solea.png>
-Package pdftex.def Info: images/solea_solea.png  used on input line 528.
+Package pdftex.def Info: images/solea_solea.png  used on input line 534.
 (pdftex.def)             Requested size: 56.9055pt x 26.55585pt.
 [12
 
@@ -1801,103 +1814,132 @@ Package pdftex.def Info: images/solea_solea.png  used on input line 528.
 stimation-and-case-study}) has been already used, duplicate ignored
 <to be read again> 
                    \relax 
-l.528 \end{frame}
+l.534 \end{frame}
                  
 File: images/data_plot.png Graphic file (type png)
 <use images/data_plot.png>
-Package pdftex.def Info: images/data_plot.png  used on input line 528.
+Package pdftex.def Info: images/data_plot.png  used on input line 534.
 (pdftex.def)             Requested size: 85.35826pt x 85.35835pt.
 
-Overfull \hbox (16.21852pt too wide) in paragraph at lines 528--528
+Overfull \hbox (16.21852pt too wide) in paragraph at lines 534--534
 [][]  
  []
 
 File: images/solea_solea.png Graphic file (type png)
 <use images/solea_solea.png>
-Package pdftex.def Info: images/solea_solea.png  used on input line 528.
+Package pdftex.def Info: images/solea_solea.png  used on input line 534.
 (pdftex.def)             Requested size: 56.9055pt x 26.55585pt.
 [13
 
 ]
-<images/res_simu_plot.png, id=346, 289.08pt x 542.025pt>
+<images/res_simu_plot.png, id=368, 289.08pt x 542.025pt>
 File: images/res_simu_plot.png Graphic file (type png)
 <use images/res_simu_plot.png>
-Package pdftex.def Info: images/res_simu_plot.png  used on input line 556.
+Package pdftex.def Info: images/res_simu_plot.png  used on input line 562.
 (pdftex.def)             Requested size: 113.81102pt x 213.39038pt.
-<images/map_simu_plot.png, id=347, 433.62pt x 542.025pt>
+<images/map_simu_plot.png, id=369, 433.62pt x 542.025pt>
 File: images/map_simu_plot.png Graphic file (type png)
 <use images/map_simu_plot.png>
-Package pdftex.def Info: images/map_simu_plot.png  used on input line 556.
+Package pdftex.def Info: images/map_simu_plot.png  used on input line 562.
 (pdftex.def)             Requested size: 156.49014pt x 195.6168pt.
 [14
 
  <./images/res_simu_plot.png> <./images/map_simu_plot.png (PNG copy)>]
-<images/par_plot.png, id=367, 433.62pt x 542.025pt>
+<images/par_plot.png, id=390, 247.6452pt x 309.5565pt>
 File: images/par_plot.png Graphic file (type png)
 <use images/par_plot.png>
-Package pdftex.def Info: images/par_plot.png  used on input line 582.
-(pdftex.def)             Requested size: 142.26378pt x 177.82669pt.
+Package pdftex.def Info: images/par_plot.png  used on input line 597.
+(pdftex.def)             Requested size: 128.0374pt x 160.04922pt.
 
-Overfull \hbox (19.34972pt too wide) in paragraph at lines 582--582
+Overfull \hbox (5.12334pt too wide) in paragraph at lines 597--597
  [] 
  []
 
-<images/case_study_plot.png, id=368, 433.62pt x 542.025pt>
+<images/case_study_plot.png, id=391, 433.62pt x 542.025pt>
 File: images/case_study_plot.png Graphic file (type png)
 <use images/case_study_plot.png>
-Package pdftex.def Info: images/case_study_plot.png  used on input line 582.
+Package pdftex.def Info: images/case_study_plot.png  used on input line 597.
 (pdftex.def)             Requested size: 156.49014pt x 195.6168pt.
 [15
 
- <./images/par_plot.png> <./images/case_study_plot.png (PNG copy)>] [16
+ <./images/par_plot.png> <./images/case_study_plot.png (PNG copy)>]pdfTeX warni
+ng (ext4): destination with the same identifier (name{case-study-sole-in-the-ba
+y-of-biscay}) has been already used, duplicate ignored
+<to be read again> 
+                   \relax 
+l.597 \end{frame}
+                 
+File: images/par_plot.png Graphic file (type png)
+<use images/par_plot.png>
+Package pdftex.def Info: images/par_plot.png  used on input line 597.
+(pdftex.def)             Requested size: 128.0374pt x 160.04922pt.
+
+Overfull \hbox (5.12334pt too wide) in paragraph at lines 597--597
+ [] 
+ []
+
+File: images/case_study_plot.png Graphic file (type png)
+<use images/case_study_plot.png>
+Package pdftex.def Info: images/case_study_plot.png  used on input line 597.
+(pdftex.def)             Requested size: 156.49014pt x 195.6168pt.
+[16
+
+] [17
 
 ]pdfTeX warning (ext4): destination with the same identifier (name{discussion-1
 }) has been already used, duplicate ignored
 <to be read again> 
                    \relax 
-l.628 \end{frame}
-                  [17
-
-]pdfTeX warning (ext4): destination with the same identifier (name{discussion-1
-}) has been already used, duplicate ignored
-<to be read again> 
-                   \relax 
-l.628 \end{frame}
+l.650 \end{frame}
                   [18
 
 ]pdfTeX warning (ext4): destination with the same identifier (name{discussion-1
 }) has been already used, duplicate ignored
 <to be read again> 
                    \relax 
-l.628 \end{frame}
+l.650 \end{frame}
                   [19
 
-]
-<images/peche_afrique_artisanale.jpg, id=465, 1602.98875pt x 901.3675pt>
-File: images/peche_afrique_artisanale.jpg Graphic file (type jpg)
-<use images/peche_afrique_artisanale.jpg>
-Package pdftex.def Info: images/peche_afrique_artisanale.jpg  used on input lin
-e 648.
-(pdftex.def)             Requested size: 128.0374pt x 71.98708pt.
-<images/peche_artisanale.jpg, id=466, 485.56406pt x 162.6075pt>
-File: images/peche_artisanale.jpg Graphic file (type jpg)
-<use images/peche_artisanale.jpg>
-Package pdftex.def Info: images/peche_artisanale.jpg  used on input line 648.
-(pdftex.def)             Requested size: 128.0374pt x 42.8774pt.
-<images/peche_hauturiere.jpg, id=467, 642.4pt x 361.35pt>
-File: images/peche_hauturiere.jpg Graphic file (type jpg)
-<use images/peche_hauturiere.jpg>
-Package pdftex.def Info: images/peche_hauturiere.jpg  used on input line 648.
-(pdftex.def)             Requested size: 128.0374pt x 72.0206pt.
-<images/thon_rouge.jpg, id=468, 677.53125pt x 423.83344pt>
-File: images/thon_rouge.jpg Graphic file (type jpg)
-<use images/thon_rouge.jpg>
-Package pdftex.def Info: images/thon_rouge.jpg  used on input line 648.
-(pdftex.def)             Requested size: 128.0374pt x 80.09589pt.
-[20
+]pdfTeX warning (ext4): destination with the same identifier (name{discussion-1
+}) has been already used, duplicate ignored
+<to be read again> 
+                   \relax 
+l.650 \end{frame}
+                  [20
 
- <./images/peche_afrique_artisanale.jpg> <./images/peche_artisanale.jpg> <./ima
-ges/peche_hauturiere.jpg> <./images/thon_rouge.jpg>]
+]
+<images/front_page.png, id=513, 860.30208pt x 450.2421pt>
+File: images/front_page.png Graphic file (type png)
+<use images/front_page.png>
+Package pdftex.def Info: images/front_page.png  used on input line 667.
+(pdftex.def)             Requested size: 312.9803pt x 163.79768pt.
+
+Overfull \hbox (5.69043pt too wide) in paragraph at lines 667--667
+ [] 
+ []
+
+[21
+
+ <./images/front_page.png>]
+LaTeX Font Info:    External font `lmex10' loaded for size
+(Font)              <8> on input line 712.
+LaTeX Font Info:    External font `lmex10' loaded for size
+(Font)              <6> on input line 712.
+LaTeX Font Info:    Font shape `T1/lmss/b/n' in size <8> not available
+(Font)              Font shape `T1/lmss/bx/n' tried instead on input line 712.
+LaTeX Font Info:    Font shape `T1/lmss/b/n' in size <6> not available
+(Font)              Font shape `T1/lmss/bx/n' tried instead on input line 712.
+LaTeX Font Info:    Font shape `T1/lmss/m/it' in size <8> not available
+(Font)              Font shape `T1/lmss/m/sl' tried instead on input line 712.
+LaTeX Font Info:    Font shape `T1/lmss/m/it' in size <6> not available
+(Font)              Font shape `T1/lmss/m/sl' tried instead on input line 712.
+
+Overfull \vbox (0.65086pt too high) detected at line 712
+ []
+
+[22
+
+]
 \tf@nav=\write7
 \openout7 = `GDREcostat_2022.nav'.
 
@@ -1909,42 +1951,48 @@ ges/peche_hauturiere.jpg> <./images/thon_rouge.jpg>]
 
 (./GDREcostat_2022.aux)
 Package rerunfilecheck Info: File `GDREcostat_2022.out' has not changed.
-(rerunfilecheck)             Checksum: AEE70CAF7E238EE6AABF4F2B4CF98B32;428.
+(rerunfilecheck)             Checksum: E2156EAB655213130E58C98DEA372CC7;463.
 Package logreq Info: Writing requests to 'GDREcostat_2022.run.xml'.
 \openout1 = `GDREcostat_2022.run.xml'.
 
  ) 
 Here is how much of TeX's memory you used:
- 33700 strings out of 480216
- 671012 string characters out of 5892982
- 1359615 words of memory out of 5000000
- 50856 multiletter control sequences out of 15000+600000
- 538969 words of font info for 121 fonts, out of 8000000 for 9000
+ 33782 strings out of 480216
+ 671948 string characters out of 5892982
+ 1362089 words of memory out of 5000000
+ 50900 multiletter control sequences out of 15000+600000
+ 570523 words of font info for 154 fonts, out of 8000000 for 9000
  14 hyphenation exceptions out of 8191
  99i,20n,104p,1012b,1728s stack positions out of 5000i,500n,10000p,200000b,80000s
 {c:/Users/balglave/AppData/Roaming/TinyTeX/texmf-dist/fonts/enc/dvips/lm/lm-m
-athsy.enc}{c:/Users/balglave/AppData/Roaming/TinyTeX/texmf-dist/fonts/enc/dvips
-/lm/lm-mathex.enc}{c:/Users/balglave/AppData/Roaming/TinyTeX/texmf-dist/fonts/e
-nc/dvips/lm/lm-mathit.enc}{c:/Users/balglave/AppData/Roaming/TinyTeX/texmf-dist
+athit.enc}{c:/Users/balglave/AppData/Roaming/TinyTeX/texmf-dist/fonts/enc/dvips
+/lm/lm-mathsy.enc}{c:/Users/balglave/AppData/Roaming/TinyTeX/texmf-dist/fonts/e
+nc/dvips/lm/lm-mathex.enc}{c:/Users/balglave/AppData/Roaming/TinyTeX/texmf-dist
 /fonts/enc/dvips/lm/lm-rm.enc}{c:/Users/balglave/AppData/Roaming/TinyTeX/texmf-
 dist/fonts/enc/dvips/lm/lm-ec.enc}<c:/Users/balglave/AppData/Roaming/TinyTeX/te
 xmf-dist/fonts/type1/public/lm/lmex10.pfb><c:/Users/balglave/AppData/Roaming/Ti
-nyTeX/texmf-dist/fonts/type1/public/lm/lmmi7.pfb><c:/Users/balglave/AppData/Roa
-ming/TinyTeX/texmf-dist/fonts/type1/public/lm/lmss10.pfb><c:/Users/balglave/App
-Data/Roaming/TinyTeX/texmf-dist/fonts/type1/public/lm/lmss12.pfb><c:/Users/balg
-lave/AppData/Roaming/TinyTeX/texmf-dist/fonts/type1/public/lm/lmss8.pfb><c:/Use
-rs/balglave/AppData/Roaming/TinyTeX/texmf-dist/fonts/type1/public/lm/lmss9.pfb>
+nyTeX/texmf-dist/fonts/type1/public/lm/lmmi6.pfb><c:/Users/balglave/AppData/Roa
+ming/TinyTeX/texmf-dist/fonts/type1/public/lm/lmmi7.pfb><c:/Users/balglave/AppD
+ata/Roaming/TinyTeX/texmf-dist/fonts/type1/public/lm/lmmi8.pfb><c:/Users/balgla
+ve/AppData/Roaming/TinyTeX/texmf-dist/fonts/type1/public/lm/lmss10.pfb><c:/User
+s/balglave/AppData/Roaming/TinyTeX/texmf-dist/fonts/type1/public/lm/lmss12.pfb>
 <c:/Users/balglave/AppData/Roaming/TinyTeX/texmf-dist/fonts/type1/public/lm/lms
-sbx10.pfb><c:/Users/balglave/AppData/Roaming/TinyTeX/texmf-dist/fonts/type1/pub
-lic/lm/lmsso8.pfb><c:/Users/balglave/AppData/Roaming/TinyTeX/texmf-dist/fonts/t
-ype1/public/lm/lmsy10.pfb><c:/Users/balglave/AppData/Roaming/TinyTeX/texmf-dist
-/fonts/type1/public/lm/lmsy5.pfb><c:/Users/balglave/AppData/Roaming/TinyTeX/tex
-mf-dist/fonts/type1/public/lm/lmsy7.pfb><c:/Users/balglave/AppData/Roaming/Tiny
-TeX/texmf-dist/fonts/type1/urw/zapfding/uzdr.pfb>
-Output written on GDREcostat_2022.pdf (20 pages, 4611004 bytes).
+s8.pfb><c:/Users/balglave/AppData/Roaming/TinyTeX/texmf-dist/fonts/type1/public
+/lm/lmss9.pfb><c:/Users/balglave/AppData/Roaming/TinyTeX/texmf-dist/fonts/type1
+/public/lm/lmssbo10.pfb><c:/Users/balglave/AppData/Roaming/TinyTeX/texmf-dist/f
+onts/type1/public/lm/lmssbx10.pfb><c:/Users/balglave/AppData/Roaming/TinyTeX/te
+xmf-dist/fonts/type1/public/lm/lmsso8.pfb><c:/Users/balglave/AppData/Roaming/Ti
+nyTeX/texmf-dist/fonts/type1/public/lm/lmsy10.pfb><c:/Users/balglave/AppData/Ro
+aming/TinyTeX/texmf-dist/fonts/type1/public/lm/lmsy5.pfb><c:/Users/balglave/App
+Data/Roaming/TinyTeX/texmf-dist/fonts/type1/public/lm/lmsy6.pfb><c:/Users/balgl
+ave/AppData/Roaming/TinyTeX/texmf-dist/fonts/type1/public/lm/lmsy7.pfb><c:/User
+s/balglave/AppData/Roaming/TinyTeX/texmf-dist/fonts/type1/public/lm/lmsy8.pfb><
+c:/Users/balglave/AppData/Roaming/TinyTeX/texmf-dist/fonts/type1/urw/zapfding/u
+zdr.pfb>
+Output written on GDREcostat_2022.pdf (22 pages, 29348839 bytes).
 PDF statistics:
- 559 PDF objects out of 1000 (max. 8388607)
- 451 compressed objects within 5 object streams
- 53 named destinations out of 1000 (max. 500000)
- 43259 words of extra memory for PDF output out of 51595 (max. 10000000)
+ 649 PDF objects out of 1000 (max. 8388607)
+ 527 compressed objects within 6 object streams
+ 58 named destinations out of 1000 (max. 500000)
+ 63737 words of extra memory for PDF output out of 74296 (max. 10000000)
 
