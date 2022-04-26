@@ -81,6 +81,48 @@ mapBase <- map("worldHires", fill = T, plot = F)
 mapBase <- st_as_sf(mapBase) %>% filter(ID %in% c("France","Spain"))
 ```
 
+# Introduction
+
+Spatial ecological data are becoming more and more accessible every days thanks to the huge effort from the scientific community to provide information in the blind spots of ecology, evolution and conservation [@nathan2022big,@hampton2013big,@gremillet2022big]. These data are crucial to face the current challenges related to large scales ecological issues (e.g. tracking global change - @maureaud_are_2020) as well as smaller scale questions (e.g. tracking animal movement - @nathan2022big). However, these new data are highly heterogeneous in size, type and sampling design making there combination a methodological challenge [@pacifici2017integrating,@fletcher_practical_2019,@miller2019recent,@renner2019combining,@isaac2020data]. 
+For instance, ones often compare scientific survey data - that benefit from a controlled sampling plan and standard protocol - to citizen science data - that provide more data but that is also caracterized by misreporting or opportunistic sampling and then by potential sampling bias [@botella2021jointly,@steen2021spatial]. Another less frequently mentionned data are declarations data. We refer to declaration data as the mandatory data that must be reported by some agent as a legal requirement to proceed with his activity. As they are mandatory, declaration data are usually very large datasets such as commercial catch declarations data in fisheries science [@hintzenVMStoolsOpensourceSoftware2012] or harvest data in hunting [@bauder2021mismatched,@gilbert2021integrating]; such way, these may be very informative of species spatial ecology. However, they are often declared at the scale of coarse spatial units while scientific survey (and commonly citizen science data) are usually reported with their exact locations. Furthermore, these administrative units do not generaly have a resolution that is relevant for ecological analysis and conservation [@pacifici2019resolving]. Developing methods to infer spatial ecological process at a fine scale from coarse declarations data and integrate these with higher resolution data is then a challenge that can give access to huge amount of information.
+
+Reconciling spatial (and eventually temporal) scales properly when different set of observations do not have the same resolution is a well known issue in geography, ecology, agriculture, geology and statistics [@gotway2002combining]. Inferring values of a variable at points or blocks different from those that have been observed is commonly refered as the *change of support problem* (COS) in the statistical literature. Issues related to COS can usually be classified within 3 categories: 
+
+- (1) spatial and temporal misalignement (when for example some multivariate data, where not all variables have been observed over all locations - see for example @finley2014bayesian).
+
+- (2) modifiable areal unit problem (MAUP) when data are aggregated over large scales 
+
+
+Several studies have tackled this issue; for instance, @gotway2002combining and @gelfand2010misaligned proposed extensive reviews on COS and how it can be handled in statistical modelling. @mugglin2000fully, @gelfand2001change, @gotway2007geostatistical, @wikle2005combining proposed generic approaches for adressing COS in spatial or spatio-temporal context. kim2016change extended the framework from @wikle2005combining to account for temporal modelling and time-varying parameters. In the context of health analysis, @young2007linking proposed to compare some standard (and rough) way to connect data that do not have the same spatial resolution with a method properly accounting for COS. berrocal2010bivariate and berrocal2010spatio proposed a spatio-temporal method for fusing several air pollution data: one from coarse resolution but with full spatial coverage and another recorded at point level, with sparse distribution but where records almost corresponds to the true value of the process. In climate science, downscaling is common practice and is usually realized by combining large scale with lower scale dynamic models; more recently, @reich2014spectral and @parker2015multiresolution proposed a spectral statistical approach to downscale information from large scale model to lower scales. The 
+
+[@gotway2002combining,@gotway2007geostatistical,@young2007linking,@berrocal2010bivariate,@berrocal2010spatio,@ren2013hierarchical,@reich2014spectral,@parker2015multiresolution,@kim2016change,@pacifici2019resolving,@gilbert2021integrating]. Typically, 
+
+
+
+It is recognized as a Broadly speaking, COS is 
+
+
+
+Combining these may require extra-care and a critical look at the data as well as methodological development to correct for these bias [@fletcher_practical_2019,@miller2019recent]. 
+
+
+
+Typically, data may be recorded following a standardized sampling plan with a controlled protocol. These data are considered as high quality data; however, they are often characterized by a low amount of samples due to the technical support they require and to their sampling cost. These are typically referred to as 'scientific survey' data (see for instance, the DATRAS online database which gathers the data from the main European Trawl scientific surveys [@ices_report_2014]). Alternatively, data may have been recorded from opportunistic sampling The strong development of citizen science data have allowed to provide additionnal information relying on volunteers to record data 
+
+
+Recently, methods have been developped to combine high quality data benefiting from a standardized protocol and controled sampling plan with opportunistically sampled data that are 
+
+
+the increasing amount of citizen science data
+
+
+They provide standardized ecological data on demersal fish over the whole European shelf. Alternatively, the Ebird plateform provide citizen science records of birds and is today extensively used in spatial and population models for ecological and conservation purposes [@sullivan2014ebird]. 
+
+ and new methods have been developped to integrate all these datasources  .
+
+
+
+
 
 References for change of support issues in integrated modelling:
 
