@@ -50,7 +50,9 @@ header-includes:
    - \usepackage{caption}
    
 output            :
-  papaja::apa6_pdf
+  papaja::apa6_pdf:
+    includes:
+            in_header: header.sty
     # reference_docx: mystyles_number_test.docx
 ---
 
@@ -73,7 +75,7 @@ library(sf)
 ```{r analysis-preferences}
 # Seed for random number generation
 set.seed(42)
-knitr::opts_chunk$set(cache.extra = knitr::rand_seed)
+knitr::opts_chunk$set(cache.extra = knitr::rand_seed, cache = TRUE)
 
 mapBase <- map("worldHires", fill = T, plot = F)
 mapBase <- st_as_sf(mapBase) %>% filter(ID %in% c("France","Spain"))
@@ -91,15 +93,53 @@ https://www.sciencedirect.com/science/article/pii/S0169534719302551#b0010
 https://www.sciencedirect.com/science/article/pii/S0006320721001993
 
 
-# Material and methods
+#  Introduction 
+* Commencer par la motivation peche
+--> knowledge of essential habitat --> Species distribution model --> link between biomass and habitat to identify essential habitat
+-->  Data from scientific survey, precisely geolocalized standard sampling protocol, expensive and time consuming
+--> On the other hand declaration data, spatialized at coarser level  but cheap and reglementaire
+Combining the two sources of data.
 
-We base our approach on the model developped by @alglave_combining_2022. In this framework, all observations were supposed to be realised at a fine scale. Here, we extend the framework to potentially provide fine scale predictions from data that have a coarse resolution (landings data) and combine these data with other fine scale datasets such as scientific data.
+This problem is not unique, other exampl in terms of apllication 
 
-## Defining the problem from a modelling point of view
+Change of support form fine to coarse sptial level 
 
-**Definition of the variables**
+A solution the reallocation process
 
-Let's define the latent field $S$ and the punctual observations $Y$. $S$ is a spatial log-Gaussian Field (GF) defined as $\log(S(x))=\mu+\beta . \Gamma(x) + \delta(x)$ (Figure \@ref(fig:SchemeRealloc)). We consider a discrete study domain where $x \in [\![1,n]\!]$ stands for the discrete locations. $\beta . \Gamma(x)$ is the covariate term with $\Gamma$ the matrix of design of the covariates and $\beta$ the effect of the covariates. $\delta(x)$ is a GF capturing spatial correlation ($\delta \sim \mathcal{N}(0,\Sigma)$).
+** Pour la discu, simulation conditionnelle ? **
+
+We proposed an alternative approach to account for the change of support and we compare it to the approach proposed in alglave but also to a golden standard to assess the consequences of these methods.
+
+Paper organized as follow 
+
+Section 2. presentation of the reference model and detail the reallocation process
+
+Section 3. Presnetation of an alternaion way to deal with change of support
+
+Section 4. simulation study to asses the bias and/or the loss of precision of the two methodes compared with the golden standard
+
+Section 5. Appllication on sole of the Bay of Biscay
+
+Section 6. Discu/conclu
+
+
+
+
+## An explicitly spatialized catch model
+
+In  @alglave_combining_2022, the authors propose a hierarchical spatial model to combine scientific survey data obtained through a standardized sampling protocol and catch data harvested by fishermen. This section provides the key ingredient of this model and raises some concern on the spatialization of the commercial catch data.
+
+Let  $D\subset \R^2$ be a spatial domain and $\bm{S}=(S(x), x\in D)$ the spatial repartition of the biomass for a species of interest.  $\bm{S}$ is assumed  to be a spatial log-Gaussian Random Field (GRF) defined as $\log(S(x))=\mu + \beta . \Gamma(x) + \delta(x)$ (Figure \@ref(fig:SchemeRealloc)) where $\bm{\delta}=(\delta(x), x\in D)$ is a zero mean GRF with covariance matrix $\Sigma$.  As the catch are   zero-inflated positive continuous data,  following  @thorson_three_2018,  the authors model a catch at a given site $X_i$ by a mixture model between a Dirac mass at $0$ and Log Normal distribution
+
+\begin{equation}
+Y_i | S(x_i) \overset{ind}{\sim} p_i \delta_0+ (1-p_i) B_i, \quad B_i \sim \mathcal{L}\left ( \frac{S(x_i)}{1-p_i} ,\sigma^2\right),
+\end{equation}
+
+
+<!-- 
+Je pense qu'il ne faut pas parler de la grille discrete tout de suite car S est défini sur un espace continu et moralement l'intensité du processus de poisson aussi. le passage à la grille est la pour simplifier l'expression de la vraisemblance, on peut dire qu'on fait une approximation pour des raisons numériques 
+
+We consider a discrete study domain where $x \in [\![1,n]\!]$ stands for the discrete locations. $\beta . \Gamma(x)$ is the covariate term with $\Gamma$ the matrix of design of the covariates and $\beta$ the effect of the covariates. $\delta(x)$ is a GF capturing spatial correlation ($\delta \sim \mathcal{N}(0,\Sigma)$). -->
 
 All fishing locations $x_i$ are supposed to be known through VMS data. At each fishing location $x_i$, fishermen realize a catch $Y_i$ conditionnally on the latent field values (referred hereafter as a punctual catch). Observations are supposed to follow some distribution $\mathcal{L}_Y$.
 
