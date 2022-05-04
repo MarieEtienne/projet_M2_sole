@@ -158,13 +158,15 @@ Section 6. Discu/conclu
 
 ## An explicitly spatialized catch model
 
-In  @alglave_combining_2022, the authors propose a hierarchical spatial model to combine scientific survey data obtained through a standardized sampling protocol and catch data harvested by fishermen. This section provides the key ingredient of this model and raises some concern on the spatialization of the commercial catch data.
+In  @alglave_combining_2022, the authors propose a hierarchical spatial model to combine scientific survey data obtained through a standardized sampling protocol and catch data harvested by fishermen. This section provides a biref overview of the key ingredient of this model and raises some concern on the spatialization of the commercial catch data.
 
-Let  $D\subset \R^2$ be a spatial domain and $\bm{S}=(S(x), x\in D)$ the spatial repartition of the biomass for a species of interest.  $\bm{S}$ is assumed  to be a spatial log-Gaussian Random Field (GRF) defined as $\log(S(x))=\mu + \beta . \Gamma(x) + \delta(x)$ (Figure \@ref(fig:SchemeRealloc)) where $\bm{\delta}=(\delta(x), x\in D)$ is a zero mean GRF with covariance matrix $\Sigma$.  As the catch are   zero-inflated positive continuous data,  following  @thorson_three_2018,  the authors model a catch at a given site $X_i$ by a mixture model between a Dirac mass at $0$ and Log Normal distribution
+Let  $D\subset \R^2$ be a spatial domain and $\bm{S}=(S(x), x\in D)$ a spatial random field which represents the biomass for a species of interest.  $\bm{S}$ is assumed  to be a spatial log-Gaussian Random Field (GRF) defined as $\log(S(x))=\mu + \beta \, \Gamma(x) + \delta(x)$ (Figure \@ref(fig:SchemeRealloc)) where $\bm{\delta}=(\delta(x), x\in D)$ is a zero mean GRF with covariance matrix $\Sigma$.  As the catch are   zero-inflated positive continuous data,  following  @thorson_three_2018,  the authors model a catch at a given site $X_i$ with a mixture of a Dirac mass at $0$ and a Log Normal distribution, the proportion of the mixture being defined  conditionally on the random field $\bm{S}$.
 
-\begin{equation}
-Y_i | S(x_i) \overset{ind}{\sim} p_i \delta_0+ (1-p_i) B_i, \quad B_i \sim \mathcal{L}\left ( \frac{S(x_i)}{1-p_i} ,\sigma^2\right),
-\end{equation}
+
+\begin{align}
+Y_i | S(x_i) & \overset{ind}{\sim} p_i \delta_0+ (1-p_i) B_i, \quad B_i \sim \mathcal{L}\left ( \frac{S(x_i)}{1-p_i} ,\sigma^2\right), \cr \nonumber
+\mbox{with } p_i &= \exp(-e^\xi S(x_{i}))
+\end{align}
 
 
 <!-- 
@@ -172,44 +174,57 @@ Je pense qu'il ne faut pas parler de la grille discrete tout de suite car S est 
 
 We consider a discrete study domain where $x \in [\![1,n]\!]$ stands for the discrete locations. $\beta . \Gamma(x)$ is the covariate term with $\Gamma$ the matrix of design of the covariates and $\beta$ the effect of the covariates. $\delta(x)$ is a GF capturing spatial correlation ($\delta \sim \mathcal{N}(0,\Sigma)$). -->
 
-All fishing locations $x_i$ are supposed to be known through VMS data. At each fishing location $x_i$, fishermen realize a catch $Y_i$ conditionnally on the latent field values (referred hereafter as a punctual catch). Observations are supposed to follow some distribution $\mathcal{L}_Y$.
+In this approach all fishing locations $x_i$ and the coressponding catch are supposed to be known.
 
-$$Y_i | S(x_i), x_i \sim \mathcal{L}_Y(S(x_i),\xi,\sigma^2)$$
+<!-- however those fishinf locations are actually derived from a different dataset containing the hourly localisation of the the commercial vessels, the VMS dataset. This dataset is processed to identify the fishing location among all the recorded locations. -->
 
-In our case, observations are zero-inflated positive continuous data and they are modelled through a zero-inflated lognormal model previously introduced by @thorson_three_2018 and already used in @alglave_combining_2022. $\mathcal{L}_Y$ is decomposed it 2 parts:
+<!-- At each fishing location $x_i$, fishermen realize a catch $Y_i$ conditionnally on the latent field values (referred hereafter as a punctual catch). Observations are supposed to follow some distribution $\mathcal{L}_Y$. -->
 
-- the probability to obtain a zero-catch which is modelled as a Bernoulli variable with probability $p_{i}=\exp(-e^\xi .S(x_{i}))$. $\xi$ is a parameter controlling zero-inflation. When $\xi$ increases, the amount of zero in the data decreases.
+<!-- $$Y_i | S(x_i), x_i \sim \mathcal{L}_Y(S(x_i),\xi,\sigma^2)$$ -->
 
-- if the catch is positive, the probability to obtain some observation value $y_i$ is modelled through a positive continous distribution $\operatorname{L}$ (here a lognormal distribution - its parameterization is described in SM)) with mean component $\frac{S(x_{i})}{1-p_{i}}$ and variance term $\sigma^2$.
+<!-- In our case, observations are zero-inflated positive continuous data and they are modelled through a zero-inflated lognormal model previously introduced by @thorson_three_2018 and already used in @alglave_combining_2022. $\mathcal{L}_Y$ is decomposed it 2 parts: -->
 
-$$
-\operatorname{P}\left(Y_i=y_{i} | x_i, S(x_i)\right) =
-\left\{
-    \begin{array}{ll}
-        p_i & \text { if } y_{i}=0 \\
-        \left(1-p_i\right) \cdot \operatorname{L}\left(y_{i },\frac{S(x_i)}{\left(1 - p_i\right)},\sigma^{2} \right) & \text { if } y_{i} > 0
-    \end{array}
-\right.
-$$
+<!-- - the probability to obtain a zero-catch which is modelled as a Bernoulli variable with probability $p_{i}=\exp(-e^\xi .S(x_{i}))$. $\xi$ is a parameter controlling zero-inflation. When $\xi$ increases, the amount of zero in the data decreases. -->
 
-Fishermen must declare what they catch at the level of the statistical rectangle at a daily time step. These data are recorded in logbooks data. A declaration (denoted $D_j$) is a summation of all the $Y_i$ realized on the fishing positions belonging to the catch declaration $D_j$. They can be expressed as:
+<!-- - if the catch is positive, the probability to obtain some observation value $y_i$ is modelled through a positive continous distribution $\operatorname{L}$ (here a lognormal distribution - its parameterization is described in SM)) with mean component $\frac{S(x_{i})}{1-p_{i}}$ and variance term $\sigma^2$. -->
 
-$$D_j=\sum_{i \in \mathcal{P}_j}{Y_{i}}$$
+<!-- $$ -->
+<!-- \operatorname{P}\left(Y_i=y_{i} | x_i, S(x_i)\right) = -->
+<!-- \left\{ -->
+<!--     \begin{array}{ll} -->
+<!--         p_i & \text { if } y_{i}=0 \\ -->
+<!--         \left(1-p_i\right) \cdot \operatorname{L}\left(y_{i },\frac{S(x_i)}{\left(1 - p_i\right)},\sigma^{2} \right) & \text { if } y_{i} > 0 -->
+<!--     \end{array} -->
+<!-- \right. -->
+<!-- $$ -->
 
-$\mathcal{P}_j$ is the vector of the fishing observations belonging to the declaration $D_j$. The punctual observations $Y_i$ are indexed through $i \in [\![1,m_j]\!]$ with $m_j$ the number of fishing positions belonging to the $j^{th}$ declaration.
+Actually, fishermen do not have to declare this precise information, but it is mandatory, for every vessel to declare the total daily catch aggregated at a given administrative spatial unit named  statistical rectangle. These data are recorded in logbooks data. For a given vessel, on a given day, a declaration (denoted $D_j$) is therefore the sum of all individual catch $Y_i$ realized in the unit associated with the catch  declaration $D_j$, more formally:
+
+$$D_j=\sum_{x_i \in \mathcal{A}_j}{Y(x_i)},$$
+
+where $\mathcal{A}_j$ is the administrative spatial unit associated to declaration $j$.    
+
+The original model proposed in  @alglave_combining_2022 is defined at the individual catch scale, those catch are  derived from the catch declaration combined with the VMS data. This is classically done in fisheries science REFREFEREFREF by using a uniform reallocation process. This process consists in counting, for a given vessel, on a given day,  the number $m_j$ of fishing points in $\mathcal{A}_j$ and define for each $x_i\in\mathcal{A}_j,$, the associated individual catch $Y(x_i)=D_j/m_j$. As a direct consequence, the so reconstructed individual catch are similar to a Catch Per Unit of Effort (CPUE), effort being measure in hours. As noted by @alglave_combining_2022, this process has several drawbacks.
+First, as a consequence of the reallocation process, the so reconstructed individual catches tend to exhibit smoother pattern than the original catches. Second, the actual number of data is the total number of declaration while the number of data after the reallocation process is the number of fishing locations, which is approximately 10 times the number of declarations. From a statistical point of view, this overestismation of the number of informative data tends to produce excessively narrow confidence intervals.
+
+<!-- **Catch reallocation: uniform reallocation or model-based reallocation** -->
+
+<!-- In standard processing, $D_j$ (available from logbooks) are reallocated uniformly on related $x_i$ (available from VMS) so that derived punctual observations $Y^*_i$ are computed as $Y^*_i=D_j/m_j$. This is what we call uniform (or proportional) reallocation. In this case, inference of species distribution is directly computed through reallocated $Y^*_i$ assuming these are the exact punctual observations. This strongly simplifies the actual process of observation and have most likely repercussion on model performance. -->
+
+<!-- To overcome such limitations, an alternative is to consider that only the catch declarations $D_j$ are observed while $Y_i$ are not (they are latent variables). Such way, we define some distribution $\mathcal{L}_D$ as the distribution of the catch declarations: -->
+
+To circumvent such limitations, we propose an alternative approach that models the catch declarations $D_j$ instead of the individual catch $Y(x_i)$. As we  aim to propose a model compatible with the original one, we are lead to specify  the distribution of $D_j$ which consists of a sum of $m_j$ random variables folowwing a mixture distribution. This distribution has no  known analytical form. However the catch data also exhibit some zero inflation and a skewed repartition of the values and a mixture model would be a good candidate.  Theefore, we propose to model $D_j$ as a mixture between a Dirac mass in $0$ and a lognormal distribution. In order to compare the original approach with our proposition, we define the different key quantities, i.e  the mixture proportion, the expected positive catch declaration and its variance so that to match the original propostion:
 
 
-**Catch reallocation: uniform reallocation or model-based reallocation**
+<!-- that only the catch declarations $D_j$ are observed while $Y_i$ are not (they are latent variables). Such way, we define some distribution $\mathcal{L}_D$ as the distribution of the catch declarations: -->
 
-In standard processing, $D_j$ (available from logbooks) are reallocated uniformly on related $x_i$ (available from VMS) so that derived punctual observations $Y^*_i$ are computed as $Y^*_i=D_j/m_j$. This is what we call uniform (or proportional) reallocation. In this case, inference of species distribution is directly computed through reallocated $Y^*_i$ assuming these are the exact punctual observations. This strongly simplifies the actual process of observation and have most likely repercussion on model performance.
+$$D_j | \mathcal{P}_j,\bm{S} \sim \mathcal{L}_D( \mu_j,\xi,\sigma^2)$$ 
 
-To overcome such limitation, an alternative is to consider that only the catch declarations $D_j$ are observed while $Y_i$ are not (they are latent variables). Such way, we define some distribution $\mathcal{L}_D$ as the distribution of the catch declarations:
+with $\mathcal{P}_j=(x_1,...,x_i, ...,x_{m_j})$, the list of the fishing points associated to declaration $D_j$,  $\mu_j$ the expected positive biomass, $\xi$ the zero-inflation parameter and $\sigma^2$ the variance parameter. 
 
-$$D_j | \mathcal{P}_j,S_{\mathcal{P}_j} \sim \mathcal{L}_D( S_{\mathcal{P}_j},\xi,\sigma^2)$$ 
+<!-- As $D_j=\sum_{i \in \mathcal{P}_j}{Y_{i}}$, it is possible to relate $D_j$, $Y_i$ and $S_{\mathcal{P}_j}$ through the distribution $\mathcal{L}_Y$ and $\mathcal{L}_D$. Our approach is to match the moments of $D_j$ (obtained from the moments of $\mathcal{L}_Y$) and $\mathcal{L}_D$ and then to infer $S(x)$ and $Y_i$ from $D_j$. This is what we call model-based reallocation. This model will be referred as the $D_j$ model. In contrast, the model fitted on reallocated observations $Y^*_i$ will be referred as the $Y^*_i$ model. -->
 
-with $S_{\mathcal{P}_j}=(S(x_1),...,S(x_i), ...,S(x_{m_j}))$, $\xi$ the zero-inflation parmeter and $\sigma^2$ the variance parameter. As $D_j=\sum_{i \in \mathcal{P}_j}{Y_{i}}$, it is possible to relate $D_j$, $Y_i$ and $S_{\mathcal{P}_j}$ through the distribution $\mathcal{L}_Y$ and $\mathcal{L}_D$. Our approach is to match the moments of $D_j$ (obtained from the moments of $\mathcal{L}_Y$) and $\mathcal{L}_D$ and then to infer $S(x)$ and $Y_i$ from $D_j$. This is what we call model-based reallocation. This model will be referred as the $D_j$ model. In contrast, the model fitted on reallocated observations $Y^*_i$ will be referred as the $Y^*_i$ model.
-
-In the following, $Y$ and $D$ will be assumed conditionnal on the fishing positions and the latent field values, but for notation simplicity they will be simply denoted as $Y_i$ or $D_j$ instead of $Y_i \vert x_i, S(x_i)$ and $D_j | \mathcal{P}_j,S_{\mathcal{P}_j}$.
+<!-- In the following, $Y$ and $D$ will be assumed conditionnal on the fishing positions and the latent field values, but for notation simplicity they will be simply denoted as $Y_i$ or $D_j$ instead of $Y_i \vert x_i, S(x_i)$ and $D_j | \mathcal{P}_j,S_{\mathcal{P}_j}$. -->
 
 **Matching $\mathcal{L}_Y$ and $\mathcal{L}_D$**
 
