@@ -164,13 +164,16 @@ Let  $D\subset \R^2$ be a spatial domain and $\bm{S}=(S(x), x\in D)$ a spatial r
 
 \begin{equation}
 \label{eq:defY}
-Y_i | S(x_i)  \overset{ind}{\sim} \M{p_i}{\frac{S(x_i)}{1-p_i}}{\sigma^2}
+Y_i | S(x_i)  \overset{ind}{\sim} \M{p_i}{\mu_i}{\sigma^2},
 \end{equation}
 
+where $p_i\defeq \exp(-e^\xi S(x_{i}))$ is the mixture weight, $\mu_i \defeq \frac{S(x_i)}{1-p_i}$ is the mean of the lognormal distribution and $\sigma^2$ its variance, so that  
 \begin{align}
-Y_i | S(x_i) & \overset{ind}{\sim} p_i \delta_0+ (1-p_i) B_i, \quad B_i \sim \mathcal{L}\left ( \frac{S(x_i)}{1-p_i} ,\sigma^2\right), \cr \nonumber
-\mbox{with } p_i &= \exp(-e^\xi S(x_{i}))
+P( Y_i = 0 | S(x_i) )& = \exp(-e^\xi S(x_{i}), \cr \nonumber
+Y_i  | Y_i>0, S(x_i) & \sim \mathcal{L}{ogNormal}\left ( \frac{S(x_i)}{1-p_i} ,\sigma^2\right), \cr \nonumber
 \end{align}
+
+
 
 
 <!-- 
