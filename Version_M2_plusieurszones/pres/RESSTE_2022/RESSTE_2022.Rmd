@@ -151,21 +151,37 @@ Harvest data, Wisconsin \\ (hunting)
 \end{columns}
 
 ---
-\btVFill
+<!-- \btVFill -->
 \begin{center} \Large
 \textbf{How to integrate all these datasources?}
-\vspace{\baselineskip}
+\end{center}
 \large
 (especially when they do not have the same spatial resolution)
 \normalsize
 
-\btVFill
+\onslide<2-3>{
 
+\begin{block}{ \center \textbf{Change of support} }
+
+\footnotesize
+\textbf{Common issue in statistical literature} \vspace{\baselineskip}
+
+\textbf{"Modifiable areal unit" problem (MAUP):} aggregation of data over increasingly larger geographic scales (e.g. data collected at point level but regrouped/declared at coarse level) \vspace{\baselineskip}
+
+\textbf{Several fields of application:} climatology, health science, ecology \vspace{\baselineskip}
+
+But mainly \textbf{standard observational data (Poisson, Gaussian)}, while data may be more complex in ecological applications (e.g. zero-inflated lognormal data)
+\begin{center}
+\textbf{\textcolor{BaptisteBlue}{\ding{224}} Objective of our work:} provide an approach that suits for complex data
 \end{center}
-\onslide<2>{
-\normalsize
-\textbf{\textcolor{BaptisteBlue}{\ding{224}}} Some specific application in the context of fishery science: \\
-\scriptsize
+
+\end{block}
+
+}
+
+\onslide<3>{
+\textbf{\textcolor{BaptisteBlue}{\ding{224}}} Base our model on an existing framework in the context of fishery science: \\
+\tiny
 \textit{Alglave Baptiste, Rivot Etienne, Etienne Marie-Pierre, Woillez Mathieu, Thorson James T, Vermard Youen (2022). \textbf{Combining scientific survey and commercial catch data to map fish distribution.} ICES Journal of Marine Science IN PRESS. \url{https://doi.org/10.1093/icesjms/fsac032}}
 \vspace{\baselineskip}
 }
@@ -346,7 +362,7 @@ if(run_codes){
   \textcolor{BaptisteLightGreen}{\textbf{Alternative solution}} & 
   $\textcolor{BaptisteLightGreen}{D_j}=\sum_{\textcolor{BaptisteLightGreen}{i \in \mathcal{P}_j}}{Y_{i}}$          &
   $\textcolor{BaptisteLightGreen}{D_j} | \textcolor{BaptisteBlue}{S}_{\textcolor{BaptisteLightGreen}{\mathcal{P}_j}},\textcolor{BaptisteLightGreen}{\mathcal{P}_j} \sim \mathcal{L}_D( \textcolor{BaptisteBlue}{S}_{\textcolor{BaptisteLightGreen}{\mathcal{P}_j}},\xi,\sigma^2)$
-  & \textcolor{BaptisteBlue}{\ding{224}}  Match $\mathcal{L}_D$ and $\mathcal{L}_Y$ moments \tiny (appendix) \\ 
+  & \textcolor{BaptisteBlue}{\ding{224}}  Match $\mathcal{L}_D$ and $\mathcal{L}_Y$ moments \\ 
   \end{tabular}
 \end{table}
 
@@ -375,6 +391,8 @@ $$p_{i}=\exp(-e^\xi .S(x_{i}))$$
 
 \normalsize \vspace{\baselineskip} \vspace{\baselineskip}
 
+\onslide<2>{
+
 \textcolor{BaptisteLightGreen}{\textbf{Declaration model}} ($D_j=\sum_{i \in \mathcal{P}_j}{Y_{i}}$)
 
 \footnotesize
@@ -386,13 +404,15 @@ P(D_j = 0) & = \prod_{i\in \mathcal{P}_j} P(Y_{i} = 0)
 
 \normalsize \vspace{\baselineskip}
 
-$$\operatorname{P}\left(D_j=d_{j} \vert d_j > 0 \right) = \quad \textbf{?}$$
+$$\operatorname{P}\left(D_j=d_{j} \vert d_j > 0 \right) = \quad \textcolor{red}{\textbf{?}}$$
+
+}
 
 ### Specifying $\operatorname{P}\left(D_j=d_{j} \vert d_j > 0 \right)$
 
 \normalsize
 
-\textbf{Compute the moments}
+\textbf{Compute the moments of $\mathbf{D_j\vert d_j > 0}$}
 
 \footnotesize
 
@@ -407,7 +427,9 @@ $$Var(Y_{i})=\frac{S(x_{i})^2}{1-p_{i}}(e^{\sigma^2}-(1-p_{i}))$$
 
 \normalsize
 
-\textbf{Consider $D_j$ is Lognormal too}
+\onslide<2>{
+
+\textbf{Consider $\mathbf{D_j\vert d_j>0}$ is Lognormal too}
 
 \footnotesize
 
@@ -419,7 +441,7 @@ $$
 \end{aligned}
 $$
 
-
+}
 
 ### Simulation-estimation and case study
 
@@ -930,11 +952,11 @@ The \textcolor{BaptisteDarkGrey}{\textbf{integrated model}} fitted to \textcolor
  
 \onslide<4>{
 
-\item \textbf{ Change of support applications} \\
+\item \textbf{Moving to space-time ?} \\
 
-\textbf{\textcolor{BaptisteBlue}{\ding{224}}} Increasing amount of available data that may face such issues \\
+\textbf{\textcolor{BaptisteBlue}{\ding{224}}} Extending the observation model to account for \textbf{temporal misalignment} \\
 
-\textbf{\textcolor{BaptisteBlue}{\ding{224}}} Here is one proposition to integrate aggregated data in SDM \\
+\textbf{\textcolor{BaptisteBlue}{\ding{224}}} Including spatio-\textbf{temporal covariance} in the latent field \\
 
 }
 
