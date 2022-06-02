@@ -54,7 +54,7 @@ if(species_to_plot == "Solea_solea"){
 }
 
 ## data file name
-sampling <- "simulate" # "simulate": simulate sampling, "from_tacsateflalo": take data points from tacsateflalo
+sampling <- "from_tacsateflalo" # "simulate": simulate sampling, "from_tacsateflalo": take data points from tacsateflalo
 simu_name <- "SimuFullArea"
 
 # file name for saving outputs

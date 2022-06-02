@@ -84,8 +84,6 @@ mapBase <- st_as_sf(mapBase) %>% filter(ID %in% c("France","Spain"))
 
 # Introduction
 
-**Attention:** L'introduction n'est pas finie
-
 **Context**
 
 Spatial ecological data are becoming more and more accessible every days through new technologies and thanks to the huge effort from the scientific community to provide intensive information for ecology, evolution and conservation [@nathan2022big;@hampton2013big;@gremillet2022big]. These data are crucial to face the current challenges related to large and small scales ecological questions: for instance, tracking climate change [@maureaud_are_2020], following animal movement [@nathan2022big] or mapping species distribution [@isaac2020data]. In particular, a key point of these studies lies in understanding the drivers of the ecological processes under study. For instance, when investigating species distribution one will try to find the main covariates (e.g. substrat, temperature, depth/altitude) that shape species distribution [@guisan_predictive_2000;@planqueUnderstandingWhatControls2011]. 
@@ -99,11 +97,11 @@ Consequently (in ecological applications but in other fields too), to bypass the
 
 **The COS issue**
 
-Reconciling spatial (and eventually temporal) scales properly when different set of observations do not have the same resolution is a well known issue in geography, ecology, agriculture, geology and statistics [@gotway2002combining]. Inferring values of a variable at points or blocks different from those that have been observed is commonly refered as the *change of support problem* (COS) in the statistical literature [@gotway2002combining and @gelfand2010misaligned]. COS issues can be classified within 2 categories - that are not necessarily mutually exclusive - [@pacifici2019resolving]:
+Reconciling spatial (and eventually temporal) scales properly when different set of observations do not have the same resolution is a well known issue in geography, ecology, agriculture, geology and statistics [@gotway2002combining]. Inferring values of a variable at points or blocks different from those that have been observed is commonly refered as the *change of support problem* (COS) in the statistical literature [@gotway2002combining,@gelfand2010misaligned]. COS issues can be classified within 2 categories - that are not necessarily mutually exclusive - [@pacifici2019resolving]:
 
 - (1) 'spatial and temporal misalignement' (the case of some multivariate data where not all variables have been observed over all locations - see for example @finley2014bayesian).
 
-- (2) 'modifiable areal unit' problem (MAUP) when data are aggregated over increasingly larger geographic scales (e.g. collected at point level but regrouped/declared at coarse level - see for instance @gilbert2021integrating). Our case of application clearly refers to MAUP. Note that within this category, another category exist and is commonly refered to the 'ecological fallacy'. This occures when the individual response to a covariate differs from the response estimated from grouping individuals. This means that conclusions from a fine-resolution analysis can differ from an analysis at a coarser scale based on the aggregation of the fine-resolution data.
+- (2) 'modifiable areal unit' problem (MAUP) when data are aggregated over increasingly larger geographic scales (e.g. collected at point level but regrouped/declared at coarse level - see for instance @gilbert2021integrating). Our case of application clearly refers to MAUP. Note that within this category, another category exist and is commonly refered as the 'ecological fallacy'. This occures when the individual response to a covariate differs from the response estimated from grouping individuals. This means that conclusions from a fine-resolution analysis can differ from an analysis at a coarser scale based on the aggregation of the fine-resolution data.
 
 Since 2000, several studies have described how could be overcome COS issues; @mugglin2000fully, @gelfand2001change, @gotway2007geostatistical, @wikle2005combining proposed generic approaches (and extensions of these approaches - @kim2016change) for adressing COS in spatial or spatio-temporal context. In health analysis, @young2007linking proposed to compare some standard (and rough) way to connect data that do not have the same spatial resolution with a method properly accounting for COS. @berrocal2010bivariate and @berrocal2010spatio proposed a spatio-temporal method for fusing several air pollution data: one from coarse resolution but with full spatial coverage and another recorded at point level, with sparse distribution but where records almost corresponds to the true value of the process. In climate science, @reich2014spectral and @parker2015multiresolution proposed a spectral statistical approach to downscale information from large scale model to lower scales. In the field of ecology, some recent studies have tackled such issues: @finley2014bayesian provided a framework for integrating spatially misaligned data, @hefley2017bias proposed a solution based on COS to account for location error in presence-only data, @pacifici2019resolving introduced a framework for integrating datasources of different resolution to map species distribution. Applying similar ideas, @gilbert2021integrating integrated harvest data (aggregated data) and camera trap (punctual data) to map several wildlife species in Wisconsin. 
 
@@ -124,173 +122,88 @@ Finally, we compare this method to the current geoprocessing method in 3 steps:
 - A final step where we compare the 2 methods on a real case study (common sole in the Bay of Biscay) and illustrate the main results that are consitent with simulations-estimations (part 5).
 
 
-#  Introduction 
-* Commencer par la motivation peche
---> knowledge of essential habitat --> Species distribution model --> link between biomass and habitat to identify essential habitat
--->  Data from scientific survey, precisely geolocalized standard sampling protocol, expensive and time consuming
---> On the other hand declaration data, spatialized at coarser level  but cheap and reglementaire
-Combining the two sources of data.
-
-This problem is not unique, other exampl in terms of apllication 
-
-Change of support form fine to coarse sptial level 
-
-A solution the reallocation process
-
-** Pour la discu, simulation conditionnelle ? **
-
-We proposed an alternative approach to account for the change of support and we compare it to the approach proposed in alglave but also to a golden standard to assess the consequences of these methods.
-
-Paper organized as follow 
-
-Section 2. presentation of the reference model and detail the reallocation process
-
-Section 3. Presnetation of an alternaion way to deal with change of support
-
-Section 4. simulation study to asses the bias and/or the loss of precision of the two methodes compared with the golden standard
-
-Section 5. Appllication on sole of the Bay of Biscay
-
-Section 6. Discu/conclu
-
-
-
-
 ## A spatialized catch model for aggregated data
 
-In  @alglave_combining_2022, the authors propose a hierarchical spatial model to combine scientific survey data obtained through a standardized sampling protocol and catch data harvested by fishermen. This section provides a brief overview of the key ingredient of this model and raises some concerns on the spatialization of the commercial catch data.
+In  @alglave_combining_2022, the authors propose a hierarchical spatial model to combine scientific survey data obtained through a standardized sampling protocol and catch data harvested by fishermen. This section provides a brief overview of the key ingredient of this model and raises the main concerns on the spatialization of the commercial catch data.
 
-Let  $D\subset \R^2$ be a spatial domain and $\bm{S}=(S(x), x\in D)$ a spatial random field which represents the biomass for a species of interest.  $\bm{S}$ is assumed  to be a spatial log-Gaussian Random Field (GRF) defined as $\log(S(x))=\mu + \beta \, \Gamma(x) + \delta(x)$ (Figure \@ref(fig:SchemeRealloc)) where $\bm{\delta}=(\delta(x), x\in D)$ is a zero mean GRF with covariance matrix $\Sigma$ and $\Gamma$ a field of covariate.  As the catch are   zero-inflated positive continuous data,  following  @thorson_three_2018,  the authors model a catch at a given site $X_i$ with a mixture of a Dirac mass at $0$ and a Log Normal distribution, the proportion of the mixture being defined  conditionally on the random field $\bm{S}$.
+Let  $D\subset \R^2$ be a spatial domain and $\bm{S}=(S(x), x\in D)$ a spatial random field which represents the biomass for a species of interest.  $\bm{S}$ is assumed  to be a spatial log-Gaussian Random Field (GRF) defined as $\log(S(x))=\mu + \beta \, \Gamma(x) + \delta(x)$ (Figure \@ref(fig:SchemeRealloc)) where $\bm{\delta}=(\delta(x), x\in D)$ is a zero mean GRF with covariance matrix $\Sigma$ and $\bm{\Gamma}=(\Gamma(x),x\in\mathcal{D})$ a field of covariate.  As the catch are zero-inflated positive continuous data,  following  @thorson_three_2018,  the authors model a catch at a given site $X_i$ with a mixture of a Dirac mass at $0$ and a Log Normal distribution, the proportion of the mixture being defined conditionally on the random field $\bm{S}$.
 
 \begin{equation}
-\label{eq:defY}
 Y_i | S(x_i)  \overset{ind}{\sim} \My{p_i}{\mu_i}{\sigma^2},
 \end{equation}
-with $p_i \defeq \exp(-e^\xi S(x_{i}))$ the proportion of the mixture, $\mu_i\defeq 
-\frac{S(x_i)}{1-p_i}$ the expected catch when positive and $\sigma^2$ a transformation of its variance variance. This parametrization (see SMXXXX) of the mixture model corresponds to:
+
+with $p_i \defeq \exp(-e^\xi S(x_{i}))$ the proportion of the mixture, $\mu_i\defeq \frac{S(x_i)}{1-p_i}$ the expected catch when positive and $\sigma^2$ a transformation of its variance. This parametrization (see SMXXXX) of the mixture model corresponds to:
 \begin{align}
 \P\left (Y_i =0 | S(x_i) \right) & = p_i=  \exp(-e^\xi S(x_{i}) ) \\  \nonumber
 \E\left ( Y_i \vert Y_i >0 , S(x_i)\right)  & =  \mu_i = \frac{S(x_i)}{1-p_i},\\  \nonumber
 \V ar( Y_i\vert Y_i >0, S(x_i) )& = \mu_i^2 (e^{\sigma^2}-1), \cr \nonumber
 \end{align}
 
-
-
-
-<!-- 
-Je pense qu'il ne faut pas parler de la grille discrete tout de suite car S est défini sur un espace continu et moralement l'intensité du processus de poisson aussi. le passage à la grille est la pour simplifier l'expression de la vraisemblance, on peut dire qu'on fait une approximation pour des raisons numériques 
-
-We consider a discrete study domain where $x \in [\![1,n]\!]$ stands for the discrete locations. $\beta . \Gamma(x)$ is the covariate term with $\Gamma$ the matrix of design of the covariates and $\beta$ the effect of the covariates. $\delta(x)$ is a GF capturing spatial correlation ($\delta \sim \mathcal{N}(0,\Sigma)$). -->
-
 In this approach all fishing locations $x_i$ and the coressponding catch are supposed to be known. This is classically the case with scientific survey for which every catch is recorded as well as its geolocalization.
 
-<!-- however those fishinf locations are actually derived from a different dataset containing the hourly localisation of the the commercial vessels, the VMS dataset. This dataset is processed to identify the fishing location among all the recorded locations. -->
+However, fishermen do not have to declare this precise information, but it is mandatory, for every vessel to declare the total daily catch aggregated at a given administrative spatial unit named  statistical rectangle. These data are recorded in logbooks data. For a given vessel, on a given day, a declaration (denoted $D$) is therefore the sum of all individual catch $Y_i$ realized in the administrative unit $\mathcal{A}_D$ associated with the catch declaration $D$, more formally:
 
-<!-- At each fishing location $x_i$, fishermen realize a catch $Y_i$ conditionnally on the latent field values (referred hereafter as a punctual catch). Observations are supposed to follow some distribution $\mathcal{L}_Y$. -->
+$$D=\sum_{i|x_i \in \mathcal{A}_D}{Y_i}$$
 
-<!-- $$Y_i | S(x_i), x_i \sim \mathcal{L}_Y(S(x_i),\xi,\sigma^2)$$ -->
-
-<!-- In our case, observations are zero-inflated positive continuous data and they are modelled through a zero-inflated lognormal model previously introduced by @thorson_three_2018 and already used in @alglave_combining_2022. $\mathcal{L}_Y$ is decomposed it 2 parts: -->
-
-<!-- - the probability to obtain a zero-catch which is modelled as a Bernoulli variable with probability $p_{i}=\exp(-e^\xi .S(x_{i}))$. $\xi$ is a parameter controlling zero-inflation. When $\xi$ increases, the amount of zero in the data decreases. -->
-
-<!-- - if the catch is positive, the probability to obtain some observation value $y_i$ is modelled through a positive continous distribution $\operatorname{L}$ (here a lognormal distribution - its parameterization is described in SM)) with mean component $\frac{S(x_{i})}{1-p_{i}}$ and variance term $\sigma^2$. -->
-
-<!-- $$ -->
-<!-- \operatorname{P}\left(Y_i=y_{i} | x_i, S(x_i)\right) = -->
-<!-- \left\{ -->
-<!--     \begin{array}{ll} -->
-<!--         p_i & \text { if } y_{i}=0 \\ -->
-<!--         \left(1-p_i\right) \cdot \operatorname{L}\left(y_{i },\frac{S(x_i)}{\left(1 - p_i\right)},\sigma^{2} \right) & \text { if } y_{i} > 0 -->
-<!--     \end{array} -->
-<!-- \right. -->
-<!-- $$ -->
-
-However, fishermen do not have to declare this precise information, but it is mandatory, for every vessel to declare the total daily catch aggregated at a given administrative spatial unit named  statistical rectangle. These data are recorded in logbooks data. For a given vessel, on a given day, a declaration (denoted $D$) is therefore the sum of all individual catch $Y_i$ realized in the administrative unit $\mathcal{A}_D$  associated with the catch  declaration $D$, more formally:
-
-$$D=\sum_{x_i \in \mathcal{A}_D}{Y(x_i)}.$$
-
-Since the original model proposed in @alglave_combining_2022 is defined at the individual catch scale, those catch are  derived from the logbooks data combined with the VMS data. This is classically done in fisheries science REFREFEREFREF by using a uniform reallocation process. 
-This process consists in counting, for a given vessel, on a given day,  the number $m_j$ of fishing points in $\mathcal{A}_{D_j}$ associated with declaration $D_j$ and define for each $x_i\in\mathcal{A}_{D_j},$ the associated reallocated individual catch $\Yr(x_i)\defeq D_j/m_j$. As a direct consequence, the so reconstructed individual catch are similar to quantity widely used in Fishereis Sceince named  Catch Per Unit of Effort (CPUE), effort being measure in hours. As noted by @alglave_combining_2022, this process has several drawbacks.
+Since the original model proposed in @alglave_combining_2022 is defined at the individual catch scale, those catch are derived from the logbooks data combined with the VMS data. This is classically done in fisheries science by using a uniform reallocation process [@hintzen_vmstools_2012,murrayEffectivenessUsingCPUE2013].
+This process consists in counting, for a given vessel, on a given day, the number $m_k$ of fishing points in $\mathcal{A}_{D_k}$ associated with declaration $D_k$ and define for each $x_i\in\mathcal{A}_{D_k},$ the associated reallocated individual catch $\Yr_i\defeq D_k/m_k$. As a direct consequence, the so reconstructed individual catch are similar to quantity widely used in fisheries science named Catch Per Unit of Effort (CPUE), effort being measured in hours. As noted by @alglave_combining_2022, this process has several drawbacks.
 First, as a consequence of the reallocation process, the reconstructed individual catches tend to exhibit smoother pattern than the original catches. 
 Second, the actual number of data is the total number of catch declarations while the number of data after the reallocation process is the number of fishing locations, which is approximately 10 times the number of declarations.
 From a statistical point of view, this overestismation of the number of informative data tends to produce excessively narrow confidence intervals.
 
 <!-- **Catch reallocation: uniform reallocation or model-based reallocation** -->
 
-<!-- In standard processing, $D_j$ (available from logbooks) are reallocated uniformly on related $x_i$ (available from VMS) so that derived punctual observations $Y^*_i$ are computed as $Y^*_i=D_j/m_j$. This is what we call uniform (or proportional) reallocation. In this case, inference of species distribution is directly computed through reallocated $Y^*_i$ assuming these are the exact punctual observations. This strongly simplifies the actual process of observation and have most likely repercussion on model performance. -->
+<!-- In standard processing, $D_k$ (available from logbooks) are reallocated uniformly on related $x_i$ (available from VMS) so that derived punctual observations $Y^*_i$ are computed as $Y^*_i=D_k/m_k$. This is what we call uniform (or proportional) reallocation. In this case, inference of species distribution is directly computed through reallocated $Y^*_i$ assuming these are the exact punctual observations. This strongly simplifies the actual process of observation and have most likely repercussion on model performance. -->
 
-<!-- To overcome such limitations, an alternative is to consider that only the catch declarations $D_j$ are observed while $Y_i$ are not (they are latent variables). Such way, we define some distribution $\mathcal{L}_D$ as the distribution of the catch declarations: -->
+<!-- To overcome such limitations, an alternative is to consider that only the catch declarations $D_k$ are observed while $Y_i$ are not (they are latent variables). Such way, we define some distribution $\mathcal{L}_D$ as the distribution of the catch declarations: -->
 
-To circumvent such limitations, we propose an alternative approach that models the catch declarations $D_j$ instead of the reconstructed individual catch $\Yr(x_i)$. As we  aim to propose a model compatible with the original one, we are lead to specify  the distribution of $D_j$ which consists of a sum of $m_j$ random variables following a mixture distribution. This distribution has no  known analytical form. However the catch declaration data also exhibit some zero inflation and a long tail repartition of the values: a mixture model would be a good candidate. 
-Therefore, we propose to use the same family of distribution for  $D_j$ than the one use for the individual catch $Y$: a mixture between a Dirac mass in $0$ and a lognormal distribution. This is not exact, as the distribution of $D_j$ should be defined as convolution of mixtures which  would result in an untractable model. We somehow approximate the sum of  the original mixture distributions  by a mixture distribution of the same kind and we define the different key quantities, i.e  the mixture proportion, the expected positive catch declaration and its variance so that to match the original proposition:
+To circumvent such limitations, we propose an alternative approach that models the catch declarations $D_k$ instead of the reconstructed individual catch $\Yr_i$. As we  aim to propose a model compatible with the original one, we are lead to specify  the distribution of $D_k$ which consists of a sum of $m_k$ random variables following a mixture distribution. This distribution has no known analytical form. However, the catch declaration data also exhibit some zero inflation and a long tail repartition of the values, thus as for $Y_i$ a mixture model is a good candidate to model $D_k$. We define then the distribution of $D_k$ through the different key quantities, i.e  the mixture proportion, the expected positive catch declaration and its variance so that to match the original proposition:
 
+We somehow approximate the sum of the original mixture distributions by a mixture distribution of the same kind and we define the different key quantities, i.e. the mixture proportion, the expected positive catch declaration and its variance in order to match the original proposition:
 
-<!-- that only the catch declarations $D_j$ are observed while $Y_i$ are not (they are latent variables). Such way, we define some distribution $\mathcal{L}_D$ as the distribution of the catch declarations: -->
+$$D_k | \mathcal{P}_k,\bm{S} \sim \Md{p^D_k}{\mu^D_k}{\sigma^{2,D}}$$
 
-$$D_j | \mathcal{P}_j,\bm{S} \sim \Md{p^D_j}{\mu^D_j}{\sigma^{2,D}}$$ 
+with $\mathcal{P}_k=(1,...,i, ...,m_{k})$, the list of the fishing positions $(x_1,...,x_i, ...,x_{m_k})$ associated to declaration $D_k=\sum_{i \in \mathcal{P}_k}{Y_i}$, $\mu^D_k$ the expected positive biomass, $p_k^D$ the proportion of the mixture and $\sigma^{2,D}$ the variance parameter.
 
-with $\mathcal{P}_j=(x_1,...,x_i, ...,x_{m_j})$, the list of the fishing points associated to declaration $D_j$,  $\mu^D_j$ the expected positive biomass, $p_j^D$ the proportion of the mixture and $\sigma^{2,D}$ the variance parameter. 
+<!-- that only the catch declarations $D_k$ are observed while $Y_i$ are not (they are latent variables). Such way, we define some distribution $\mathcal{L}_D$ as the distribution of the catch declarations: -->
 
-<!-- As $D_j=\sum_{i \in \mathcal{P}_j}{Y_{i}}$, it is possible to relate $D_j$, $Y_i$ and $S_{\mathcal{P}_j}$ through the distribution $\mathcal{L}_Y$ and $\mathcal{L}_D$. Our approach is to match the moments of $D_j$ (obtained from the moments of $\mathcal{L}_Y$) and $\mathcal{L}_D$ and then to infer $S(x)$ and $Y_i$ from $D_j$. This is what we call model-based reallocation. This model will be referred as the Declaration Model. In contrast, the model fitted on reallocated observations $Y^*_i$ will be referred as the $Y^*_i$ model. -->
+<!-- As $D_k=\sum_{i \in \mathcal{P}_k}{Y_{i}}$, it is possible to relate $D_k$, $Y_i$ and $S_{\mathcal{P}_k}$ through the distribution $\mathcal{L}_Y$ and $\mathcal{L}_D$. Our approach is to match the moments of $D_k$ (obtained from the moments of $\mathcal{L}_Y$) and $\mathcal{L}_D$ and then to infer $S(x)$ and $Y_i$ from $D_k$. This is what we call model-based reallocation. This model will be referred as the Declaration Model. In contrast, the model fitted on reallocated observations $Y^*_i$ will be referred as the $Y^*_i$ model. -->
 
-<!-- In the following, $Y$ and $D$ will be assumed conditionnal on the fishing positions and the latent field values, but for notation simplicity they will be simply denoted as $Y_i$ or $D_j$ instead of $Y_i \vert x_i, S(x_i)$ and $D_j | \mathcal{P}_j,S_{\mathcal{P}_j}$. -->
+<!-- In the following, $Y$ and $D$ will be assumed conditionnal on the fishing positions and the latent field values, but for notation simplicity they will be simply denoted as $Y_i$ or $D_k$ instead of $Y_i \vert x_i, S(x_i)$ and $D_k | \mathcal{P}_k,S_{\mathcal{P}_k}$. -->
 
 **Matching the individual catch and the declaration levels**
 
-In order to define compatible models for $Y$ the actual individual catches and $D$ the catch declarations, we choose to match the key quantities of the two distributions. 
+In order to define relate the individual observation level $Y$ and the catch declaration level $D$, we choose to match the key quantities of the two distributions.
 
-(1) As the $Y_1, \ldots, Y_{m_j}$ are independent conditionally on $\bm{S}$,  the probability to obtain a zero-declaration $P(D_j = 0\vert \bm{S}, \mathcal{P}_j )$ is obtained by simply multiplying the probability to obtain a zero-punctual observation $P(Y_i=0 )$ to all fishing points $x_i \in \mathcal{P}_j$.
+(1) As the $Y_1, \ldots, Y_{m_k}$ are independent conditionally on $\bm{S}$,  the probability to obtain a zero-declaration $\P(D_k = 0\vert \bm{S}, \mathcal{P}_k )$ is obtained by simply multiplying the probability to obtain a zero-punctual observation $P(Y_i=0 )$ to all fishing points $i \in \mathcal{P}_k$.
 
 \begin{align*}
-\P(D_j = 0\vert \bm{S}, \mathcal{P}_j)  & = \prod_{i\in \mathcal{P}_j} P(Y_{i} = 0\vert \bm{S}, x_i),\nonumber \\
-                      & = \exp{ \left \lbrace- \sum_{i\in \mathcal{P}_j} e^{\xi}. S(x_{i})\right \rbrace} = p_j^D
+\P(D_k = 0\vert \bm{S}, \mathcal{P}_k)  & = \P_{i \in \mathcal{P}_k} P(Y_{i} = 0\vert \bm{S}, x_i),\nonumber \\
+                      & = \exp{ \left \lbrace- \sum_{i \in \mathcal{P}_k} e^{\xi}. S(x_{i})\right \rbrace} = p_k^D
 \end{align*}
 
 
-(2) The continuous component of the mixture is defined by the expected mean of a positive declaration and a transformation of its variance. It is straightforward to prove (see  SMXXXXX) that  
+(2) The continuous component of the mixture is defined by the expected mean of a positive declaration and a transformation of its variance. It is straightforward to prove (see SMXXXXX) that  
 
-$$\E(D_j \vert D_j > 0, \bm{S}, \mathcal{P}_j)= \frac{\sum_{x_i \in \mathcal{P}_j} \E(Y_i \vert S(x_i)) }{1-p_j^D} = \frac{\sum_{x_i \in \mathcal{P}_j} S(x_{i})}{1-p_j^D},$$
-$$\V ar(D_j \vert D_j > 0) = \frac{\sum_{i \in \mathcal{P}_j} \V ar(Y_{i})}{1-p_j^D} - \frac{\pi_j}{(1-p_j^D)^2}E(D_j)^2,$$
+$$\E(D_k \vert D_k > 0, \bm{S}, \mathcal{P}_k)= \frac{\sum_{i \in \mathcal{P}_k} \E(Y_i \vert S(x_i)) }{1-p_k^D} = \frac{\sum_{i \in \mathcal{P}_k} S(x_{i})}{1-p_k^D},$$
+$$\V ar(D_k \vert D_k > 0) = \frac{\sum_{i \in \mathcal{P}_k} \V ar(Y_{i})}{1-p_k^D} - \frac{\pi_k}{(1-p_k^D)^2}E(D_k)^2,$$
 $$\mbox{with } \V ar(Y_{i})=\frac{S(x_{i})^2}{1-p_{i}}(e^{\sigma^2}-(1-p_{i})).$$
 
+Knowing the moment of $D_k$ (that only depends on the distribution of $Y_i$), it is required then to define a probability distribution for $D_k|D_k>0$ that is adapted to the underlying individual observations and express $\P(D_k|D_k>0)$ as a function of $\E(D_k \vert D_k > 0, \bm{S}, \mathcal{P}_k)$ and $\V ar(D_k \vert D_k > 0)$. We propose to use the same family of distribution for $D_k|D_k>0$ than the one used for the individual catch $Y_i|Y_i>0$ i.e. a lognormal distribution. This is an approximation that we discuss hereafter.
 
+By defining the observation process at the declaration level, we expect to avoid some of the drawbacks of the estimation based on reallocated individual catch data $\Yr$.
 
-By defining the observation process at the declaration level,  we expect to  avoid some of the drawbacks of the estimation based on reallocated individual catch data $Y^r$.
+Finally, note that the scientific data is considered known at each fishing locations and thus they can be simply modelled as standard individual data $Y_i$.
 
+The inference is based on  maximum likelihood approach with two simplifications. We use the Stochastic Partial Differential Equations (SPDE) approach to represent the spatial field [@lindgren_explicit_2011] and we use Laplace approximation to compute the likelihood. The stochastic random field is also approximated by a piecewise constant process defined on a fine grid. The optimization of the likelihood relies Template Model Builder (TMB), an effective tool to build hierarchical models and perform maximum likelihood estimation through automatic differentiation and Laplace Approximation [@kristensen_tmb_2016].
 
- The inference is based on  maximum likelihood approach with two simplifications. We use the Stochastic Partial Differential Equations (SPDE) approach to represent the spatial field and we use integrated Nested Laplace approximation to compute le likelihood. The stochastic random field is also approximated by a piecewise constant process defined on a fine grid. The optimization of the likelihood relies Template Model Builder (TMB), an effective tool to build hierarchical models and perform maximum likelihood estimation through automatic differentiation and Laplace Approximation [@kristensen_tmb_2016].
-
-
-
-
-
-<!-- XXXX  Il faut aussi présenter la partie scientific ou dire que c'est comme dans Alglave 2022 -->
-
-![(\#fig:SchemeRealloc) Schematic representation of the reallocation process. The biomass field (the background field) depends on a covariate and a spatial random effect. The covariate is the $x$ axis. It has a positive effect on biomass values (i.e. biomass is higher on the right of the grid than on the left). The spatial random effect conduct to a hotspot on the bottom-right of the latent field. The study domain is considered as a statistical rectangle (grey square). Fishermen sample catches in areas of poor biomass where the covariate is relatively low (blue points) and in areas of higher biomass where the covariate is higher and eventually in the hotspot of biomass (orange and red points). These catches belong to the same declaration $j$ and are summed to constitute the declaration $D_j=50$. The declaration is declared at the level of the statistical rectangle. From VMS data, we know the fishing positions $x_i$. In standard processing, $D_j$ are then uniformly reallocated over the fishing positions $x_i$. This strongly homogeneizes the catch. In particular, the effect of the habitat is no more evidenced in the reallocated catch $Y_i^*$.](images/realloc.png)
-
-
-```{r}
-
-# save(data=gridpolygon_sf_2,file="res/simu_lf.RData")
-# 
-# plot_1 <- ggplot(gridpolygon_sf_2)+
-#   geom_sf(aes(fill=Strue_x),alpha=0.9)+
-#   scale_fill_distiller(palette = "Spectral")+
-#   theme_void()+theme(legend.position = "none")
-# 
-# ggsave("images/simu_lf.png",width = 7.5,height = 7.5,dpi = 500)
-
-```
-
-
+![(\#fig:SchemeRealloc) Schematic representation of the reallocation process. The biomass field (the background field) depends on a covariate and a spatial random effect. The covariate is the $x$ axis. It has a positive effect on biomass values (i.e. biomass is higher on the right of the grid than on the left). The spatial random effect conduct to a hotspot on the bottom-right of the latent field. The study domain is considered as a statistical rectangle (grey square). Fishermen sample catches in areas of poor biomass where the covariate is relatively low (blue points) and in areas of higher biomass where the covariate is higher and eventually in the hotspot of biomass (orange and red points). These catches belong to the same declaration $j$ and are summed to constitute the declaration $D_k=50$. The declaration is declared at the level of the statistical rectangle. From VMS data, we know the fishing positions $x_i$. In standard processing, $D_k$ are then uniformly reallocated over the fishing positions $x_i$. This strongly homogeneizes the catch. In particular, the effect of the habitat is no more evidenced in the reallocated catch $Y_i^r$.](images/realloc.png)
 
 We have finally three alternatives to estimate the spatial field of biomass from catch data:
 
-* the original approach from  @alglave_combining_2022 when the locations of  commercial catch (and eventually the scientific catch) are precisely geolocalized. This ideal situation, with no actual application,  will be named 'Spatial Model' and used as a reference for the comparison between the two alternatives.
-* the original model fitted with  commercial reallocated individual catch (and potentially few precisely geolocalized scientific data  as done in  @alglave_combining_2022. This approach will be refereed as "Reallocated Model".
-* the alternative approach detailed before where the biomass model is fitted  using commercial catch declaration at a corase spatial level and potentially few precisely geolocalized scientific data. This approach is named "Declaration Model".
-
+* the original approach from @alglave_combining_2022 when the locations of commercial catch (and eventually the scientific catch) are precisely geolocalized. This ideal situation, with no actual application, will be named 'Spatial Model' and used as a reference for the comparison between the two alternatives.
+* the original model fitted with commercial reallocated individual catch (and potentially few precisely geolocalized scientific data) as done in @alglave_combining_2022. This approach will be refered as "Reallocated Model".
+* the alternative approach detailed before where the biomass model is fitted  using commercial catch declaration at a coarse spatial level and potentially few precisely geolocalized scientific data. This approach is named "Declaration Model".
 
 ## Simulation studies
 
@@ -300,26 +213,27 @@ First, we explore the base properties of the different models by a study at sing
 
 Then, we extend the simulation study to several rectangles to get closer to a real case study configuration. We add a spatial random effect in the latent field and we also simulate precisely geolocalized scientific data (in addition to commercial data) to explore the contribution of both datasets in inference. These simulations will be referred as "multiple-square simulations".
 
-
 In these two sets of simulation studies, there is a unique covariate,  modeled as a continuous GRF that we suppose known at each point of the grid (when present the spatial random component is also a GRF but its values are not observed). 
-XXXX AJouter les paramètres du chmaps spatial 
+
 The covariate effect is fixed to $\beta_S=2$ and the intercept is also fixed to $\mu=2$. Regarding commercial data, the number of fishing pings per declaration is fixed to 10 as it is the average number of fishing locations for a single declaration in real data. All parameterizations are detailed in the Table 1.
 
 The locations of the individual commercial catch are generally organized in spatial clusters, named fishing zones in the following. The simulation process mimics this property by sampling the fishing points using a Neymann Scott process: the centers of the fishing zones are sampled according to a Poisson process and the fishing points are then uniformely sampled within a squared area of side 7. At each fishing position, a catch is  sampled conditionally on the value of the latent field according to the model $\mathcal{M}_Y$.
 
-We compare the performance of the Spatial Model (the gold standard), the Reallocated Model and the Declaration Model  model configurations in regards to 2 metrics:
+We compare the performance of the Spatial Model (the gold standard), the Reallocated Model and the Declaration Model configurations in regards to 2 metrics:
 
 - the MSPE which quantifies the accuracy of the spatial predictions of the latent field over the spatial domain ($n$ is the number of locations over the grid).
 
 $$MSPE=\frac{\sum_x (S(x) - \hat{S}(x) ) ^2}{n}$$
 
-- the quality of the estimation of the parameter  $\beta_S$  which quantifies the species habitat relationship.
+- the quality of the estimation of the parameter $\beta_S$ which quantifies the species habitat relationship.
+
+To get enough replicates, we run the simulations 100 time.
 
 ```{r}
 
-df <- data.frame(v1=c("$\\mu$","$\\beta_S$","$\\text{Range}$","$\\text{Marginal variance}$","$\\xi_{com}$","$\\sigma_{com}$","$k_{com}$","$\\xi_{sci}$","$\\sigma_{sci}$"),
-                 v2=c("2","2"," -- "," -- ","-1","1"," -- "," -- "," -- "),
-                 v3=c("2","2","1.5","0.5","-1","1","1","0","0.8"))
+df <- data.frame(v1=c("$\\mu$","$\\beta_S$","$\\text{Range } (\\delta)$","$\\text{Marginal variance }  (\\delta)$","$\\text{Range } (\\Gamma)$","$\\text{Marginal variance }  (\\Gamma)$","$\\xi_{com}$","$\\sigma_{com}$","$k_{com}$","$\\xi_{sci}$","$\\sigma_{sci}$"),
+                 v2=c("2","2"," -- "," -- ","10 (cells)","0.5","-1","1"," -- "," -- "," -- "),
+                 v3=c("2","2","0.6 ($\\approx$ 50 km)","1","1.5 ($\\approx$ 120 km)","0.5","-1","1","1","0","0.8"))
 
 # italic column headers
 colnames(df) <- c("\\text{Parameters}","\\text{Single-square simulations}","\\text{Multiple-square simulations}")
@@ -342,8 +256,6 @@ table_param <- t(data.frame(
 
 
 **Single-square simulations**
-XXX Infor sur le nombre de simus ???
-
 
 Two important variables may affect the accuracy of model outputs: the amount of commercial data and the number of fishing zones explored and aggregated within a catch declaration. The single-squares simulations intend to explore the effect of these two variables.
 
@@ -351,10 +263,96 @@ First, increasing the amount of data the accuracy is expected to improve the est
 
 Furthermore, the number of fishing zones within the statistical rectangle associated with a declaration might also affect the performance of the different approaches. We expect that the reallocation process will be less problematic when all the individual catch are spatially close. This situation corresponds to a declaration associated with only one fishing zone. 
 <!-- closed    samples belonging to a single declaration can be sampled in a single restricted zone or can mix catches from distinct zones (within a unique statistical rectangle). Note that we make a distinction between fishing zones and statistical rectangles: fishing zones are included in a statistical rectangle and there can be several fishing zones within the same statistical rectangles. Consequently, a declaration can mix catches that have been realized in zones of high biomass and in zones of low biomass. For instance, a declaration can aggregate data from several fishing operations that occured the same day within the same statistical rectangle, but that were realized on 2 distinct types of fishing grounds (and then on two distinct habitats). Reallocating uniformly the declaration will strongly homogeneise the actual catch, will mix up information from to different grounds and then may lead to a strong loss of accuracy in model outputs. -->
-The accuracy of the Reallocated Model outputs is expected to decrease when the number of fishing zones increases.  To assess the effect of such process, we simulated the fishing locations associated with a declaration declaration assuming they were either realized in a single zone, in 3 distinct zones or in 5 distinct zones.
+The accuracy of the Reallocated Model outputs is expected to decrease when the number of fishing zones increases.  To assess the effect of such process, we simulated the fishing locations associated with a declaration declaration assuming they were either realized in a single zone, in 3 distinct zones or in 5 distinct zones (Figure \@ref(fig:SimuSevZone)).
 
 
-XXXX Un petit schéma pour expliquer le  processus de similuation et mettre des images sur les mots de fishing zone, fishing points 
+```{r}
+
+## 1 zone
+load(file="res/fish_1zones.RData")
+
+centres <- fish_zones_res$centres
+peche_com_old <- fish_zones_res$peche_com_old
+gridpolygon_sf <- fish_zones_res$gridpolygon_sf
+
+centres_sf <- st_as_sf(centres,coords = c("x","y"))
+buffer_sf <- st_buffer(centres_sf,dist = 3,endCapStyle = 'SQUARE')
+
+gridpolygon_sf_2 <- gridpolygon_sf[st_intersects(gridpolygon_sf,buffer_sf) %>% lengths > 0,] %>%
+  mutate(centr = 1) %>%
+  dplyr::select(-layer)
+
+one_zones_plot <- ggplot()+
+  geom_point(data=centres,aes(x=x, y=y, col=as.factor(boats)),
+             shape = 4,size=4)+
+  geom_point(data=peche_com_old,aes(x=x, y=y, col=as.factor(boats)), size=4)+
+  geom_sf(data = gridpolygon_sf,alpha=0)+
+  geom_sf(data = gridpolygon_sf_2,alpha=0.2,fill="red")+
+  theme_void()+
+  theme(legend.position = "none",
+        plot.title = element_text(hjust = 0.5))+
+  ggtitle("One zone")
+
+## 3 zones
+load(file="res/fish_3zones.RData")
+
+centres <- fish_zones_res$centres
+peche_com_old <- fish_zones_res$peche_com_old
+gridpolygon_sf <- fish_zones_res$gridpolygon_sf
+
+centres_sf <- st_as_sf(centres,coords = c("x","y"))
+buffer_sf <- st_buffer(centres_sf,dist = 3,endCapStyle = 'SQUARE')
+
+gridpolygon_sf_2 <- gridpolygon_sf[st_intersects(gridpolygon_sf,buffer_sf) %>% lengths > 0,] %>%
+  mutate(centr = 1) %>%
+  dplyr::select(-layer)
+
+three_zones_plot <- ggplot()+
+  geom_point(data=centres,aes(x=x, y=y, col=as.factor(boats)),
+             shape = 4,size=4)+
+  geom_point(data=peche_com_old,aes(x=x, y=y, col=as.factor(boats)), size=4)+
+  geom_sf(data = gridpolygon_sf,alpha=0)+
+  geom_sf(data = gridpolygon_sf_2,alpha=0.2,fill="red")+
+  theme_void()+
+  theme(legend.position = "none",
+        plot.title = element_text(hjust = 0.5))+
+  ggtitle("Three zones")
+
+## 5 zones
+load(file="res/fish_5zones.RData")
+
+centres <- fish_zones_res$centres
+peche_com_old <- fish_zones_res$peche_com_old
+gridpolygon_sf <- fish_zones_res$gridpolygon_sf
+
+centres_sf <- st_as_sf(centres,coords = c("x","y"))
+buffer_sf <- st_buffer(centres_sf,dist = 3,endCapStyle = 'SQUARE')
+
+gridpolygon_sf_2 <- gridpolygon_sf[st_intersects(gridpolygon_sf,buffer_sf) %>% lengths > 0,] %>%
+  mutate(centr = 1) %>%
+  dplyr::select(-layer)
+
+five_zones_plot <- ggplot()+
+  geom_point(data=centres,aes(x=x, y=y, col=as.factor(boats)),
+             shape = 4,size=4)+
+  geom_point(data=peche_com_old,aes(x=x, y=y, col=as.factor(boats)), size=4)+
+  geom_sf(data = gridpolygon_sf,alpha=0)+
+  geom_sf(data = gridpolygon_sf_2,alpha=0.2,fill="red")+
+  theme_void()+
+  theme(legend.position = "none",
+        plot.title = element_text(hjust = 0.5))+
+  ggtitle("Five zones")
+
+sev_zones_plot <- plot_grid(one_zones_plot,
+                            three_zones_plot,
+                            five_zones_plot,nrow = 1)
+
+ggsave("images/sev_zones_plot.png",width = 9, height = 3)
+
+```
+
+![(\#fig:SimuSevZone) Simulations of 10 fishing points within 1, 3 and 5 fishing zones. The full grid correspond to a statistical rectangle. Cross are the centroid of the fishing zones. A declaration declared at the level of the statistical rectangle would be uniformly reallocated over these fishing points.](images/sev_zones_plot.png)
+
 
 <!--
 Concretely, for each fishing declaration the fishing pings are sampled in 2 steps: first the centroid of the zones are randomly sampled over the statistical rectangle (here the simulation domain) and then the fishing positions are randomly sampled within the radius of the centroid of the zones. The zone size was chosen to be a square of side 7. This is a realistic order of magnitude if we consider each zone is one fishing operation and that for each fishing operation the distance of the operation will not exceed 30km.
@@ -372,7 +370,7 @@ XXXX MPE  le coté raisonnable dépend de l'échelle de la carte. je vourdrais e
 
 <!-- - a configuration corresponding to our alternative approach: simulated catch are reallocated over fishing locations and we fit the Declaration Model to the data (i.e. the one fitted at the level of the declarations data). -->
 
-For the single square simulation, in addition to the metrics introduced before ($MSPE$ and species-habitat parameter $\beta_S$), we also assess quality of the estitmation for  $\mu$, the observation variance parameter $\sigma^2$ and the zero-inflation parameter $\xi$.
+For the single square simulation, in addition to the metrics introduced before ($MSPE$ and species-habitat parameter $\beta_S$), we also assess the quality of the estimation for  $\mu$, the observation variance parameter $\sigma^2$ and the zero-inflation parameter $\xi$.
 
 
 ```{r,warning=F}
@@ -401,7 +399,7 @@ Results_conv_2 <- summaryBy(Convergence+one~
     mutate(aggreg_obs = ifelse(aggreg_obs == T,"Dj","Yi"),
            reallocation = ifelse(reallocation == 1,"Yes","No"),
            perc_convergence = round((1 - Convergence.sum / one.sum)*100,digits = 3)) %>%
-  mutate(aggreg_obs = ifelse((aggreg_obs == "Yi" & reallocation == "Yes"),"Yi*",aggreg_obs))
+  mutate(aggreg_obs = ifelse((aggreg_obs == "Yi" & reallocation == "Yes"),"Yr",aggreg_obs))
 
 Results_conv_2$n_samp_com <- as.integer(Results_conv_2$n_samp_com)
 Results_conv_2$sequencesdepeche <- as.integer(Results_conv_2$sequencesdepeche)
@@ -431,14 +429,14 @@ Results[,"Bias_intercept"]=(Results[,"intercept_est"]-Results[,"intercept_true"]
 
 Results <- Results %>%
   mutate(relloc_aggreg = paste0("Reallocation: ",ifelse(reallocation==0,"No","Yes")," -  Likelihood: ",ifelse(aggreg_obs==T,"Dj","Yi"))) %>%
-  mutate(relloc_aggreg = ifelse(aggreg_obs == F & reallocation == 1,"Reallocation: Yes -  Likelihood: Yi*",relloc_aggreg))
+  mutate(relloc_aggreg = ifelse(aggreg_obs == F & reallocation == 1,"Reallocation: Yes -  Likelihood: Yr",relloc_aggreg))
 
 
 Results$zonespersequence <- as.factor(Results$zonespersequence)
 Results$b_true <- as.factor(Results$b_true)
 Results$relloc_aggreg <- factor(Results$relloc_aggreg,
                                 levels = c("Reallocation: No -  Likelihood: Yi",
-                                           "Reallocation: Yes -  Likelihood: Yi*",
+                                           "Reallocation: Yes -  Likelihood: Yr",
                                            "Reallocation: Yes -  Likelihood: Dj"))
 
 Results_2 <- Results %>%
@@ -460,7 +458,7 @@ MSPE_S_plot <- ggplot()+
   scale_y_log10(breaks = trans_breaks("log10", function(x) 10^x),
                 labels = trans_format("log10", math_format(10^.x)))+
   scale_fill_manual(breaks = c("Reallocation: No -  Likelihood: Yi",
-                                "Reallocation: Yes -  Likelihood: Yi*",
+                                "Reallocation: Yes -  Likelihood: Yr",
                                 "Reallocation: Yes -  Likelihood: Dj"),
                      values=c("gold","#F8766D","#00BA38"))
 
@@ -481,7 +479,7 @@ Beta_plot <- ggplot()+
   ylab(parse(text = TeX('$\\beta_S$')))+
   xlab("")+
   scale_fill_manual(breaks = c("Reallocation: No -  Likelihood: Yi",
-                                "Reallocation: Yes -  Likelihood: Yi*",
+                                "Reallocation: Yes -  Likelihood: Yr",
                                 "Reallocation: Yes -  Likelihood: Dj"),
                      values=c("gold","#F8766D","#00BA38"))
 
@@ -501,7 +499,7 @@ RelBias_N_plot <- ggplot()+
   ylab("Relative bias of biomass")+
   xlab("")+
   scale_fill_manual(breaks = c("Reallocation: No -  Likelihood: Yi",
-                                "Reallocation: Yes -  Likelihood: Yi*",
+                                "Reallocation: Yes -  Likelihood: Yr",
                                 "Reallocation: Yes -  Likelihood: Dj"),
                      values=c("gold","#F8766D","#00BA38"))
 
@@ -535,7 +533,7 @@ q1_plot <- ggplot()+
         axis.ticks.x = element_blank(),
         plot.title = element_text(hjust = 0.5))+
   scale_fill_manual(breaks = c("Reallocation: No -  Likelihood: Yi",
-                               "Reallocation: Yes -  Likelihood: Yi*",
+                               "Reallocation: Yes -  Likelihood: Yr",
                                "Reallocation: Yes -  Likelihood: Dj"),
                     values=c("gold","#F8766D","#00BA38"))+
   xlab("")+ylab(parse(text = TeX('$\\xi$')))+
@@ -556,7 +554,7 @@ sigma_plot <- ggplot()+
         axis.ticks.x = element_blank(),
         plot.title = element_text(hjust = 0.5))+
   scale_fill_manual(breaks = c("Reallocation: No -  Likelihood: Yi",
-                               "Reallocation: Yes -  Likelihood: Yi*",
+                               "Reallocation: Yes -  Likelihood: Yr",
                                "Reallocation: Yes -  Likelihood: Dj"),
                     values=c("gold","#F8766D","#00BA38"))+
   xlab("")+ylab(parse(text = TeX('$\\sigma^2$')))+
@@ -580,7 +578,7 @@ intercept_plot <- ggplot()+
         axis.ticks.x = element_blank(),
         plot.title = element_text(hjust = 0.5))+
   scale_fill_manual(breaks = c("Reallocation: No -  Likelihood: Yi",
-                               "Reallocation: Yes -  Likelihood: Yi*",
+                               "Reallocation: Yes -  Likelihood: Yr",
                                "Reallocation: Yes -  Likelihood: Dj"),
                     values=c("gold","#F8766D","#00BA38"))+
   xlab("")+ylab(parse(text = TeX('$\\mu$')))+
@@ -596,20 +594,17 @@ par_plot <- plot_grid(par_plot,legend,rel_heights = c(1,0.08),ncol=1)
 ggsave("images/par_plot_single_square.png",width = 10.5, height = 4)
 
 ```
-The resultats are presented in Figures \@ref(fig:ParBiasSingle) and \@ref(fig:ParBiasSingle). 
 
+The resultats are presented in Figures \@ref(fig:PerfMetricSingle) and \@ref(fig:ParBiasSingle). 
 
-![(\#fig:PerfMetricSingle) Performance metric for single-square simulations with a total of 100 or 1000 fishing positions in columns. The number of fishing zones visited within each declaration is represented on the x-axis. The result of the Spatial model is in yellow, in red the results of the Reallocated model and in green the Declaration model.  Simulations conducted with 10 fishing positions are not represented as they encouter convergence issues as stated in Table 2.](images/Perf.metric_single_square.png){width=75%}
+![(\#fig:PerfMetricSingle) Performance metric for single-square simulations with a total of 100 or 1000 fishing positions in columns. The number of fishing zones visited within each declaration is represented on the x-axis. The result of the Spatial model is in yellow, in red the results of the Reallocated model and in green the Declaration Model.  Simulations conducted with 10 fishing positions are not represented as they encounter convergence issues as stated in Table 1.](images/Perf.metric_single_square.png){width=75%}
 
-
-![(\#fig:ParBiasSingle) Parameters relative bias for single-square simulations. 'Reallocation: ', data are or are not reallocated in simulations. 'Likelihood: ', the likelihood is computed on exact punctual observations $Y_i$, on reallocated observations $Y_i^*$ or on catch declarations $D_j$. Gold: golden standard. Red: uniform reallocation ($Y_i^*$ model). Green: model-based reallocation ($D_j$ model). Only the simulations with 1000 fishing positionss are represented. Black line: zero value. Red line: parameter true value.](images/par_plot_single_square.png)
-
+![(\#fig:ParBiasSingle) Parameters relative bias for single-square simulations. 'Reallocation: ', data are or are not reallocated in simulations. 'Likelihood: ', the likelihood is computed on exact punctual observations $Y_i$, on reallocated observations $\Yr$ or on catch declarations $D_k$. Gold: golden standard. Red: uniform reallocation ($\Yr$ model). Green: model-based reallocation ($D_k$ model). Only the simulations with 1000 fishing positions are represented. Black line: zero value. Red line: parameter true value.](images/par_plot_single_square.png)
 
  Figure \@ref(fig:PerfMetricSingle) highlights that the reallocation process has a major effect on predictions and estimates accuracy. As expected, the reallocation process conducts to a 10 to 200 times decrease in accuracy for spatial predictions when fitting the Reallocated Model (MSPE gold compared to red boxplots). Accuracy decreases as the number of visited zones within a declaration increases. Besides, the estimation of $\beta_S$ is biased and reallocation leads to the loss of the species-habitat relationship as the number of fishing zones (within a declaration) increases ($\beta_S$ estimates get closer to 0). Increasing the number of samples does not improve inference. 
-Figure \@ref(fig:ParBiasSingle) shows the over-estimation of  the zero-inflation parameter ($\xi$) when using the Reallocated Model. This is not surpising since the uniform reallocation of commercial data tends to decrease the proportion of zero since a realocated catch $Y^r$ is non-zer as soon as at least one of the individual catch associated with the same declaration is non -zero. The observation variance ($\sigma$) is underestimated i.e. the data is estimated to be less noisy than they actually are. The intercept of the latent field ($\mu$) is slightly over-estimated (Figure \@ref(fig:ParBiasSingle)).
+Figure \@ref(fig:ParBiasSingle) shows the over-estimation of  the zero-inflation parameter ($\xi$) when using the Reallocated Model. This is not surpising since the uniform reallocation of commercial data tends to decrease the proportion of zero since a reallocated catch $Y^r$ is non-zero as soon as at least one of the individual catch associated with the same declaration is non-zero. The observation variance ($\sigma$) is underestimated i.e. the data is estimated to be less noisy than they actually are. The intercept of the latent field ($\mu$) is slightly over-estimated (Figure \@ref(fig:ParBiasSingle)).
 
-The Declaration model allows to recover the species-habitat relationship and to improve the accuracy of the spatial predictions (Figure \@ref(fig:PerfMetricSingle)) even so the model outputs are not as accurate as the ones of the golden-standard. Furthermore, the zero-inflation parameter is unbiased when the model is fitted to catch declarations. Other parameters (observation variance, intercept) are also better estimated than with the Reallocated Model even though they remain slightly biased (Figure \@ref(fig:ParBiasSingle)). This alternative model have some convergence issues (Table 2) as 8% of the model did not converged when sample size is medium (100 pings) and only 3% did not when sample size is large (1000 pings).
-
+The Declaration model allows to recover the species-habitat relationship and to improve the accuracy of the spatial predictions (Figure \@ref(fig:PerfMetricSingle)) even so the model outputs are not as accurate as the ones of the Spatial Model. Furthermore, the zero-inflation parameter is unbiased when the model is fitted to catch declarations. Other parameters (observation variance, intercept) are also better estimated than with the Reallocated Model even though they remain slightly biased (Figure \@ref(fig:ParBiasSingle)). This alternative model have some convergence issues (Table 2) as 8% of the model did not converged when sample size is medium (100 pings) and only 3% did not when sample size is large (1000 pings).
 
 
 ```{r}
@@ -621,11 +616,12 @@ knitr::kable(Results_conv_2,booktabs = T,align = "c",
 
 
 **Multiple-square simulations**
-As mentioned before, we propose another set of simulations designed to be closer from the case study. The latent biomass process is modeled as the sum of the covariate effect and a random spatial field which represents the spatial structure not captured  by the covariate. This is possible as we extend tthe simulation to several statistical rectangles. We also simulate precisely localized scientific data as another source of information used to infer the spatial hidden biomass field. 
+
+As mentioned before, we propose another set of simulations designed to be closer from the case study. The latent biomass process is modeled as the sum of a covariate effect and a random spatial field which represents the spatial structure not captured by the covariate. The covariate is simulated with wider autocorrelation than the random effect (Table 1). This is possible as we extend the simulation to several statistical rectangles. We also simulate precisely localized scientific data as another source of information used to infer the spatial hidden biomass field.
 
 The study area is based on the case study; it includes the whole coast of the Bay of Biscay and cover several statistical rectangles (Figure \@ref(fig:MapSeveral)A). To tailor the case study, we simulate 3000 of fishing positions regrouped in 300 declarations (10 individual catches per declaration). Commercial data may not cover the full area, and consequently we allow the commercial samples to cover only 2/3 of the area. Similarly to the single-square simulations, the sampling of the commercial fishing points associated with a declaration is realized in three steps. (1) The declaration is randomly affected to one of the ICES rectangle. (2) The centroid of the fishing zone is uniformely  sampled within this statistical rectangle. (3) The 10 fishing punctual observations are randomly sampled within the fishing zone. The side of the squared fishing zone is set so as the extent of a fishing operation does not exceed 30 km. Note that we do not explore the effect of exploring several zones within the same declaration as it is already done in the single-square simulations.
 
-100 scientific precisely locazed scientific fishing points  are simulated following a random stratified plan; contrary to commercial data they cover the entire study domain (Figure \@ref(fig:MapSeveral)A). Scientific observations are simulated following the observation equations of $\mathcal{M}_Y$ (with specific parameters for scientific data - Table 1). 
+100 scientific precisely localized scientific fishing points are simulated following a random stratified plan; contrary to commercial data they cover the entire study domain (Figure \@ref(fig:MapSeveral)A). Scientific observations are simulated following the observation equations of $\mathcal{M}_Y$ (with specific parameters for scientific data - Table 1). 
 
 We compare several model configurations:
 
@@ -634,10 +630,6 @@ We compare several model configurations:
 - to assess the information brought by each data source, we compare models built on scientific data only (scientific-based models), models built on commercial data only (commercial-based models) and models combining both data sources (integrated models).
 
 In addition to the 2 metrics introduced at the beginning of the section ($MSPE$ and species-habitat parameter $\beta_S$), we also compare the precision of the estimate for the range parameter.
-
-Note that when including 2 datasets in the model, a difference in efficiency (named catchability in the Fisheries Science vocabulary)  should be accounted for and one of the two dataset will be considered as reference (see @alglave_combining_2022 for more details on parameterization). Here the reference level is set with scientific data and the parameter $k_{com}$ accounts for the relative ratio between scientific and commercial observation values. In simulations, $k_{com}$ is set to 1 so that both data sources are assumed to have the same catchability. XXXX du coup est ce qu'on a intérêt à en parler ici ?? XXXXX 
-
-
 
 ```{r,warning=F}
 
@@ -658,7 +650,7 @@ Results_conv_2 <- summaryBy(converge+one~
     mutate(aggreg_obs = ifelse(aggreg_obs == T,"Dj","Yi"),
            perc_convergence = round((1 - converge.sum / one.sum)*100,digits = 3))
 
-Results_conv_2$aggreg_obs[which(Results_conv_2$aggreg_obs == "Yi")] <- "Yi*"
+Results_conv_2$aggreg_obs[which(Results_conv_2$aggreg_obs == "Yi")] <- "Yr"
 
 Results_conv_2 <- Results_conv_2 %>%
   dplyr::rename(`Likelihood level` = aggreg_obs,
@@ -670,7 +662,7 @@ Results_conv_2$Model <- factor(Results_conv_2$Model,levels = c("Scientific model
 Results_conv_2 <- Results_conv_2[-which(Results_conv_2$Model == "Scientific model" &
                                           Results_conv_2$`Likelihood level` == "Dj"),]
 Results_conv_2$`Likelihood level`[which(Results_conv_2$Model == "Scientific model" &
-                       Results_conv_2$`Likelihood level` == "Yi*")] <- " "
+                       Results_conv_2$`Likelihood level` == "Yr")] <- " "
 
 ```
 
@@ -687,9 +679,9 @@ Results_plot[,"RelBias_beta"]=(Results_plot[,"beta1_est"]-Results_plot[,"beta1_t
 
 Results_plot$obs <- NA
 Results_plot$obs[which(Results_plot$aggreg_obs == T)] <- "Dj"
-Results_plot$obs[which(Results_plot$aggreg_obs == F)] <- "Yi*"
+Results_plot$obs[which(Results_plot$aggreg_obs == F)] <- "Yr"
 Results_plot$obs[which(Results_plot$Estimation_model == 2)] <- "Scientific data"
-Results_plot$obs <- factor(Results_plot$obs,levels = c("Yi*","Dj","Scientific data"))
+Results_plot$obs <- factor(Results_plot$obs,levels = c("Yr","Dj","Scientific data"))
 
 Results_plot$Model[which(Results_plot$Model == "Scientific model")] <- "Scientific"
 Results_plot$Model[which(Results_plot$Model == "Commercial model")] <- "Commercial"
@@ -713,7 +705,7 @@ beta_plot <- ggplot()+
   xlab("")+
   geom_hline(yintercept = 2,col="red",linetype="dashed")+
   scale_color_manual(breaks = c("Scientific model",
-                                "Yi*",
+                                "Yr",
                                 "Dj"),
                      values=c("#619CFF","#F8766D","#00BA38"))
 
@@ -729,7 +721,7 @@ MSPE_S_plot <- ggplot()+
   # facet_wrap(.~simu_type)+
   ylab("MSPE")+xlab("")+
   scale_color_manual(breaks = c("Scientific model",
-                                "Yi*",
+                                "Yr",
                                 "Dj"),
                      values=c("#619CFF","#F8766D","#00BA38"))+
   ylim(0,NA)
@@ -749,7 +741,7 @@ Range_plot <- ggplot()+
   xlab("")+
   geom_hline(yintercept = 0.6,col="red",linetype="dashed")+
   scale_color_manual(breaks = c("Scientific model",
-                                "Yi*",
+                                "Yr",
                                 "Dj"),
                      values=c("#619CFF","#F8766D","#00BA38"))+
   ylim(-0.1,2)
@@ -779,9 +771,9 @@ Furthermore, consistently with single-square simulations, the Reallocated Model 
 
 Interestingly, in addition to the species-habitat relationship, uniform reallocation also affects the spatial autocorrelation terms such as the range parameter. The Reallocated model provides biased range estimates while the Declaration model provides unbiased estimates. This is a consequence of the loss of the species-habitat relationship: when uniformly reallocating declarations, part of the variability related to the covariate effect is captured by the random effect. Consequently, the range parameter captures both the autocorrelation related to the actual random effect and to the covariate. The Declaration Model allows to recover and disentangle the effect of the species-habitat relationship and of the random effect. This is evidenced in Figure \@ref(fig:MapSeveral) where the Reallocated Model produces smoothed maps and does not capture the relatively small scale patterns that are shaped by the covariate. On the other hand, the Declaration model (as the scientific-based model) better captures and disentangles the covariate effect and the spatial random effect and then provides predictions that better fit to the small-scale patterns of the species distribution. However, this goes with some difficulty in convergence as only 75% of the model built on catch declarations converge (Table 3).
 
-![(\#fig:PerfMetricSeveral) Performance metric for the multiple-square simulations. Red line: true value for the range and the species-habitat parameter ($\beta_S$). Red: uniform reallocation ($Y_i^*$ model). Green: model-based reallocation ($D_j$ model). Blue: scientific-based model.](images/Perf.metric_multiple_square.png)
+![(\#fig:PerfMetricSeveral) Performance metric for the multiple-square simulations. Red line: true value for the range and the species-habitat parameter ($\beta_S$). Red: uniform reallocation ($\Yr$ model). Green: model-based reallocation ($D_k$ model). Blue: scientific-based model.](images/Perf.metric_multiple_square.png)
 
-![(\#fig:MapSeveral) Relative distribution of simulated/estimated biomass field. A: Simulated biomass field with scientific samples (red) and statistical rectangles. The rectangles that have not been sampled by commercial data are the transparent rectangles. They represent 1/3 of the full area. B: simulated biomass field. C: biomass field from the scientific-based model. $Y_i^*$: $Y_i^*$ model (D, E). $D_j$:Declaration Model (F, G). Scientific model: model fitted to scientific data only. Commercial model: model fitted to commercial data only. Integratedd model: model fitted to both data sources.](images/Map_multi_square.png)
+![(\#fig:MapSeveral) Relative distribution of simulated/estimated biomass field. A: Simulated biomass field with scientific samples (red) and statistical rectangles. The rectangles that have not been sampled by commercial data are the transparent rectangles. They represent 1/3 of the full area. B: simulated biomass field. C: biomass field from the scientific-based model. $\Yr$: Reallocated Model (D, E). $D_k$: Declaration Model (F, G). Scientific model: model fitted to scientific data only. Commercial model: model fitted to commercial data only. Integrated model: model fitted to both data sources.](images/Map_multi_square.png)
 
 ```{r}
 
@@ -793,11 +785,11 @@ knitr::kable(Results_conv_2,booktabs = T,align = "c",
 
 ## Case-study: sole of the Bay of Biscay
 
-To illustrate our method on a real case study, we applied the approach to the common sole of the Bay of Biscay. VMS-logbooks data were extracted for the bottom trawlers fleet (OTB). The methods to cross VMS-logbooks data and to filter the fleet is already extensively described in the previous papers [@alglave_combining_2022] and is not developed further here. Scientific data were extracted from the DATRAS database for the Orhago beam trawl survey [@biais_gerard_orhago_2003;@ices_report_2018]. To align the commercial and the scientific data, we filtered scientific data based on the minimum size of sole (24 cm for sole - @ices_report_2018-1). To illustrate the method, we compare the outputs of (1) the Spatial model fitted with scientific data, (2) the integrated model Realocated model fitted to scientific data and reallocated individual catch data and (3) the integrated Declaration Model fitted to scientific and declarations data.
+To illustrate our method on a real case study, we applied the approach to the common sole of the Bay of Biscay. VMS-logbooks data were extracted for the bottom trawlers fleet (OTB). The methods to cross VMS-logbooks data and to filter the fleet is already extensively described in the previous papers [@alglave_combining_2022] and is not developed further here. Scientific data were extracted from the DATRAS database for the Orhago beam trawl survey [@biais_gerard_orhago_2003;@ices_report_2018]. To align the commercial and the scientific data, we filtered scientific data based on the minimum size of sole (24 cm for sole - @ices_report_2018-1). To illustrate the method, we compare the outputs of (1) the Spatial model fitted with scientific data, (2) the integrated Reallocated model fitted to both scientific data and reallocated individual catch data and (3) the integrated Declaration Model fitted to both scientific and declarations data.
 
-The integrated Declaration Modelfaced convergence issues (some of the parameters were hardly estimated e.g. the range parameter). To ease convergence, we integrated in the analysis onboard observer data for the same fleet. They can be considered as individual commercial catch data. There are few vessels with onboard observers and therefore few precisely geolocalized commercial data XXXX Dire combien ?? XXX Integrating these data allow to have direct information on $Y_i$ and to better estimate the observation equations parameters (i.e. observation variance and zero-inflation parameter of commercial data).
+The integrated Declaration Model faced convergence issues (some of the parameters were hardly estimated e.g. the range parameter). To ease convergence, we integrated in the analysis onboard observer data for the same fleet. They can be considered as individual commercial catch data. There are few vessels with onboard observers and therefore few precisely geolocalized commercial data (86 samples). Integrating these data allow to have direct information on $Y_i$ and to better estimate the observation equations parameters (i.e. observation variance and zero-inflation parameter of commercial data).
 
-Furthermore, as commonly done in complex fisheries model using automatic differentiation method [@fournier2012ad], we adopt a phase optimization procedure to initialize the optimization algorithm for the Declaration model. We first fit the Reallocated model and use the estimates of this model as starting point of the optimization algorithm used for the Declaration model estimation.. We eventually fix the parameters that are hard to estimate in the initial optimization phases (intercept $\mu$, covariate effect $\beta_S$, range and marginal variance) to finally let them be  freely estimated in the following phases.
+Furthermore, as commonly done in complex fisheries model using automatic differentiation method [@fournier2012ad], we adopt a phase optimization procedure to initialize the optimization algorithm for the Declaration model. We first fit the Reallocated model and use the estimates of this model as starting point of the optimization algorithm used for the Declaration model estimation. We eventually fix the parameters that are hard to estimate in the initial optimization phases (intercept $\mu$, covariate effect $\beta_S$, range and marginal variance) to finally let them be freely estimated in the following phases.
 
 
 
@@ -816,7 +808,7 @@ load("res/est_par_df_full_3.RData")
 no.realloc_plot <- ggplot(no.realloc_df)+
   geom_point(aes(x=x,y=y,col=S_x),shape=15,size=2)+
   scale_color_distiller(palette = "Spectral",limits=c(0,NA))+
-  ggtitle("Integrated model",subtitle = "Commercial likelihood on Yi*")+
+  ggtitle("Integrated model",subtitle = "Commercial likelihood on Yr")+
   theme_bw()+
   theme(plot.title = element_text(hjust = 0.5),
         plot.subtitle = element_text(hjust = 0.5))+
@@ -856,8 +848,8 @@ case_study_plot <- plot_grid(sci_plot,no.realloc_plot,realloc_rest_plot,ncol=3,a
 ggsave("images/case_study_plot.png",width = 12, height = 4)
 
 ## Parameter estimates
-est_par_df_full_3$lkl[which(est_par_df_full_3$lkl == "Yi")] <- "Yi*"
-est_par_df_full_3$lkl <- factor(est_par_df_full_3$lkl,levels = c("Dj","Yi*","Scientific model"))
+est_par_df_full_3$lkl[which(est_par_df_full_3$lkl == "Yi")] <- "Yr"
+est_par_df_full_3$lkl <- factor(est_par_df_full_3$lkl,levels = c("Dj","Yr","Scientific model"))
 est_par_df_full_3 <- est_par_df_full_3 %>%
   filter(par_names != "substr_Sand_Coarse_substrate")
 par_plot <- ggplot(est_par_df_full_3, aes(y=par_val, x=par_names))+
@@ -870,7 +862,7 @@ par_plot <- ggplot(est_par_df_full_3, aes(y=par_val, x=par_names))+
                 position = position_dodge(0.5),width=0.4
   )+
   scale_color_manual(breaks = c("Scientific model",
-                                "Yi*",
+                                "Yr",
                                 "Dj"),
                      values=c("#619CFF","#F8766D","#00BA38"))+
   geom_hline(yintercept=0, linetype="dashed", color = "red",alpha=0.4)+
@@ -907,17 +899,38 @@ Consistently with simulations, the Declaration model modifies some of the parame
 
 In addition, uncertainty is also revised when fitting the model at the declaration level. For instance, when comparing the Reallocated Model to the Declaration Model, the confidence intervals of $\beta_S$, the marginal variance, the range, $\xi_{com}$, $\sigma_{com}$ are much wider. This emphasizes that uncertainty is probably underestimated in the Reallocated Model compared with the Declaration Model. Now, when comparing the scientific-based model and the integrated Declaration Model, some parameters are better estimated than when only scientific data feed the model. For instance, while in the scientific-based model the substrate effect was not significant, in the integrated model built on the declarations, substrate is significant and the confidence interval is smaller.
 
-On the contrary, other parameters do not seem  well estimated in either the Reallocated or the Declaration Models. For instance, compared to the scientific-based model, the intercept is revised upwards when building the likelihood on the individual precisely geolocalized catch  and revised downwards when estimatedwith the Reallocated Model. This is consistent with the simulations results, see Figure \@ref(fig:ParBiasSingle).
+On the contrary, other parameters do not seem  well estimated in either the Reallocated or the Declaration Models. For instance, compared to the scientific-based model, the intercept is revised upwards when building the likelihood on the individual precisely geolocalized catch  and revised downwards when estimated with the Reallocated Model. This is consistent with the simulations results, see Figure \@ref(fig:ParBiasSingle).
 
 Regarding the maps of the species distribution, fitting the model at the declaration level strongly modifies the model biomass field compared with the Reallocated model. In particular, the substrate covariate have a sharper effect on species distribution and the intensity of the hotspots are revised when fitting the Declaration model.
 
-Finally, the Declaration Model fitted only on commercial data does not converge (while the one fitted on reallocated data does) emphasizing the model fitted on catch declarations face difficulties to converge and require punctual observations (here survey data and on-board observer data) to converge on real data. This might be explained by the relative loss of spatail information due to the data agreagation.
+Finally, the Declaration Model fitted only on commercial data does not converge (while the one fitted on reallocated data does) emphasizing the model fitted on catch declarations face difficulties to converge and require punctual observations (here survey data and on-board observer data) to converge on real data. This might be explained by the relative loss of spatial information due to the data agreagation.
 
-![(\#fig:CaseStudyPar) Parameters obtained with scientific-based model, the integrated model fitted on reallocated catch $Y_i^*$ and the integrated model fitted on catch declarations $D_j$.](images/par_plot.png)
+![(\#fig:CaseStudyPar) Parameters obtained with scientific-based model, the integrated model fitted on reallocated catch $\Yr$ and the integrated model fitted on catch declarations $D_k$. $k_com$ is the relative difference in catchability between scientific data and commercial data (i.e. it is a scaling parameter). This parameter captures the difference in catch efficiency between scientific and commercial gears.](images/par_plot.png)
 
-![(\#fig:CaseStudyMap) Maps obtained from (left) the scientific-based model, (center) the integrated model fitted on punctual reallocated catch $Y_i^*$, (right) the integrated model fitted on catch declarations $D_j$.](images/case_study_plot.png)
+![(\#fig:CaseStudyMap) Maps obtained from (left) the scientific-based model, (center) the integrated model fitted on punctual reallocated catch $\Yr$, (right) the integrated model fitted on catch declarations $D_k$. ](images/case_study_plot.png)
+
 
 # Discussion
+
+**Summary of the main findings**
+We built an integrated spatial framework:
+--> that allows to handle COS issues with complex data
+--> that can combine rough resolution data (catch declaration data) and high resolution data (scientific data) to provide fine resolution species predictions
+
+The Declaration Model allows to recover the effect of the habitat on species distribution while this was lost when reallocating uniformly the declarations of VMS pings. This modifies the resulting predictions and resulting maps better fit to the covariate shape.
+--> Consistent with litterature of COS (when dealing roughly with COS --> biased estimates)
+
+**Some simplifications / aproximations that may be investigated further**
+--> we assumed the fishing locations are known exactly and without error, however in the reality boats fish along a trajectory which is unknown and emit VMS pings along this trajectory. Potential combination with other frameworks to reconstruct the trajectory of vessels.
+
+--> We modelled the positive declarations as a lognormal distribution and assume this result from a set of other zero-inflated lognormal distribution. This should be seen as a first approximation to handle the issue of COS in our specific case. Our simulations and previous studies [@monnahan2021incorporating] higlhight that this gives good results in practice. Other observation modelled could be explored (a Gamma distribution instead of a Lognormal for instance). However, the relation between the parameters of a Gamma distribution (usually the shape $k$ and the scale $\theta$) and its moments ($k=\E[X]^2/\V[X]$, $\theta=\V[X]/\E[X]$) can be more complex than the parameterization of the Lognormal distribution we used here ($\mu=E(X)$, $\sigma^2=ln(\frac{Var(Z)}{E(Z)^2} + 1)$) which might cause problem during convergence.
+
+--> Individual observations improve the convergence of the model (similarly as @gilbert2021integrating). Need for individual observations (Obsmer, Survey). More and more punctual data that may be available through direct recording of the catch. Value of individual observations [@plet2020value].
+
+--> Covariate range may have effect on the bias.
+
+**Perspectives**
+--> moving to space-time: no major challenge regarding the observation process (same ideas that should be involved), more challenging regarding the latent field as this would require to specify a covariance function that is meaningfull for such processes.
 
 
 \newpage
@@ -936,17 +949,17 @@ Finally, the Declaration Model fitted only on commercial data does not converge 
 
 **Notations**
 
-We model catch declarations $D_j$ (available at coarse resolution through logbooks data) as a sum of $Y_{i}$ punctual observations (which are unknown i.e. latent variables) each one realised at one fishing position $x_{i}$ (known through VMS data).
+We model catch declarations $D_k$ (available at coarse resolution through logbooks data) as a sum of $Y_{i}$ punctual observations (which are unknown i.e. latent variables) each one realised at one fishing position $x_{i}$ (known through VMS data).
 
 We note: 
 
-- $\mathcal{P}_j$ : the vector of all fishing positions related to the $j^{th}$ declaration.
+- $\mathcal{P}_k$ : the vector of all fishing positions $x_i$ related to the $j^{th}$ declaration.
 
 - $j \in \{1,...,l\}$ with $l$ the number of declarations.
 
-- $i \in \{1,...,m_j\}$ with $m_j$ the number of fishing positions belonging to the $j^{th}$ declaration.
+- $i \in \{1,...,m_k\}$ with $m_k$ the number of fishing positions belonging to the $j^{th}$ declaration.
 
-$$D_j=\sum_{i \in \mathcal{P}_j}{Y_{i}}$$
+$$D_k=\sum_{i \in \mathcal{P}_k}{Y_{i}}$$
 
 **Reparameterization of the lognormal distribution**
 
@@ -960,9 +973,9 @@ We choose to slightly reparameterize the lognormal distribution. Let's define $\
 
 - $Var(Z)=\mu^2(e^{\sigma^2} - 1) \Leftrightarrow	\sigma^2=ln(\frac{Var(Z)}{E(Z)^2} + 1)$
 
-**$D_j$ probability distribution and moments**
+**$D_k$ probability distribution and moments**
 
-We have to express the probability distribution of $D_j$ and its moments as a function of $Y_{i}$ and its related moments. Let's assume $Y_{i} = C_{i}.Z_{i}$ is a zero-inflated lognormal distribution with $C_{i}$ a binary random variable and $Z_{i}$ a lognormal random variable.
+We have to express the probability distribution of $D_k$ and its moments as a function of $Y_{i}$ and its related moments. Let's assume $Y_{i} = C_{i}.Z_{i}$ is a zero-inflated lognormal distribution with $C_{i}$ and $Z_i$ the two components of the mixture. $C_{i}$ is a binary random variable and $Z_{i}$ a lognormal random variable.
 
 $$C_{i} \sim \mathcal{B}(1-p_{i})$$ 
 with $p_{i}=exp(-e^\xi .S(x_{i}))$ the probability to obtain a zero value.
@@ -974,46 +987,63 @@ Here, $Y_{i}$, $C_{i}$ and $Z_{i}$ are observations of a latent field $S(x_{i})$
 
 **Probability of obtaining a zero declaration**
 
+As mentionned in the core text, the probability to obtain a zero declaration is the probability that all individual observations within this declaration are null. This gives:
+
 \begin{align*}
-P(D_j = 0 \vert S, X) & = \prod_{i\in \mathcal{P}_j} P(Y_{i} = 0 \vert S, X),\nonumber \\
-                      & = \exp{ \left \lbrace- \sum_{i\in \mathcal{P}_j} e^{\xi}. S(x_{i})\right \rbrace} = \pi_j.
+P(D_k = 0 \vert S, X) & = \prod_{i \in \mathcal{P}_k} P(Y_{i} = 0 \vert S, X),\nonumber \\
+                      & = \exp{ \left \lbrace- \sum_{i \in \mathcal{P}_k} e^{\xi}. S(x_{i})\right \rbrace} = \pi_k.
 \end{align*}
 
 
 **Expectation of a positive declaration**
 
-Following calculations are supposed to be conditionnal on $S$ and $X$.
-
-$$E(D_j\vert D_j >0) =  \sum_{i\in \mathcal{P}_j} E(C_{i} Z_{i}\vert \exists i\in\mathcal{P}_j , C_{i}=1)$$
+Conditionnally on $\bm{S}$ and $\mathcal{P}_j$.
 
 \begin{align*}
-E(D_j\vert D_j > 0) & = E(D_j 1_{ \left \lbrace D_j > 0\right\rbrace } )  / P\left ( D_j > 0\right ),   \\
-& = E(D_j 1_{ \left \lbrace D_j > 0\right\rbrace } )  / \left (1-\pi_j\right).   \\
+E(D_k\vert D_k >0) & =  \sum_{i \in \mathcal{P}_k} E(C_{i} Z_{i}\vert \exists x_i\in\mathcal{P}_k , C_{i}=1)
+& = E(D_k 1_{ \left \lbrace D_k > 0\right\rbrace } )  / P\left ( D_k > 0\right ),   \\
+& = E(D_k 1_{ \left \lbrace D_k > 0\right\rbrace } )  / \left (1-\pi_k\right).   \\
 \end{align*}
 
-As $E(D_j 1_{ \left \lbrace D_j > 0\right\rbrace } ) = E(D_j ),$
+As $E(D_k 1_{ \left \lbrace D_k > 0\right\rbrace } ) = E(D_k ),$ we can write $E(D_k\vert D_k > 0)$ as:
 
 \begin{align*}
-E(D_j\vert D_j > 0) & = \left (1- \pi_j\right)^{-1} E(D_j)   ,   \nonumber \\
-& = \left (1- \pi_j\right)^{-1} \sum_{i\in \mathcal{P}_j} E(C_{i} Z_{i}),\nonumber \\
-& = \left (1- \pi_j\right)^{-1} \sum_{i\in \mathcal{P}_j} (1-p_{i}) \frac{S(x_{i})}{1-p_{i}}, \nonumber \\
-& = \left (1- \pi_j\right)^{-1}\sum_{i\in \mathcal{P}_j} S(x_{i}).
+E(D_k\vert D_k > 0) & = \left (1- \pi_k\right)^{-1} E(D_k)   ,   \nonumber \\
+& = \left (1- \pi_k\right)^{-1} \sum_{i \in \mathcal{P}_k} E(C_{i} Z_{i}),\nonumber \\
+& = \left (1- \pi_k\right)^{-1} \sum_{i \in \mathcal{P}_k} (1-p_{i}) \frac{S(x_{i})}{1-p_{i}}, \nonumber \\
+& = \left (1- \pi_k\right)^{-1}\sum_{i \in \mathcal{P}_k} S(x_{i}).
 \end{align*}
 
 
 **Variance of a positive declaration**
 
-$$Var(D_j \vert D_j >0)  = E(D_j^2 \vert D_j >0)- E(D_j \vert D_j >0)^2.$$
+The variance then can expressed as:
 
-$$E(D_j^2 \vert D_j >0) = (1-\pi_j)^{-1} E(D_j^2 1_{\left \lbrace D_j >0\right\rbrace}) = (1-\pi_j)^{-1} E(D_j^2 )$$
+$$Var(D_k \vert D_k >0)  = E(D_k^2 \vert D_k >0)- E(D_k \vert D_k >0)^2.$$
+with, 
 
-$$E(D_j \vert D_j >0)^2 = ((1-\pi_j)^{-1} E(D_j 1_{\left \lbrace D_j >0\right\rbrace}))^2 =  (1-\pi_j)^{-2} E(D_j)^2$$
+\begin{align*}
+E(D_k^2 \vert D_k >0) & = (1-\pi_k)^{-1} E(D_k^2 1_{\left \lbrace D_k >0\right\rbrace}) 
+& = (1-\pi_k)^{-1} E(D_k^2 )
+\end{align*}
 
-Then,
+and
 
-$$Var(D_j \vert D_j >0) = (1-\pi_j)^{-1} E(D_j^2 ) - (1-\pi_j)^{-2} E(D_j)^2 = (1-\pi_j)^{-1} Var(D_j) - \frac{\pi_j}{(1-\pi_j)^2} E(D_j)^2.$$
+\begin{align*}
+E(D_k \vert D_k >0)^2 & = ((1-\pi_k)^{-1} E(D_k 1_{\left \lbrace D_k >0\right\rbrace}))^2 
+& =  (1-\pi_k)^{-2} E(D_k)^2
+\end{align*}
 
-As the $(Y_{i})_{i\in \mathcal{P}_j}$ are independent, $Var(D_j) =\sum_{i \in\mathcal{P}_j} Var(Y_{i}) = \sum_{i \in\mathcal{P}_j} Var(C_{i}.Z_{i})$.
+Then, using these two expressions in the variance formula we obtain:
+
+\begin{align*}
+Var(D_k \vert D_k >0) & = (1-\pi_k)^{-1} E(D_k^2 ) - (1-\pi_k)^{-2} E(D_k)^2
+& = (1-\pi_k)^{-1} Var(D_k) - \frac{\pi_k}{(1-\pi_k)^2} E(D_k)^2.
+\end{align*}
+
+As the $(Y_{i})_{i \in \mathcal{P}_k}$ are independent, $Var(D_k) =\sum_{i \in\mathcal{P}_k} Var(Y_{i}) = \sum_{i \in\mathcal{P}_k} Var(C_{i}.Z_{i})$.
+
+Obtaining $Var(C_{i} Z_{i})$ is then straightforward due to conditionnal independence properties:
 
 \begin{align*}
 Var(C_{i} Z_{i}) & = E( C_{i}^2 Z_{i}^2 ) - E(C_{i} Z_{i})^2,\\
@@ -1027,17 +1057,26 @@ Var(C_{i} Z_{i}) & = E( C_{i}^2 Z_{i}^2 ) - E(C_{i} Z_{i})^2,\\
 
 **Sum up of the main formulas**
 
-$$P(D_j = 0 \vert S, X) = \exp{ \left \lbrace- \sum_{i\in \mathcal{P}_j} e^{\xi}. S(x_{i})\right \rbrace} = \pi_j$$
+The main formulas of the model can be summarised as follow:
 
-$$E(D_j \vert D_j > 0)=\frac{\sum_{i \in \mathcal{P}_j} S(x_{i})}{1-\pi_j}$$
+- The probability to obtain a zero declaration
 
+$$P(D_k = 0 \vert S, X) = \exp{ \left \lbrace- \sum_{i \in \mathcal{P}_k} e^{\xi}. S(x_{i})\right \rbrace} = \pi_k$$
 
-$$Var(D_j \vert D_j > 0) = \frac{\sum_{i \in \mathcal{P}_j} Var(Y_{i})}{1-\pi_j} - \frac{\pi_j}{(1-\pi_j)^2}E(D_j)^2$$
+- The expectancy of a positive declaration
+
+$$E(D_k \vert D_k > 0)=\frac{\sum_{i \in \mathcal{P}_k} S(x_{i})}{1-\pi_k}$$
+
+- The variance of a positive declaration
+
+$$Var(D_k \vert D_k > 0) = \frac{\sum_{i \in \mathcal{P}_k} Var(Y_{i})}{1-\pi_k} - \frac{\pi_k}{(1-\pi_k)^2}E(D_k)^2$$
+
+- The variance of an individual observation
 
 $$Var(Y_{i})=\frac{S(x_{i})^2}{1-p_{j}}(e^{\sigma^2}-(1-p_{i}))$$
 
-Assuming $D_j \vert D_j > 0$ also follows a lognormal distribution we can write:
+Then, assuming $D_k \vert D_k > 0$ also follows a lognormal distribution we can write:
 
-$$D_j \vert D_j > 0 \sim \operatorname{L}( \mu_j = E(D_j \vert D_j > 0), \sigma_j^2= ln(\frac{Var(D_j \vert D_j > 0)}{E(D_j \vert D_j > 0)^2} + 1))$$
+$$D_k \vert D_k > 0 \sim \operatorname{L}( \mu_k = E(D_k \vert D_k > 0), \sigma_k^2= ln(\frac{Var(D_k \vert D_k > 0)}{E(D_k \vert D_k > 0)^2} + 1))$$
 
 

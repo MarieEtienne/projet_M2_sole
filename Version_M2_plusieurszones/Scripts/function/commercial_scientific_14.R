@@ -304,38 +304,38 @@ simu_commercial_scientific <- function(Results,
   # Représentation graphique des donnees commerciales (4 graphes)
   
   # 1. Centres des zones de peche
-  # plot_centres = ggplot(centres) + geom_point(aes(x=x, y=y, col=as.factor(boats)), size=4) +
-  #   labs(color= "Bateau") +
-  #   theme_bw() +
-  #   theme(axis.title = element_blank(),legend.position='none')
-  
+  plot_centres = ggplot(centres) + geom_point(aes(x=x, y=y, col=as.factor(boats)), size=4) +
+    labs(color= "Bateau") +
+    theme_bw() +
+    theme(axis.title = element_blank(),legend.position='none')
+
   # 2. Points de peche
-  # plot_pointsdepechecomperboat = ggplot(peche_com_old) + geom_point(aes(x=x, y=y, col=as.factor(boats)), size=4) +
-  #   labs(color= "Bateau") +
-  #   theme_bw() +
-  #   theme(axis.title = element_blank(),legend.position='none')
+  plot_pointsdepechecomperboat = ggplot(peche_com_old) + geom_point(aes(x=x, y=y, col=as.factor(boats)), size=4) +
+    labs(color= "Bateau") +
+    theme_bw() +
+    theme(axis.title = element_blank(),legend.position='none')
   
   # 3. Points de peche dans les cellules
   pointsdepeche_com = as.data.frame(cbind(x = x_com, y = y_com, boats = boats_number, ncell = index_com_i, y_com_i = y_com_i))
-  # plot_pointsdepechecell = ggplot(pointsdepeche_com) +
-  #   geom_point(aes(x=x, y=y, col=as.factor(boats)), size=4) +
-  #   labs(color= "Bateau") +
-  #   theme_bw() +
-  #   theme(axis.title = element_blank(),legend.position='none')
+  plot_pointsdepechecell = ggplot(pointsdepeche_com) +
+    geom_point(aes(x=x, y=y, col=as.factor(boats)), size=4) +
+    labs(color= "Bateau") +
+    theme_bw() +
+    theme(axis.title = element_blank(),legend.position='none')
   
   # 4. Quantite pechee
-  # if (k==0){
-  #   plot_pointsdepecheqte = ggplot(pointsdepeche_com) + geom_point(aes(x=x, y=y, col=y_com_i), size=4) +
-  #     labs(color= "Quantite pechee") +
-  #     theme_bw() +
-  #     scale_color_gradient2(midpoint = mean(pointsdepeche_com$y_com_i), low = "#E6F2FC", mid = "#62B4FC",
-  #                           high = "#02182C", space = "Lab" ) + 
-  #     theme(axis.title = element_blank(),legend.position='none')
-  # } else{
-  #   plot_pointsdepecheqte = ggplot(pointsdepeche_com) + geom_point(aes(x=x, y=y, col=as.factor(round(y_com_i, 1))), size=4) +
-  #     labs(color= "Quantite pechee") + theme_bw() +
-  #     theme(axis.title = element_blank(),legend.position='none')
-  # }
+  if (k==0){
+    plot_pointsdepecheqte = ggplot(pointsdepeche_com) + geom_point(aes(x=x, y=y, col=y_com_i), size=4) +
+      labs(color= "Quantite pechee") +
+      theme_bw() +
+      scale_color_gradient2(midpoint = mean(pointsdepeche_com$y_com_i), low = "#E6F2FC", mid = "#62B4FC",
+                            high = "#02182C", space = "Lab" ) +
+      theme(axis.title = element_blank(),legend.position='none')
+  } else{
+    plot_pointsdepecheqte = ggplot(pointsdepeche_com) + geom_point(aes(x=x, y=y, col=as.factor(round(y_com_i, 1))), size=4) +
+      labs(color= "Quantite pechee") + theme_bw() +
+      theme(axis.title = element_blank(),legend.position='none')
+  }
   
   # print(paste0("% of pos. values : ",length((y_com_i[which(y_com_i > 0)]))/length(y_com_i)))
   

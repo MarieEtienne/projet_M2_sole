@@ -259,6 +259,7 @@ x_parallel1 <- clusterEvalQ(cl,{
   
   TMB::compile(paste0(TmbFile,"inst/executables/com_x_sci_data_14_scientific_commercial_simple.cpp"),"-O1 -g",DLLFLAGS="")
   
+  
   # If problems with the PATH
   # Sys.setenv(PATH = paste("C:/Rtools/bin", Sys.getenv("PATH"), sep=";")) # if "C:/Rtools/bin" is not in the PATH
   
