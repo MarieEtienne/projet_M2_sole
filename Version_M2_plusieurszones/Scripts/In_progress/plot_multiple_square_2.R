@@ -3,7 +3,7 @@
 ##############################################################
 
 compute_profile <- F
-save_data <- T
+save_data <- F
 
 load("draft/paper_3/res/list_input.RData")
 
@@ -268,6 +268,8 @@ if(compute_profile){
 ############
 ## Plot maps
 ############
+
+
 max_val <- max(simu_df$S_x/sum(simu_df$S_x),
                sci_df$S_x/sum(sci_df$S_x),
                int_Yi_df$S_x/sum(int_Yi_df$S_x),
@@ -323,7 +325,7 @@ sci_plot <- ggplot(sci_df)+
 int_Yi_plot <- ggplot(int_Yi_df)+
   geom_point(aes(x=x,y=y,col=S_x/sum(S_x)),shape=15,size=2)+
   scale_color_distiller(palette = "Spectral",limits=c(0,max_val+0.01*max_val))+
-  ggtitle("Integrated model - Yi")+
+  ggtitle("Integrated model - Yr")+
   theme_bw()+
   theme(plot.title = element_text(hjust = 0.5),
         plot.subtitle = element_text(hjust = 0.5),
@@ -335,7 +337,7 @@ int_Yi_plot <- ggplot(int_Yi_df)+
 com_Yi_plot <- ggplot(com_Yi_df)+
   geom_point(aes(x=x,y=y,col=S_x/sum(S_x)),shape=15,size=2)+
   scale_color_distiller(palette = "Spectral",limits=c(0,max_val+0.01*max_val))+
-  ggtitle("Commercial model - Yi")+
+  ggtitle("Commercial model - Yr")+
   theme_bw()+
   theme(plot.title = element_text(hjust = 0.5),
         plot.subtitle = element_text(hjust = 0.5),
@@ -347,7 +349,7 @@ com_Yi_plot <- ggplot(com_Yi_df)+
 int_Dj_plot <- ggplot(int_Dj_df)+
   geom_point(aes(x=x,y=y,col=S_x/sum(S_x)),shape=15,size=2)+
   scale_color_distiller(palette = "Spectral",limits=c(0,max_val+0.01*max_val))+
-  ggtitle("Integrated model - Dj")+
+  ggtitle("Integrated model - Dk")+
   theme_bw()+
   theme(plot.title = element_text(hjust = 0.5),
         plot.subtitle = element_text(hjust = 0.5),
@@ -359,7 +361,7 @@ int_Dj_plot <- ggplot(int_Dj_df)+
 com_Dj_plot <- ggplot(com_Dj_df)+
   geom_point(aes(x=x,y=y,col=S_x/sum(S_x)),shape=15,size=2)+
   scale_color_distiller(palette = "Spectral",limits=c(0,max_val+0.01*max_val))+
-  ggtitle("Commercial model - Dj")+
+  ggtitle("Commercial model - Dk")+
   theme_bw()+
   theme(plot.title = element_text(hjust = 0.5),
         plot.subtitle = element_text(hjust = 0.5),

@@ -1,0 +1,975 @@
+---
+title: "Inferring fine scale wild species distribution from spatially aggregated data"
+author : "Marie-Pierre Etienne, Baptiste Alglave, Kasper Kristensen, Youen Vermard, Mathieu Woillez, Etienne Rivot"
+
+fontsize: 10pt
+bibliography : ["ref.bib"]
+csl : ices-journal-of-marine-science.csl
+
+output:
+  beamer_presentation:
+    theme: "Darmstadt"
+    colortheme: "default"
+    slide_level: 3
+    # template: mytemplate.tex
+    includes:
+      in_header: header-simple.tex
+---
+
+```{r setup, include=FALSE}
+
+knitr::opts_chunk$set(echo = TRUE)
+
+library(dplyr)
+library(tidyr)
+library(rnaturalearth)
+library(stringr)
+library(sf)
+library(raster)
+library(maps)
+library(mapdata)
+library(ggplot2)
+library(ggspatial)
+library(cowplot)
+library(latex2exp)
+library(ggpubr)
+
+col_scale <- function(palette = "Spectral", name = "", limits = NULL) {
+  scale_colour_distiller(palette = palette,   # spectral colour scale
+                         guide = "colourbar", # continuous colour bar
+                         name = name,
+                         limits = limits)
+}
+
+run_codes <- F
+
+grid_projection <- "+proj=longlat +datum=WGS84"
+
+mapBase <- map("worldHires", fill = T, plot = F)
+mapBase <- st_as_sf(mapBase) %>% filter(ID %in% c("France","Spain"))
+
+```
+
+
+# Context
+
+### Spatial data in ecology
+
+<!-- Standardized and high quality data, but low amount of samples -->
+<!-- more data, but no standardize sampling plan (e.g. problem related to preferential sampling) -->
+<!-- legal and massive data, but low quality, declared at the level of some administrative unit -->
+
+\begin{columns}
+\begin{column}{0.1\textwidth}
+\end{column}
+\begin{column}{0.3\textwidth}
+\center {\bf Survey data}
+\end{column}
+\begin{column}{0.3\textwidth}
+\center {\bf Citizen science data}
+\end{column}
+\begin{column}{0.3\textwidth}
+\center {\bf Declaration data}
+\end{column}
+\end{columns}
+
+\vspace{\baselineskip}
+ 
+\begin{columns}
+\begin{column}{0.1\textwidth}
+\center \Huge \textbf{\textcolor{BaptisteBlue}{\ding{58}}}
+\normalsize
+\end{column}
+\begin{column}{0.3\textwidth}
+\normalsize
+Standardized sampling plan \\
+High quality data
+\end{column}
+\begin{column}{0.3\textwidth}
+Access to more data \\
+Exact locations available
+\end{column}
+\begin{column}{0.3\textwidth}
+Mandatory declaration \\
+Massive data
+\end{column}
+\end{columns}
+
+\vspace{\baselineskip}
+
+\begin{columns}
+\begin{column}{0.1\textwidth}
+\center \Huge \fontsize{45}{15}{\textbf{\textcolor{BaptisteBlue}{-}}}
+\normalsize
+\end{column}
+\begin{column}{0.3\textwidth}
+\normalsize
+Small sample size
+\end{column}
+\begin{column}{0.3\textwidth}
+Opportunistic (or even preferential) sampling
+\end{column}
+\begin{column}{0.3\textwidth}
+Aggregated at the scale of administrative units
+\end{column}
+\end{columns}
+
+\begin{columns}
+\begin{column}{0.1\textwidth}
+\center \footnotesize {\bf Examples}
+\end{column}
+\begin{column}{0.3\textwidth}
+\center
+\includegraphics[width=2cm]{images/EVHOE_stations.jpg}
+\end{column}
+\begin{column}{0.3\textwidth}
+\center
+\includegraphics[width=3cm]{images/bird_apps.jpg}
+\end{column}
+\begin{column}{0.3\textwidth}
+\center
+\includegraphics[width=2.5cm]{images/harvest_picture.PNG}
+\end{column}
+\end{columns}
+
+\begin{columns}
+\begin{column}{0.1\textwidth}
+\end{column}
+\begin{column}{0.3\textwidth}
+\center \scriptsize
+EVHOE data, Bay of Biscay \\ (marine ecology)
+\end{column}
+\begin{column}{0.3\textwidth}
+\center \scriptsize
+Ebird application \\ (ornithology)
+\end{column}
+\begin{column}{0.3\textwidth}
+\center \scriptsize
+Harvest data, Wisconsin \\ (hunting)
+\end{column}
+\end{columns}
+
+---
+<!-- \btVFill -->
+\begin{center} \Large
+\textbf{How to integrate all these datasources?}
+\end{center}
+\large
+(especially when they do not have the same spatial resolution)
+\normalsize
+
+\onslide<2-3>{
+
+\begin{block}{ \center \textbf{Change of support} }
+
+\footnotesize
+\textbf{Common issue in statistical literature} \vspace{\baselineskip}
+
+\textbf{"Modifiable areal unit" problem (MAUP):} aggregation of data over increasingly larger geographic scales (e.g. data collected at point level but regrouped/declared at coarse level) \vspace{\baselineskip}
+
+\textbf{Several fields of application:} climatology, health science, ecology \vspace{\baselineskip}
+
+But mainly \textbf{standard observational data (Poisson, Gaussian)}, while data may be more complex in ecological applications (e.g. zero-inflated lognormal data)
+\begin{center}
+\textbf{\textcolor{BaptisteBlue}{\ding{224}} Objective of our work:} provide an approach that suits for complex data
+\end{center}
+
+\end{block}
+
+}
+
+\onslide<3>{
+\textbf{\textcolor{BaptisteBlue}{\ding{224}}} Base our model on an existing framework in the context of fishery science: \\
+\tiny
+\textit{Alglave Baptiste, Rivot Etienne, Etienne Marie-Pierre, Woillez Mathieu, Thorson James T, Vermard Youen (2022). \textbf{Combining scientific survey and commercial catch data to map fish distribution.} ICES Journal of Marine Science IN PRESS. \url{https://doi.org/10.1093/icesjms/fsac032}}
+\vspace{\baselineskip}
+}
+
+# Material and method
+
+### Commercial catch declarations data in fishery science
+
+```{r,echo=F,fig.align='center',out.width="120%"}
+
+if(run_codes){
+  
+  load("map/ICES_rect.RData")
+  load("res/points_sf.RData")
+
+  #-------------------
+  ## Logbook data plot
+  #-------------------
+  logbooks_df <- points_sf %>%
+    # filter(str_detect(SI_DATE,"11/2018")) %>%
+    group_by(ICESNAME_1) %>%
+    dplyr::summarise(Catch = sum(LE_KG_Solea_solea)/1000,
+                     Effort = sum(INTV)/60)
+  
+  logbooks_sf <- st_join(ICES_rect,logbooks_df) %>%
+    filter(!is.na(Effort))
+  
+  Logbooks_data <- ggplot()+
+    geom_sf(data = ICES_rect,fill="skyblue",alpha=0.25)+
+    geom_sf(data=logbooks_sf,aes(fill=Catch))+
+    geom_sf(data = mapBase)+
+    scale_fill_distiller(palette = "Spectral")+
+    theme(panel.background = element_rect(fill = "skyblue"),
+          plot.title = element_text(hjust=0.5),
+          legend.position = "none")+
+    geom_sf(col="black")+
+    coord_sf(xlim = c(-6,0), ylim = c(43,48), expand = FALSE)+
+    annotation_scale(location = "bl", line_width = .5)+
+    annotation_north_arrow(location = "tl", height = unit(0.7, "cm"),
+                           width = unit(0.7, "cm"))
+  
+  ggsave(Logbooks_data,filename = "images/logbooks_data.png",width = 5,height = 5)
+  
+  #---------------
+  ## VMS data plot
+  #---------------
+  ## Aggregate/discretize data
+  vms_df <- points_sf %>%
+    mutate(long = sf::st_coordinates(.)[,1],
+           lati = sf::st_coordinates(.)[,2]) %>%
+    as.data.frame %>%
+    dplyr::select(-geometry) %>%
+    mutate(long = round(long,digits = 2),
+           lati = round(lati,digits = 2)) %>%
+    group_by(long,lati) %>%
+    dplyr::summarise(Effort = sum(INTV)/60)
+    
+  vms_sf <- st_as_sf(vms_df,coords = c("long","lati"),crs=grid_projection)
+  
+  ## Build polygon
+  # Coordinates Bay of Biscay
+  grid_xmin <- -6
+  grid_xmax <- 0
+  grid_ymin <- 42
+  grid_ymax <- 48
+  grid_limit <- extent(c(grid_xmin,grid_xmax,grid_ymin,grid_ymax))
+  
+  # Build grid
+  grid <- raster(grid_limit)
+  res(grid) <- 0.025
+  crs(grid) <- "+proj=longlat +datum=WGS84"
+  gridpolygon <- rasterToPolygons(grid)
+  gridpolygon$layer <- c(1:length(gridpolygon$layer))
+  gridpolygon_sf <- st_as_sf(gridpolygon)
+  
+  vms_sf_2 <- st_join(gridpolygon_sf,points_sf)
+  vms_sf_3 <- vms_sf_2 %>%
+    group_by(layer) %>%
+    dplyr::summarise(Effort = sum(INTV)/60)
+  
+  vms_sf_3 <- vms_sf_3 %>%
+    filter(!is.na(Effort))
+  
+  # save(data=vms_sf_3,file="res/vms_sf_3.RData")
+  
+  vms_data <- ggplot()+
+    geom_sf(data = ICES_rect,fill="skyblue",alpha=0.25)+
+    geom_sf(data=vms_sf_3,aes(col=Effort,fill=Effort))+
+    geom_sf(data = ICES_rect,alpha=0)+
+    geom_sf(data = mapBase)+
+    scale_color_distiller(direction = 1,palette = "OrRd")+ # palette = "OrRd"
+    scale_fill_distiller(direction = 1,palette = "OrRd")+ # ,palette = "Spectral"
+    theme(panel.background = element_rect(fill = "skyblue"),
+          plot.title = element_text(hjust=0.5),
+          legend.position = "none")+
+    geom_sf(col="black")+
+    coord_sf(xlim = c(-6,0), ylim = c(43,48), expand = FALSE)
+  
+  ggsave(filename = "images/vms_data.png",width = 5,height = 5)
+  
+}
+
+```
+
+
+\begin{columns}
+\begin{column}{0.1\textwidth}
+\end{column}
+\begin{column}{0.45\textwidth}
+\center {\bf Logbook landings} \\
+\scriptsize (Sole, trawlers OTB-DEF, 2018) 
+\end{column}
+\begin{column}{0.45\textwidth}
+\center {\bf Fishing locations (VMS)} \\
+\scriptsize (Trawlers OTB-DEF, 2018)
+\end{column}
+\end{columns}
+
+\begin{columns}
+\begin{column}{0.1\textwidth}
+\end{column}
+\begin{column}{0.45\textwidth}
+\includegraphics[width=5cm]{images/logbooks_data.png}
+\end{column}
+\begin{column}{0.45\textwidth}
+\includegraphics[width=5cm]{images/vms_data.png}
+\end{column}
+\end{columns}
+
+\begin{columns}
+\begin{column}{0.1\textwidth}
+\center \scriptsize {\bf Spatial \\ resolution}
+\end{column}
+\begin{column}{0.45\textwidth}
+\center \scriptsize Catch are daily declared at the resolution of ICES rectangles
+\end{column}
+\begin{column}{0.45\textwidth}
+\center \scriptsize VMS pings are vessels GPS locations emitted each hour
+\end{column}
+\end{columns}
+\tiny
+\onslide<2>{
+\begin{columns}
+\begin{column}{0.1\textwidth}
+\end{column}
+\begin{column}{0.45\textwidth}
+\end{column}
+\begin{column}{0.45\textwidth}
+\center \scriptsize \textbf{\textcolor{BaptisteBlue}{\ding{224}}  Refine landings spatial resolution}
+\end{column}
+\end{columns}
+}
+
+### Two alternative procedures to reallocate catches
+
+\center
+
+\includegraphics[width=11cm]{images/realloc.png}
+
+\onslide<2-3>{
+
+\begin{table}
+  \centering \scriptsize
+  \begin{tabular}{ M{2cm} M{4cm} M{4cm} }
+  \textcolor{BaptisteRed}{\textbf{Current situation}} & 
+  $Y_i | \textcolor{BaptisteBlue}{S}(x_i), x_i \sim \mathcal{L}_Y(\textcolor{BaptisteBlue}{S}(x_i),\xi,\sigma^2)$          &
+  $Y_i=\frac{\textcolor{BaptisteLightGreen}{D_j}}{ \operatorname{n}(\textcolor{BaptisteLightGreen}{\mathcal{P}_j})}=\textcolor{BaptisteRed}{Y_i^*}$ \\
+  \end{tabular}
+\end{table}
+
+}
+
+\onslide<3>{
+
+\begin{table}
+  \centering \scriptsize
+  \begin{tabular}{ M{2cm} M{2cm} M{4cm} M{2cm} }
+  \textcolor{BaptisteLightGreen}{\textbf{Alternative solution}} & 
+  $\textcolor{BaptisteLightGreen}{D_j}=\sum_{\textcolor{BaptisteLightGreen}{i \in \mathcal{P}_j}}{Y_{i}}$          &
+  $\textcolor{BaptisteLightGreen}{D_j} | \textcolor{BaptisteBlue}{S}_{\textcolor{BaptisteLightGreen}{\mathcal{P}_j}},\textcolor{BaptisteLightGreen}{\mathcal{P}_j} \sim \mathcal{L}_D( \textcolor{BaptisteBlue}{S}_{\textcolor{BaptisteLightGreen}{\mathcal{P}_j}},\xi,\sigma^2)$
+  & \textcolor{BaptisteBlue}{\ding{224}}  Match $\mathcal{L}_D$ and $\mathcal{L}_Y$ moments \\ 
+  \end{tabular}
+\end{table}
+
+}
+
+### Two alternative procedures to reallocate catches
+
+
+\textbf{Punctual observation model} ($Y_i$)
+
+\scriptsize $\operatorname{L}(y,\mu,\sigma^2)$ is the lognormal likelihood for observation $y$, mean $\mu$ and variance $\sigma^2$
+
+$Y$ and $D$ are supposed conditional on S and x \footnotesize
+
+$$
+\operatorname{P}\left(Y_i=y_{i} \right) =
+\left\{
+    \begin{array}{ll}
+        p_i & \text { if } y_{i}=0 \\
+        \left(1-p_i\right) \cdot \operatorname{L}\left(y_{i },\mu_i=\frac{S(x_i)}{\left(1 - p_i\right)},\sigma^{2} \right) & \text { if } y_{i} > 0
+    \end{array}
+\right.
+$$
+
+$$p_{i}=\exp(-e^\xi .S(x_{i}))$$
+
+\normalsize \vspace{\baselineskip} \vspace{\baselineskip}
+
+\onslide<2>{
+
+\textcolor{BaptisteLightGreen}{\textbf{Declaration model}} ($D_j=\sum_{i \in \mathcal{P}_j}{Y_{i}}$)
+
+\footnotesize
+
+\begin{align*}
+P(D_j = 0) & = \prod_{i\in \mathcal{P}_j} P(Y_{i} = 0)
+                      = \exp{ \left \lbrace- \sum_{i\in \mathcal{P}_j} e^{\xi}. S(x_{i})\right \rbrace} = \pi_j
+\end{align*}
+
+\normalsize \vspace{\baselineskip}
+
+$$\operatorname{P}\left(D_j=d_{j} \vert d_j > 0 \right) = \quad \textcolor{red}{\textbf{?}}$$
+
+}
+
+### Specifying $\operatorname{P}\left(D_j=d_{j} \vert d_j > 0 \right)$
+
+\normalsize
+
+\textbf{Compute the moments of $\mathbf{D_j\vert d_j > 0}$}
+
+\footnotesize
+
+$$E(D_j \vert d_j > 0)=\frac{\sum_{i \in \mathcal{P}_j} S(x_{i})}{1-\pi_j}$$
+
+$$Var(D_j \vert d_j > 0) = \frac{\sum_{i \in \mathcal{P}_j} Var(Y_{i})}{1-\pi_j} - \frac{\pi_j}{(1-\pi_j)^2}E(D_j)^2$$
+
+$$Var(Y_{i})=\frac{S(x_{i})^2}{1-p_{i}}(e^{\sigma^2}-(1-p_{i}))$$
+
+\vspace{\baselineskip}
+\vspace{\baselineskip}
+
+\normalsize
+
+\onslide<2>{
+
+\textbf{Consider $\mathbf{D_j\vert d_j>0}$ is Lognormal too}
+
+\footnotesize
+
+\vspace{\baselineskip}
+
+$$
+\begin{aligned}
+&\operatorname{P}\left(D_j=d_{j} \vert d_j > 0 \right) = \\ \\ & \quad \quad \operatorname{L}\left(d_{j},\mu_j = E(D_j|d_j>0),\sigma_j^2 = ln(\frac{Var(D_j|d_j>0)}{E(D_j|d_j>0)^2} + 1) \right)
+\end{aligned}
+$$
+
+}
+
+### Simulation-estimation and case study
+
+
+```{r,echo=F}
+
+if(run_codes){
+  ## Load simulated data
+  load("res/simu_df.RData")
+  load("res/list_input.RData")
+  
+  simu_df_2 <- simu_df %>%
+    mutate(Ab = sum(S_x))
+  
+  loc_x <- list_input$loc_x
+  sci.data_df <- data.frame(cell = list_input$index_sci_i,
+                            y_sci = list_input$y_sci_i) %>%
+    inner_join(loc_x[,c("x","y","cell","ICESNAME")])
+  
+  com.data_df <- data.frame(cell = list_input$index_i,
+                            y_com = list_input$y_i2) %>%
+    inner_join(loc_x[,c("x","y","cell","ICESNAME")]) %>%
+    group_by(x,y,cell,ICESNAME) %>%
+    dplyr::summarise(n=n())
+  
+  ## Grid data
+  grid <- raster(grid_limit)
+  res(grid) <- 0.05
+  crs(grid) <- "+proj=longlat +datum=WGS84"
+  gridpolygon <- rasterToPolygons(grid)
+  gridpolygon$layer <- c(1:length(gridpolygon$layer))
+  gridpolygon_sf <- st_as_sf(gridpolygon)
+  
+  simu_sf <- st_as_sf(simu_df_2,coords = c("long","lati"),crs=grid_projection)
+  
+  simu_sf_2 <- st_join(gridpolygon_sf,simu_sf) %>%
+    filter(!is.na(S_x))
+  
+  ## Plot data
+  data_plot <- ggplot()+
+    geom_sf(data=simu_sf_2,aes(fill=log(S_x)),col=NA,alpha=0.5)+
+    geom_sf(data=simu_sf_2[which(simu_sf_2$ICESNAME %in% com.data_df$ICESNAME),],
+            aes(fill=log(S_x),col=log(S_x)))+
+    scale_fill_distiller(palette = "Spectral")+
+    scale_color_distiller(palette = "Spectral")+
+    geom_point(data=sci.data_df,aes(x=x,y=y),fill="#619CFF",shape=21,size=1)+
+    theme_bw()+
+    theme(plot.title = element_text(hjust = 0.5),
+          plot.subtitle = element_text(hjust = 0.5),
+          legend.title = element_blank(),
+          legend.position = "none")+
+    geom_sf(data=ICES_rect,alpha=0)+
+    geom_sf(data = mapBase)+
+    coord_sf(xlim = c(-6,0), ylim = c(43,48), expand = FALSE)+
+    xlab("")+ylab("")
+  
+  ggsave(filename = "images/data_plot.png",width = 5,height = 5)
+  
+}
+
+```
+
+
+\begin{columns}
+\begin{column}{0.5\textwidth}
+
+\center
+\textbf{Simulation-estimation}
+
+\end{column}
+\begin{column}{0.5\textwidth}
+
+\end{column}
+\end{columns}
+
+\tiny \vspace{\baselineskip}
+
+\begin{columns}
+\begin{column}{0.5\textwidth}
+
+
+\begin{columns}
+\begin{column}{0.45\textwidth}
+
+\includegraphics[width=3cm]{images/data_plot.png}
+
+\end{column}
+\begin{column}{0.55\textwidth}
+\footnotesize
+\textbf{Simulation}
+\tiny
+\begin{itemize}
+\item \scriptsize \textcolor{BaptisteBlue}{\textbf{Latent field}} \tiny (\textcolor{BaptisteOrange}{covariate} + \textcolor{BaptisteBrown}{spatial random effect})
+\item \scriptsize \textbf{Commercial data} \tiny (3000 samples over 2/3 of the area)
+\item \scriptsize \textcolor{BaptisteLightGreen}{\textbf{Reallocation process}} \tiny (10 locations per declaration)
+\item \scriptsize \textcolor{SurveyBlue}{\textbf{Scientific data}} \tiny (100 samples over the whole the area)
+\end{itemize}
+
+\end{column}
+\end{columns}
+
+\scriptsize
+\vspace{\baselineskip}
+
+\onslide<2-4>{
+\footnotesize
+\textbf{Estimation} \scriptsize \\
+Comparison of 3 model configurations: \\
+\tiny \vspace{\baselineskip} \scriptsize
+1/ Model fitted to \textbf{\textcolor{SurveyBlue}{scientific data}} only \\
+\tiny \vspace{\baselineskip} \scriptsize
+2/ \textcolor{BaptisteDarkGrey}{\textbf{Integrated model}} (= \textbf{\textcolor{SurveyBlue}{scientific}} + \textbf{commercial data}) with \textcolor{BaptisteRed}{commercial likelihood built on $\bf{Y_i^*}$} \\
+\tiny \vspace{\baselineskip} \scriptsize
+3/ \textcolor{BaptisteDarkGrey}{\textbf{Integrated model}} with \textcolor{BaptisteLightGreen}{commercial likelihood built on $\bf{D_j}$} \\
+\tiny \vspace{\baselineskip}
+
+Estimation realized through TMB (Template Model Builder) \\
+100 runs of simulation-estimation
+
+}
+
+\end{column}
+\begin{column}{0.5\textwidth}
+
+\onslide<3-4>{
+
+\footnotesize
+\textbf{Model evaluation} \scriptsize \\
+1/ Mean square prediction error \\
+$$MSPE=\frac{\sum_{x=1}^n (\textcolor{BaptisteBlue}{S(x)} - \textcolor{BaptisteBlue}{\hat{S}(x)} ) ^2}{n}$$
+
+\vspace{\baselineskip}
+
+2/ Covariate effect (or species-habitat relationship): \\
+$$\textcolor{BaptisteOrange}{\beta_S} = 2 \, \, \, \text{versus} \, \, \, \textcolor{BaptisteOrange}{\hat{\beta}_S}$$
+\vspace{\baselineskip}
+
+}
+
+\onslide<4>{
+
+\normalsize
+\begin{center}
+\textbf{Case study:} \scriptsize Sole in the Bay of Biscay \\
+\end{center}
+
+\begin{columns}
+\begin{column}{0.5\textwidth}
+\center
+\includegraphics[width=2cm]{images/solea_solea.png}
+\vspace{\baselineskip}
+\vspace{\baselineskip}
+\end{column}
+\begin{column}{0.5\textwidth}
+\tiny \textcolor{SurveyBlue}{\textbf{Survey data:}} Orhago\\
+\textbf{Commercial data:} OTB-DEF trawlers (to ease convergence onboard observer data were integrated in the fit)\\
+\textbf{Fitted models:} same as simulations\\
+\textcolor{BaptisteOrange}{\textbf{Covariate:}} substrate
+
+\normalsize \vspace{\baselineskip}
+ 
+\end{column}
+\end{columns}
+
+}
+
+\end{column}
+\end{columns}
+
+
+# Results
+
+### Simulation-estimation
+
+```{r,echo=F}
+
+if(run_codes){
+  
+  ######################
+  ## Parameter estimates
+  ######################
+  load("res/Results_full_multi_square.RData")
+  
+  Results_plot <- Results_2 %>%
+    filter(converge == 0) %>%
+    filter(simu_type == "Unsampled Rectangles")
+  
+  Results_plot[,"RelBias_N"]=(Results_plot[,"N_est"]-Results_plot[,"N_true"])/Results_plot[,"N_true"]
+  Results_plot[,"RelBias_N.2"]=(Results_plot[,"N_est.2"]-Results_plot[,"N_true.2"])/Results_plot[,"N_true.2"]
+  Results_plot[,"RelBias_beta"]=(Results_plot[,"beta1_est"]-Results_plot[,"beta1_true"])/Results_plot[,"beta1_true"]
+  
+  Results_plot$obs <- NA
+  Results_plot$obs[which(Results_plot$aggreg_obs == T)] <- "Dj"
+  Results_plot$obs[which(Results_plot$aggreg_obs == F)] <- "Yi*"
+  Results_plot$obs[which(Results_plot$Estimation_model == 2)] <- "Scientific model"
+  Results_plot$obs <- factor(Results_plot$obs,levels = c("Yi*","Dj","Scientific model"))
+  
+  Results_plot$Model[which(Results_plot$Model == "Scientific model")] <- "Scientific"
+  Results_plot$Model[which(Results_plot$Model == "Commercial model")] <- "Commercial"
+  Results_plot$Model[which(Results_plot$Model == "Integrated model")] <- "Integrated"
+  
+  Results_plot <- Results_plot %>%
+    filter(Model != "Commercial")
+  
+  # Results_plot_fullArea <- Results_plot
+  # Results_plot_UnsampArea <- Results_plot
+  
+  beta_plot <- ggplot()+
+    geom_boxplot(data = Results_plot,
+                 aes(x = Model,
+                     y = beta1_est,
+                     fill = obs))+
+    geom_hline(yintercept = 0,linetype="dashed")+
+    theme_bw()+
+    theme(legend.title = element_blank(),
+          legend.position = "none",
+          aspect.ratio = 1)+
+    # facet_wrap(.~simu_type)+
+    ylab(TeX("$\\beta_S$")) +
+    xlab("")+
+    geom_hline(yintercept = 2,col="red",linetype="dashed")+
+    scale_color_manual(breaks = c("Scientific model",
+                                  "Yi*",
+                                  "Dj"),
+                       values=c("#619CFF","#F8766D","#00BA38"))
+  
+  MSPE_S_plot <- ggplot()+
+    geom_boxplot(data = Results_plot,
+                 aes(x = Model,
+                     y = mspe,
+                     fill = obs))+
+    theme_bw()+
+    theme(legend.title = element_blank(),
+          legend.position = "none",
+          aspect.ratio = 1)+
+    # facet_wrap(.~simu_type)+
+    ylab("MSPE")+xlab("")+
+    scale_color_manual(breaks = c("Scientific model",
+                                  "Yi*",
+                                  "Dj"),
+                       values=c("#619CFF","#F8766D","#00BA38"))+
+    ylim(0,NA)
+  
+  legend <- as_ggplot(cowplot::get_legend(MSPE_S_plot+theme(legend.position="bottom",legend.title = element_blank())))
+  
+  pl_plot <- plot_grid(MSPE_S_plot,
+                       beta_plot,
+                       ncol = 1,
+                       legend,
+                       align="hv",
+                       rel_heights = c(1,1,0.15))
+  
+  ggsave(filename = "images/res_simu_plot.png",width = 4,height = 7.5)
+  
+  #######
+  ## Maps
+  #######
+  simu_plot <- ggplot(simu_df)+
+    geom_point(aes(x=x,y=y,col=S_x/sum(S_x)),shape=15,size=2)+
+    scale_color_distiller(palette = "Spectral")+
+    ggtitle("Simulated latent field")+
+    theme_bw()+
+    theme(plot.title = element_text(hjust = 0.5,face = "bold"),
+          plot.subtitle = element_text(hjust = 0.5),
+          legend.position = "none")+
+    geom_sf(data = mapBase)+
+    coord_sf(xlim = c(-6,0), ylim = c(43,48), expand = FALSE)+
+    xlab("")+ylab("")
+  
+  load("res/fit_IM_res_sci.RData")
+  sci_df <- data.frame(loc_x,S_x=fit_IM_res$Report$S_x)
+  sci_plot <- ggplot(sci_df)+
+    geom_point(aes(x=x,y=y,col=S_x/sum(S_x)),shape=15,size=2)+
+    scale_color_distiller(palette = "Spectral")+
+    ggtitle("Scientific model")+
+    theme_bw()+
+    theme(plot.title = element_text(colour = "#619CFF",hjust = 0.5,face = "bold"),
+          plot.subtitle = element_text(hjust = 0.5),
+          legend.position = "none")+
+    geom_sf(data = mapBase)+
+    coord_sf(xlim = c(-6,0), ylim = c(43,48), expand = FALSE)+
+    xlab("")+ylab("")
+  
+  load("res/fit_IM_res_int_Yi.RData")
+  int_Yi_df <- data.frame(loc_x,S_x=fit_IM_res$Report$S_x)
+  int_Yi_plot <- ggplot(int_Yi_df)+
+    geom_point(aes(x=x,y=y,col=S_x/sum(S_x)),shape=15,size=2)+
+    scale_color_distiller(palette = "Spectral")+
+    ggtitle("Commercial likelihood on Yi*")+
+    theme_bw()+
+    theme(plot.title = element_text(colour = "#F8766D",hjust = 0.5,face = "bold"),
+          plot.subtitle = element_text(hjust = 0.5),
+          legend.position = "none")+
+    geom_sf(data = mapBase)+
+    coord_sf(xlim = c(-6,0), ylim = c(43,48), expand = FALSE)+
+    xlab("")+ylab("")
+  
+  load("res/fit_IM_res_int_Dj.RData")
+  int_Dj_df <- data.frame(loc_x,S_x=fit_IM_res$Report$S_x)
+  int_Dj_plot <- ggplot(int_Dj_df)+
+    geom_point(aes(x=x,y=y,col=S_x/sum(S_x)),shape=15,size=2)+
+    scale_color_distiller(palette = "Spectral")+
+    ggtitle("Commercial likelihood on Dj")+
+    theme_bw()+
+    theme(plot.title = element_text(colour = "#00BA38",hjust = 0.5,face = "bold"),
+          plot.subtitle = element_text(hjust = 0.5),
+          legend.position = "none")+
+    geom_sf(data = mapBase)+
+    coord_sf(xlim = c(-6,0), ylim = c(43,48), expand = FALSE)+
+    xlab("")+ylab("")
+  
+  map_simu <- plot_grid(simu_plot,sci_plot,int_Yi_plot,int_Dj_plot)
+
+  ggsave(filename = "images/map_simu_plot.png",width = 6,height = 7.5)
+
+}
+
+```
+
+\center
+
+\begin{columns}
+\begin{column}{0.4\textwidth}
+
+\center
+\includegraphics[width=4cm]{images/res_simu_plot.png}
+
+\end{column}
+
+\begin{column}{0.6\textwidth}
+\center
+
+\includegraphics[width=5.5cm]{images/map_simu_plot.png}
+\vspace{\baselineskip}
+
+\end{column}
+
+\end{columns}
+
+
+### Case study: Sole in the Bay of Biscay
+
+```{r,echo=F}
+
+if(run_codes){
+
+  ## Load data
+  load("res/sci_df.RData")
+  
+  load("res/realloc_rest_df.RData")
+  
+  load("res/no.realloc_df.RData")
+  
+  load("res/est_par_df_full_3.RData")
+  
+  ## Plot maps
+  no.realloc_plot <- ggplot(no.realloc_df)+
+    geom_point(aes(x=x,y=y,col=S_x),shape=15,size=2)+
+    scale_color_distiller(palette = "Spectral",limits=c(0,NA))+
+    ggtitle("Commercial likelihood on Yi*")+
+    theme_bw()+
+    theme(legend.position = "none",
+          plot.title = element_text(colour = "#F8766D",hjust = 0.5,face = "bold"))+
+    geom_sf(data = mapBase)+
+    coord_sf(xlim = c(-6,0), ylim = c(43,48), expand = FALSE)+
+    xlab("")+ylab("")
+  
+  realloc_rest_plot <- ggplot(realloc_rest_df)+
+    geom_point(aes(x=x,y=y,col=S_x),shape=15,size=2)+
+    scale_color_distiller(palette = "Spectral",limits=c(0,NA))+
+    ggtitle("Commercial likelihood on Dj")+
+    theme_bw()+
+    theme(legend.position = "none",
+          plot.title = element_text(colour = "#00BA38",hjust = 0.5,face = "bold"))+
+    geom_sf(data = mapBase)+
+    coord_sf(xlim = c(-6,0), ylim = c(43,48), expand = FALSE)+
+    xlab("")+ylab("")
+  
+  sci_plot <- ggplot(sci_df)+
+    geom_point(aes(x=x,y=y,col=S_x),shape=15,size=2)+
+    scale_color_distiller(palette = "Spectral",limits=c(0,NA))+
+    ggtitle("Scientific model")+
+    theme_bw()+
+    theme(legend.position = "none",
+          plot.title = element_text(colour = "#619CFF",hjust = 0.5,face = "bold"))+
+    geom_sf(data = mapBase)+
+    coord_sf(xlim = c(-6,0), ylim = c(43,48), expand = FALSE)+
+    xlab("")+ylab("")
+  
+  # plot(log(no.realloc_df$S_x),log(sci_df$S_x))
+  # cor(log(no.realloc_df$S_x),log(sci_df$S_x),method = "spearman")
+  # plot(log(realloc_rest_df$S_x),log(sci_df$S_x))
+  # cor(log(realloc_rest_df$S_x),log(sci_df$S_x),method = "spearman")
+  
+  case_study_plot <- plot_grid(NULL,sci_plot,no.realloc_plot,realloc_rest_plot,align="hv")
+  
+  ggsave("images/case_study_plot.png",width = 6, height = 7.5)
+  
+  ## Parameter estimates
+  est_par_df_full_3$lkl[which(est_par_df_full_3$lkl == "Yi")] <- "Yi*"
+  est_par_df_full_3$lkl <- factor(est_par_df_full_3$lkl,levels = c("Dj","Yi*","Scientific model"))
+  est_par_df_full_3 <- est_par_df_full_3 %>%
+    filter(par_names != "substr_Sand_Coarse_substrate")
+  par_plot <- ggplot(est_par_df_full_3, aes(y=par_val, x=par_names))+
+    geom_point(
+      aes(color = lkl),
+      position = position_dodge(0.5),
+      size=2
+    )+
+    geom_errorbar(aes(ymin = CI.inf, ymax = CI.sup, color = lkl),
+                  position = position_dodge(0.5),width=0.4
+    )+
+    scale_color_manual(breaks = c("Scientific model",
+                                  "Yi*",
+                                  "Dj"),
+                       values=c("#619CFF","#F8766D","#00BA38"))+
+    geom_hline(yintercept=0, linetype="dashed", color = "red",alpha=0.4)+
+    xlab("")+ylab("")+
+    theme_bw()+
+    ggtitle("Parameters estimates")+
+    theme(plot.title = element_text(hjust = 0.5,face = "bold"),
+          legend.title = element_blank(),
+          legend.position = "bottom",
+          aspect.ratio = 1)+
+    coord_flip()+
+    scale_x_discrete(labels=c('k_com'=parse(text = TeX('$k_{com}$')),
+                              'Sigma_com'=parse(text = TeX('$\\sigma_{com}$')),
+                              'q1_com'=parse(text = TeX('$\\xi_{com}$')),
+                              'Sigma_sci'=parse(text = TeX('$\\sigma_{sci}$')),
+                              'q1_sci'=parse(text = TeX('$\\xi_{sci}$')),
+                              'Range'="Range",
+                              'MargSD'="M. var.",
+                              'substr_Mud_sediment'=parse(text = TeX('$\\beta_{S}$')),
+                              'intercept'=parse(text = TeX('$\\mu$'))))
+
+  ggsave("images/par_plot.png",width = 6/1.75,height = 7.5/1.75)
+  
+}
+
+```
+
+\center
+
+\begin{columns}
+\begin{column}{0.4\textwidth}
+
+\begin{center}
+\includegraphics[width=4.5cm]{images/par_plot.png}
+\end{center}
+\scriptsize
+\onslide<2>{
+
+The \textcolor{BaptisteDarkGrey}{\textbf{integrated model}} fitted to \textcolor{BaptisteLightGreen}{$\bf{D_j}$}:
+
+\textbf{\textcolor{BaptisteBlue}{\ding{224}}} Recovers the species-habitat relationship ($\bf{\textcolor{BaptisteOrange}{\beta_S}}$)
+
+\textbf{\textcolor{BaptisteBlue}{\ding{224}}} Modifies the \textbf{contrasts of the map} \tiny (shape and intensity of the hotspots/coldspots) \scriptsize
+
+}
+
+\end{column}
+
+\begin{column}{0.6\textwidth}
+\center
+\includegraphics[width=5.5cm]{images/case_study_plot.png}
+\vspace{\baselineskip}
+
+\end{column}
+
+\end{columns}
+
+
+# Discussion
+
+### Discussion
+
+\begin{itemize}
+
+\item \textcolor{BaptisteDarkGrey}{\textbf{Integrated framework}} that combines \textcolor{BaptisteLightGreen}{\textbf{catch declarations data}} (rough resolution) and \textcolor{SurveyBlue}{\textbf{scientific data}} (exact locations) \\
+\textcolor{BaptisteBlue}{\ding{224}} Allows to estimate the \textcolor{BaptisteOrange}{\textbf{habitat effect}} through commercial data \\
+\textcolor{BaptisteBlue}{\ding{224}} Modifies the \textbf{contrasts of the map} (hotspots vs. coldspots)
+
+\tiny \vspace{\baselineskip} \normalsize
+
+\onslide<2-4>{
+
+\item \textbf{Some limits:}
+
+\textcolor{BaptisteBlue}{\ding{224}} How to ease convergence ? \\
+
+\textbf{\textcolor{BaptisteBlue}{\ding{224}}} Need to make the hypothesis that fishing locations ($\textcolor{BaptisteLightGreen}{\mathcal{P}_j}$) are known
+
+}
+
+\tiny \vspace{\baselineskip} \normalsize
+
+\onslide<3-4>{
+
+\item \textbf{Is it a generic framework ?} \\
+
+\textbf{\textcolor{BaptisteBlue}{\ding{224}}} The overall approach is, \scriptsize \\ \textit{(i.e. modelling observed aggregated observations as a sum of latent punctual observations)}
+
+\normalsize \textbf{\textcolor{BaptisteBlue}{\ding{224}}} But need to adapt the observation model to the data \scriptsize \\ \textit{(here zeroinflated positive continuous data)}
+
+}
+
+\tiny \vspace{\baselineskip} \normalsize
+ 
+\onslide<4>{
+
+\item \textbf{Moving to space-time ?} \\
+
+\textbf{\textcolor{BaptisteBlue}{\ding{224}}} Extending the observation model to account for \textbf{temporal misalignment} \\
+
+\textbf{\textcolor{BaptisteBlue}{\ding{224}}} Including spatio-\textbf{temporal covariance} in the latent field \\
+
+}
+
+
+\end{itemize}
+
+#
+
+\tiny \vspace{\baselineskip}
+
+\centering \Large \textcolor{BaptisteGrey}{\textbf{Thank you for your attention!}}
+
+\tiny \vspace{\baselineskip}
+
+\begin{figure}
+    \includegraphics[width=11cm]{images/front_page.png}
+\end{figure}

@@ -141,7 +141,13 @@ loc_x <- loc_x_sf %>%
          y=loc_x$y)
 
 ## Load tacsateflalo and obsmer
+foCatEu6_filter <- "OTT_DEF_>=70_0|OTB_CEP_>=70_0|OTB_DEF_>=70_0"
 source("Scripts/source/load_commercial_data.R")
+
+
+# ## Make figure manuscript
+# source("Scripts/In_progress/figure_intro_manuscript.R")
+
 
 ## Initialize loop
 #-----------------

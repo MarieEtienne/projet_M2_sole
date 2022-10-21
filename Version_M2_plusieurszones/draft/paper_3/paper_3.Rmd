@@ -35,6 +35,7 @@ wordcount         : "X"
 
 bibliography      : ["paper_3.bib"]
 
+numbersections : true
 floatsintext     : yes
 figurelist       : no
 tablelist        : no
@@ -396,7 +397,7 @@ Results_conv_2 <- summaryBy(Convergence+one~
                 aggreg_obs,
                 Convergence.sum,
                 one.sum) %>%
-    mutate(aggreg_obs = ifelse(aggreg_obs == T,"Dj","Yi"),
+    mutate(aggreg_obs = ifelse(aggreg_obs == T,"Dk","Yi"),
            reallocation = ifelse(reallocation == 1,"Yes","No"),
            perc_convergence = round((1 - Convergence.sum / one.sum)*100,digits = 3)) %>%
   mutate(aggreg_obs = ifelse((aggreg_obs == "Yi" & reallocation == "Yes"),"Yr",aggreg_obs))
@@ -428,7 +429,7 @@ Results[,"Bias_q1_com"]=(Results[,"q1_com_est"]-Results[,"q1_com_true"]) / Resul
 Results[,"Bias_intercept"]=(Results[,"intercept_est"]-Results[,"intercept_true"]) / Results[,"intercept_true"]
 
 Results <- Results %>%
-  mutate(relloc_aggreg = paste0("Reallocation: ",ifelse(reallocation==0,"No","Yes")," -  Likelihood: ",ifelse(aggreg_obs==T,"Dj","Yi"))) %>%
+  mutate(relloc_aggreg = paste0("Reallocation: ",ifelse(reallocation==0,"No","Yes")," -  Likelihood: ",ifelse(aggreg_obs==T,"Dk","Yi"))) %>%
   mutate(relloc_aggreg = ifelse(aggreg_obs == F & reallocation == 1,"Reallocation: Yes -  Likelihood: Yr",relloc_aggreg))
 
 
@@ -437,7 +438,7 @@ Results$b_true <- as.factor(Results$b_true)
 Results$relloc_aggreg <- factor(Results$relloc_aggreg,
                                 levels = c("Reallocation: No -  Likelihood: Yi",
                                            "Reallocation: Yes -  Likelihood: Yr",
-                                           "Reallocation: Yes -  Likelihood: Dj"))
+                                           "Reallocation: Yes -  Likelihood: Dk"))
 
 Results_2 <- Results %>%
   filter(n_samp_com > 10)
@@ -459,7 +460,7 @@ MSPE_S_plot <- ggplot()+
                 labels = trans_format("log10", math_format(10^.x)))+
   scale_fill_manual(breaks = c("Reallocation: No -  Likelihood: Yi",
                                 "Reallocation: Yes -  Likelihood: Yr",
-                                "Reallocation: Yes -  Likelihood: Dj"),
+                                "Reallocation: Yes -  Likelihood: Dk"),
                      values=c("gold","#F8766D","#00BA38"))
 
 Beta_plot <- ggplot()+
@@ -480,7 +481,7 @@ Beta_plot <- ggplot()+
   xlab("")+
   scale_fill_manual(breaks = c("Reallocation: No -  Likelihood: Yi",
                                 "Reallocation: Yes -  Likelihood: Yr",
-                                "Reallocation: Yes -  Likelihood: Dj"),
+                                "Reallocation: Yes -  Likelihood: Dk"),
                      values=c("gold","#F8766D","#00BA38"))
 
 RelBias_N_plot <- ggplot()+
@@ -500,7 +501,7 @@ RelBias_N_plot <- ggplot()+
   xlab("")+
   scale_fill_manual(breaks = c("Reallocation: No -  Likelihood: Yi",
                                 "Reallocation: Yes -  Likelihood: Yr",
-                                "Reallocation: Yes -  Likelihood: Dj"),
+                                "Reallocation: Yes -  Likelihood: Dk"),
                      values=c("gold","#F8766D","#00BA38"))
 
 legend <- as_ggplot(cowplot::get_legend(MSPE_S_plot+theme(legend.position="right",legend.title = element_blank())))
@@ -534,7 +535,7 @@ q1_plot <- ggplot()+
         plot.title = element_text(hjust = 0.5))+
   scale_fill_manual(breaks = c("Reallocation: No -  Likelihood: Yi",
                                "Reallocation: Yes -  Likelihood: Yr",
-                               "Reallocation: Yes -  Likelihood: Dj"),
+                               "Reallocation: Yes -  Likelihood: Dk"),
                     values=c("gold","#F8766D","#00BA38"))+
   xlab("")+ylab(parse(text = TeX('$\\xi$')))+
   ggtitle("Zero-inflation parameter")
@@ -555,7 +556,7 @@ sigma_plot <- ggplot()+
         plot.title = element_text(hjust = 0.5))+
   scale_fill_manual(breaks = c("Reallocation: No -  Likelihood: Yi",
                                "Reallocation: Yes -  Likelihood: Yr",
-                               "Reallocation: Yes -  Likelihood: Dj"),
+                               "Reallocation: Yes -  Likelihood: Dk"),
                     values=c("gold","#F8766D","#00BA38"))+
   xlab("")+ylab(parse(text = TeX('$\\sigma^2$')))+
   ggtitle("Observation variance parameter")+
@@ -579,7 +580,7 @@ intercept_plot <- ggplot()+
         plot.title = element_text(hjust = 0.5))+
   scale_fill_manual(breaks = c("Reallocation: No -  Likelihood: Yi",
                                "Reallocation: Yes -  Likelihood: Yr",
-                               "Reallocation: Yes -  Likelihood: Dj"),
+                               "Reallocation: Yes -  Likelihood: Dk"),
                     values=c("gold","#F8766D","#00BA38"))+
   xlab("")+ylab(parse(text = TeX('$\\mu$')))+
   ggtitle("Intercept of the latent field")+
@@ -647,7 +648,7 @@ Results_conv_2 <- summaryBy(converge+one~
                 aggreg_obs,
                 converge.sum,
                 one.sum) %>%
-    mutate(aggreg_obs = ifelse(aggreg_obs == T,"Dj","Yi"),
+    mutate(aggreg_obs = ifelse(aggreg_obs == T,"Dk","Yi"),
            perc_convergence = round((1 - converge.sum / one.sum)*100,digits = 3))
 
 Results_conv_2$aggreg_obs[which(Results_conv_2$aggreg_obs == "Yi")] <- "Yr"
@@ -660,7 +661,7 @@ Results_conv_2 <- Results_conv_2 %>%
 Results_conv_2$Model <- factor(Results_conv_2$Model,levels = c("Scientific model", "Commercial model", "Integrated model"))
 
 Results_conv_2 <- Results_conv_2[-which(Results_conv_2$Model == "Scientific model" &
-                                          Results_conv_2$`Likelihood level` == "Dj"),]
+                                          Results_conv_2$`Likelihood level` == "Dk"),]
 Results_conv_2$`Likelihood level`[which(Results_conv_2$Model == "Scientific model" &
                        Results_conv_2$`Likelihood level` == "Yr")] <- " "
 
@@ -678,10 +679,10 @@ Results_plot[,"RelBias_N.2"]=(Results_plot[,"N_est.2"]-Results_plot[,"N_true.2"]
 Results_plot[,"RelBias_beta"]=(Results_plot[,"beta1_est"]-Results_plot[,"beta1_true"])/Results_plot[,"beta1_true"]
 
 Results_plot$obs <- NA
-Results_plot$obs[which(Results_plot$aggreg_obs == T)] <- "Dj"
+Results_plot$obs[which(Results_plot$aggreg_obs == T)] <- "Dk"
 Results_plot$obs[which(Results_plot$aggreg_obs == F)] <- "Yr"
 Results_plot$obs[which(Results_plot$Estimation_model == 2)] <- "Scientific data"
-Results_plot$obs <- factor(Results_plot$obs,levels = c("Yr","Dj","Scientific data"))
+Results_plot$obs <- factor(Results_plot$obs,levels = c("Yr","Dk","Scientific data"))
 
 Results_plot$Model[which(Results_plot$Model == "Scientific model")] <- "Scientific"
 Results_plot$Model[which(Results_plot$Model == "Commercial model")] <- "Commercial"
@@ -706,7 +707,7 @@ beta_plot <- ggplot()+
   geom_hline(yintercept = 2,col="red",linetype="dashed")+
   scale_color_manual(breaks = c("Scientific model",
                                 "Yr",
-                                "Dj"),
+                                "Dk"),
                      values=c("#619CFF","#F8766D","#00BA38"))
 
 MSPE_S_plot <- ggplot()+
@@ -722,7 +723,7 @@ MSPE_S_plot <- ggplot()+
   ylab("MSPE")+xlab("")+
   scale_color_manual(breaks = c("Scientific model",
                                 "Yr",
-                                "Dj"),
+                                "Dk"),
                      values=c("#619CFF","#F8766D","#00BA38"))+
   ylim(0,NA)
 
@@ -742,7 +743,7 @@ Range_plot <- ggplot()+
   geom_hline(yintercept = 0.6,col="red",linetype="dashed")+
   scale_color_manual(breaks = c("Scientific model",
                                 "Yr",
-                                "Dj"),
+                                "Dk"),
                      values=c("#619CFF","#F8766D","#00BA38"))+
   ylim(-0.1,2)
 
@@ -819,7 +820,7 @@ no.realloc_plot <- ggplot(no.realloc_df)+
 realloc_rest_plot <- ggplot(realloc_rest_df)+
   geom_point(aes(x=x,y=y,col=S_x),shape=15,size=2)+
   scale_color_distiller(palette = "Spectral",limits=c(0,NA))+
-  ggtitle("Integrated model",subtitle = "Commercial likelihood on Dj")+
+  ggtitle("Integrated model",subtitle = "Commercial likelihood on Dk")+
   theme_bw()+
   theme(plot.title = element_text(hjust = 0.5),
         plot.subtitle = element_text(hjust = 0.5))+
@@ -848,8 +849,10 @@ case_study_plot <- plot_grid(sci_plot,no.realloc_plot,realloc_rest_plot,ncol=3,a
 ggsave("images/case_study_plot.png",width = 12, height = 4)
 
 ## Parameter estimates
+est_par_df_full_3$lkl[which(est_par_df_full_3$lkl == "Dj")] <- "Dk"
+
 est_par_df_full_3$lkl[which(est_par_df_full_3$lkl == "Yi")] <- "Yr"
-est_par_df_full_3$lkl <- factor(est_par_df_full_3$lkl,levels = c("Dj","Yr","Scientific model"))
+est_par_df_full_3$lkl <- factor(est_par_df_full_3$lkl,levels = c("Dk","Yr","Scientific model"))
 est_par_df_full_3 <- est_par_df_full_3 %>%
   filter(par_names != "substr_Sand_Coarse_substrate")
 par_plot <- ggplot(est_par_df_full_3, aes(y=par_val, x=par_names))+
@@ -863,7 +866,7 @@ par_plot <- ggplot(est_par_df_full_3, aes(y=par_val, x=par_names))+
   )+
   scale_color_manual(breaks = c("Scientific model",
                                 "Yr",
-                                "Dj"),
+                                "Dk"),
                      values=c("#619CFF","#F8766D","#00BA38"))+
   geom_hline(yintercept=0, linetype="dashed", color = "red",alpha=0.4)+
   xlab("")+ylab("")+

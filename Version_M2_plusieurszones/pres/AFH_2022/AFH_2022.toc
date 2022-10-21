@@ -1,0 +1,5 @@
+\babel@toc {english}{}\relax 
+\beamer@sectionintoc {1}{Context}{2}{0}{1}
+\beamer@sectionintoc {2}{Material and method}{6}{0}{2}
+\beamer@sectionintoc {3}{Results}{19}{0}{3}
+\beamer@sectionintoc {4}{Discussion}{22}{0}{4}

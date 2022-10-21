@@ -13,8 +13,9 @@ HH_obsmer_2$quarter[which(HH_obsmer_2$month %in% c(4,5,6))] <- 2
 HH_obsmer_2$quarter[which(HH_obsmer_2$month %in% c(7,8,9))] <- 3
 HH_obsmer_2$quarter[which(HH_obsmer_2$month %in% c(10,11,12))] <- 4
 
+
 HH_obsmer_2 <- HH_obsmer_2 %>%
-  filter(str_detect(foCatEu6,"OTB_CEP_>=70_0|OTB_DEF_>=70_0")) %>%
+  filter(str_detect(foCatEu6,foCatEu6_filter)) %>%
   filter(year == year_y) %>%
   filter(y<48 & quarter == quarter_q) # month == month_m)
 
@@ -46,3 +47,20 @@ ObsMer_df <- inner_join(ObsMer_df,loc_x[,c("layer","cell","x","y","ICESNAME")])
 
 index_ObsM_i <- ObsMer_df$cell
 y_ObsM_i <- ObsMer_df$CPUE
+
+# vec_obs <- y_ObsM_i[which(y_ObsM_i != 0)]
+# lmfit <- lm(log(vec_obs) ~ 1)
+# 
+# descdist((vec_obs))
+# 
+# fit.gamma <- fitdist(vec_obs, "gamma")
+# plot(fit.gamma)
+# fit.gamma$aic
+# 
+# fit.norm <- fitdist(log(vec_obs), "norm")
+# plot(fit.norm)
+# fit.norm$aic
+# 
+# fit.lognorm <- fitdist(vec_obs, "lnorm")
+# plot(fit.lognorm)
+# fit.lognorm$aic

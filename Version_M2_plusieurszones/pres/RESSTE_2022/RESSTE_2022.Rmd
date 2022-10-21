@@ -756,7 +756,7 @@ if(run_codes){
   map_simu <- plot_grid(simu_plot,sci_plot,int_Yi_plot,int_Dj_plot)
 
   ggsave(filename = "images/map_simu_plot.png",width = 6,height = 7.5)
-  
+
 }
 
 ```
