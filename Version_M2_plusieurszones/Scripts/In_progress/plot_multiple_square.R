@@ -12,6 +12,7 @@ folder_name <- "C:/R_projects/projet_M2_sole/Version_M2_plusieurszones/results/s
 folder_c <- c("C:/R_projects/projet_M2_sole/Version_M2_plusieurszones/results/severa_rect-2022-01-12_13_03_00_SimuUnsampledRect",
               "C:/R_projects/projet_M2_sole/Version_M2_plusieurszones/results/severa_rect-2022-01-13_11_14_00_SimuFullArea")
 
+
 for(folder_i in folder_c){
   
   load(paste0(folder_i,"/Results.RData"))

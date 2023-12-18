@@ -58,37 +58,42 @@ com.data_df <- data.frame(cell = index_i,
   dplyr::summarise(n=n())
 
 ## Scientific data
-fit_IM_res <- fit_IM(Estimation_model_i = 2,
-                     Samp_process = 0,
-                     EM = "fix_b",
-                     TmbFile = "Scripts/",
-                     ignore.uncertainty = F,
-                     c_com_x = c_com_x,
-                     y_com_i = y_i2,
-                     index_com_i = index_i,
-                     y_sci_i = y_sci_i,
-                     index_sci_i = index_sci_i,
-                     aggreg_obs=T,
-                     boats_number = boats_i,
-                     Cov_x = as.matrix(cov_x_2), # NULL, # 
-                     ref_level = ref_level,
-                     lf_param = "RE", # lf_param,
-                     spde=spde,
-                     mesh=mesh,
-                     n_cells=n_cells,
-                     cov_est = T,
-                     Params_step.est=NULL,
-                     Map_step.est=NULL,
-                     ObsM=F,
-                     y_ObsM_i=NULL,
-                     index_ObsM_i=NULL,
-                     sampling = sampling,
-                     landings = T,
-                     quadratic_cov = F)
+if(save_data == T) {
+  
+  
+  fit_IM_res <- fit_IM(Estimation_model_i = 2,
+                       Samp_process = 0,
+                       EM = "fix_b",
+                       TmbFile = "Scripts/",
+                       ignore.uncertainty = T,
+                       c_com_x = c_com_x,
+                       y_com_i = y_i2,
+                       index_com_i = index_i,
+                       y_sci_i = y_sci_i,
+                       index_sci_i = index_sci_i,
+                       aggreg_obs=T,
+                       boats_number = boats_i,
+                       Cov_x = as.matrix(cov_x_2), # NULL, # 
+                       ref_level = ref_level,
+                       lf_param = "RE", # lf_param,
+                       spde=spde,
+                       mesh=mesh,
+                       n_cells=n_cells,
+                       cov_est = T,
+                       Params_step.est=NULL,
+                       Map_step.est=NULL,
+                       ObsM=F,
+                       y_ObsM_i=NULL,
+                       index_ObsM_i=NULL,
+                       sampling = sampling,
+                       landings = T,
+                       quadratic_cov = F)
+  
+  sci_df <- data.frame(loc_x,S_x=fit_IM_res$Report$S_x)
+  
+  save(data=sci_df,file="draft/paper_3/res/sci_df.RData")
 
-if(save_data == T) save(data=fit_IM_res,file="draft/paper_3/res/fit_IM_res_sci.RData")
-
-sci_df <- data.frame(loc_x,S_x=fit_IM_res$Report$S_x)
+}
 
 if(compute_profile){
   sci_prof <- TMB::tmbprofile(fit_IM_res$Obj,lincomb = c(0,1,0,0,0,0))
@@ -99,37 +104,41 @@ if(compute_profile){
 }
 
 ## Integrated model - Yi
-fit_IM_res <- fit_IM(Estimation_model_i = 1,
-                     Samp_process = 0,
-                     EM = "fix_b",
-                     TmbFile = "Scripts/",
-                     ignore.uncertainty = F,
-                     c_com_x = c_com_x,
-                     y_com_i = y_i2,
-                     index_com_i = index_i,
-                     y_sci_i = y_sci_i,
-                     index_sci_i = index_sci_i,
-                     aggreg_obs=F,
-                     boats_number = boats_i,
-                     Cov_x = as.matrix(cov_x_2), # NULL, # 
-                     ref_level = ref_level,
-                     lf_param = "RE", # lf_param,
-                     spde=spde,
-                     mesh=mesh,
-                     n_cells=n_cells,
-                     cov_est = T,
-                     Params_step.est=NULL,
-                     Map_step.est=NULL,
-                     ObsM=F,
-                     y_ObsM_i=NULL,
-                     index_ObsM_i=NULL,
-                     sampling = sampling,
-                     landings = T,
-                     quadratic_cov = F)
-
-if(save_data == T) save(data=fit_IM_res,file="draft/paper_3/res/fit_IM_res_int_Yi.RData")
-
-int_Yi_df <- data.frame(loc_x,S_x=fit_IM_res$Report$S_x)
+if(save_data == T){
+  
+  fit_IM_res <- fit_IM(Estimation_model_i = 1,
+                       Samp_process = 0,
+                       EM = "fix_b",
+                       TmbFile = "Scripts/",
+                       ignore.uncertainty = T,
+                       c_com_x = c_com_x,
+                       y_com_i = y_i2,
+                       index_com_i = index_i,
+                       y_sci_i = y_sci_i,
+                       index_sci_i = index_sci_i,
+                       aggreg_obs=F,
+                       boats_number = boats_i,
+                       Cov_x = as.matrix(cov_x_2), # NULL, # 
+                       ref_level = ref_level,
+                       lf_param = "RE", # lf_param,
+                       spde=spde,
+                       mesh=mesh,
+                       n_cells=n_cells,
+                       cov_est = T,
+                       Params_step.est=NULL,
+                       Map_step.est=NULL,
+                       ObsM=F,
+                       y_ObsM_i=NULL,
+                       index_ObsM_i=NULL,
+                       sampling = sampling,
+                       landings = T,
+                       quadratic_cov = F)
+  
+  int_Yi_df <- data.frame(loc_x,S_x=fit_IM_res$Report$S_x)
+  
+  save(data=int_Yi_df,file="draft/paper_3/res/int_Yi_df.RData")
+  
+}
 
 if(compute_profile){
   int_Yi_prof <- TMB::tmbprofile(fit_IM_res$Obj,lincomb = c(0,1,0,0,0,0,0,0,0))
@@ -140,11 +149,13 @@ if(compute_profile){
 }
 
 ## Commercial model - Yi
-fit_IM_res <- fit_IM(Estimation_model_i = 3,
+if(save_data == T){
+  
+  fit_IM_res <- fit_IM(Estimation_model_i = 3,
                      Samp_process = 0,
                      EM = "fix_b",
                      TmbFile = "Scripts/",
-                     ignore.uncertainty = F,
+                     ignore.uncertainty = T,
                      c_com_x = c_com_x,
                      y_com_i = y_i2,
                      index_com_i = index_i,
@@ -167,10 +178,12 @@ fit_IM_res <- fit_IM(Estimation_model_i = 3,
                      sampling = sampling,
                      landings = T,
                      quadratic_cov = F)
+  
+  com_Yi_df <- data.frame(loc_x,S_x=fit_IM_res$Report$S_x)
+  save(data = com_Yi_df, file = "draft/paper_3/res/com_Yi_df.RData")
+  
+}
 
-if(save_data == T) save(data=fit_IM_res,file="draft/paper_3/res/fit_IM_res_com_Yi.RData")
-
-com_Yi_df <- data.frame(loc_x,S_x=fit_IM_res$Report$S_x)
 
 if(compute_profile){
   com_Yi_prof <- TMB::tmbprofile(fit_IM_res$Obj,lincomb = c(0,1,0,0,0,0))
@@ -181,37 +194,41 @@ if(compute_profile){
 }
 
 ## Integrated model - Dj
-fit_IM_res <- fit_IM(Estimation_model_i = 1,
-                     Samp_process = 0,
-                     EM = "fix_b",
-                     TmbFile = "Scripts/",
-                     ignore.uncertainty = F,
-                     c_com_x = c_com_x,
-                     y_com_i = y_i2,
-                     index_com_i = index_i,
-                     y_sci_i = y_sci_i,
-                     index_sci_i = index_sci_i,
-                     aggreg_obs=T,
-                     boats_number = boats_i,
-                     Cov_x = as.matrix(cov_x_2), # NULL, # 
-                     ref_level = ref_level,
-                     lf_param = "RE", # lf_param,
-                     spde=spde,
-                     mesh=mesh,
-                     n_cells=n_cells,
-                     cov_est = T,
-                     Params_step.est=NULL,
-                     Map_step.est=NULL,
-                     ObsM=F,
-                     y_ObsM_i=NULL,
-                     index_ObsM_i=NULL,
-                     sampling = sampling,
-                     landings = T,
-                     quadratic_cov = F)
+if(save_data == T){
+  
+  fit_IM_res <- fit_IM(Estimation_model_i = 1,
+                       Samp_process = 0,
+                       EM = "fix_b",
+                       TmbFile = "Scripts/",
+                       ignore.uncertainty = T,
+                       c_com_x = c_com_x,
+                       y_com_i = y_i2,
+                       index_com_i = index_i,
+                       y_sci_i = y_sci_i,
+                       index_sci_i = index_sci_i,
+                       aggreg_obs=T,
+                       boats_number = boats_i,
+                       Cov_x = as.matrix(cov_x_2), # NULL, # 
+                       ref_level = ref_level,
+                       lf_param = "RE", # lf_param,
+                       spde=spde,
+                       mesh=mesh,
+                       n_cells=n_cells,
+                       cov_est = T,
+                       Params_step.est=NULL,
+                       Map_step.est=NULL,
+                       ObsM=F,
+                       y_ObsM_i=NULL,
+                       index_ObsM_i=NULL,
+                       sampling = sampling,
+                       landings = T,
+                       quadratic_cov = F)
+  
+  int_Dj_df <- data.frame(loc_x,S_x=fit_IM_res$Report$S_x)
+  save(data = int_Dj_df, file = "draft/paper_3/res/int_Dj_df.RData")
+  
+} 
 
-if(save_data == T) save(data=fit_IM_res,file="draft/paper_3/res/fit_IM_res_int_Dj.RData")
-
-int_Dj_df <- data.frame(loc_x,S_x=fit_IM_res$Report$S_x)
 
 if(compute_profile){
   int_Dj_prof <- TMB::tmbprofile(fit_IM_res$Obj,lincomb = c(0,1,0,0,0,0,0,0,0))
@@ -223,37 +240,41 @@ if(compute_profile){
 
 
 ## Commercial model - Dj
-fit_IM_res <- fit_IM(Estimation_model_i = 3,
-                     Samp_process = 0,
-                     EM = "fix_b",
-                     TmbFile = "Scripts/",
-                     ignore.uncertainty = F,
-                     c_com_x = c_com_x,
-                     y_com_i = y_i2,
-                     index_com_i = index_i,
-                     y_sci_i = y_sci_i,
-                     index_sci_i = index_sci_i,
-                     aggreg_obs=T,
-                     boats_number = boats_i,
-                     Cov_x = as.matrix(cov_x_2), # NULL, # 
-                     ref_level = ref_level,
-                     lf_param = "RE", # lf_param,
-                     spde=spde,
-                     mesh=mesh,
-                     n_cells=n_cells,
-                     cov_est = T,
-                     Params_step.est=NULL,
-                     Map_step.est=NULL,
-                     ObsM=F,
-                     y_ObsM_i=NULL,
-                     index_ObsM_i=NULL,
-                     sampling = sampling,
-                     landings = T,
-                     quadratic_cov = F)
+if(save_data == T){
+  
+  fit_IM_res <- fit_IM(Estimation_model_i = 3,
+                       Samp_process = 0,
+                       EM = "fix_b",
+                       TmbFile = "Scripts/",
+                       ignore.uncertainty = T,
+                       c_com_x = c_com_x,
+                       y_com_i = y_i2,
+                       index_com_i = index_i,
+                       y_sci_i = y_sci_i,
+                       index_sci_i = index_sci_i,
+                       aggreg_obs=T,
+                       boats_number = boats_i,
+                       Cov_x = as.matrix(cov_x_2), # NULL, # 
+                       ref_level = ref_level,
+                       lf_param = "RE", # lf_param,
+                       spde=spde,
+                       mesh=mesh,
+                       n_cells=n_cells,
+                       cov_est = T,
+                       Params_step.est=NULL,
+                       Map_step.est=NULL,
+                       ObsM=F,
+                       y_ObsM_i=NULL,
+                       index_ObsM_i=NULL,
+                       sampling = sampling,
+                       landings = T,
+                       quadratic_cov = F)
+  
+  com_Dj_df <- data.frame(loc_x,S_x=fit_IM_res$Report$S_x)
+  save(data = com_Dj_df, file = "draft/paper_3/res/com_Dj_df.RData")
+  
+}
 
-if(save_data == T) save(data=fit_IM_res,file="draft/paper_3/res/fit_IM_res_com_Dj.RData")
-
-com_Dj_df <- data.frame(loc_x,S_x=fit_IM_res$Report$S_x)
 
 if(compute_profile){
   com_Dj_prof <- TMB::tmbprofile(fit_IM_res$Obj,lincomb = c(0,1,0,0,0,0))
