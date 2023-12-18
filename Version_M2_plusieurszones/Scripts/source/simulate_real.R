@@ -54,14 +54,14 @@ samp_df <- do.call(rbind,lapply(1:n_seq_com, function(j){
       
       ## Sample within the statistical rectangle
       samp_cell <- sample(x = loc_x_zone$cell,
-                          size = n_ping_per_seq/n_zone,
+                          size = round(n_ping_per_seq/n_zone),
                           replace=T)
     }))
     
     
   }
   
-  seq_id <- rep(j,n_ping_per_seq)
+  seq_id <- rep(j,length(samp_cell))
   df <- data.frame(cell=samp_cell,seq_id=seq_id,rect_stat)
   return(df)
   
@@ -80,8 +80,8 @@ c_com_x <- samp_df %>%
   c() %>% unlist() %>%
   as.matrix()
 
-# test <- cbind(loc_x,c_com_x)
-# 
+test <- cbind(loc_x,c_com_x)
+
 # ggplot(test)+
 #   geom_point(aes(x=long,y=lati,col=c_com_x))+scale_color_distiller(palette = "Spectral")
 

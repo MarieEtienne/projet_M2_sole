@@ -12,10 +12,11 @@ folder_name <- "C:/R_projects/projet_M2_sole/Version_M2_plusieurszones/results/s
 folder_c <- c("C:/R_projects/projet_M2_sole/Version_M2_plusieurszones/results/severa_rect-2022-01-12_13_03_00_SimuUnsampledRect",
               "C:/R_projects/projet_M2_sole/Version_M2_plusieurszones/results/severa_rect-2022-01-13_11_14_00_SimuFullArea")
 
+folder_c <- c("/media/balglave/Elements/results/q1/")
 
 for(folder_i in folder_c){
   
-  load(paste0(folder_i,"/Results.RData"))
+  load(paste0(folder_i,"Results.RData"))
   
   # Load List_param
   list_file_i <- list.files(paste0(folder_i,"/"))
@@ -40,8 +41,10 @@ for(folder_i in folder_c){
   Results$q1_com_true <- NA
   Results$intercept_est <- NA
   Results$intercept_true <- NA
+  Results$q1_true <- NA
+  Results$q1_est <- NA
   
-  
+  simu_type <- "nothing_special"
   if(str_detect(folder_i,"UnsampledRect")) simu_type <- "Unsampled Rectangles"
   if(str_detect(folder_i,"FullArea")) simu_type <- "All area sampled"
   
@@ -50,6 +53,7 @@ for(folder_i in folder_c){
     
     print(paste0("simu_type: ", simu_type," | counter: ",counter))
     load(paste0(folder_i,"/List_param_",counter,".RData"))
+    n_cells <- length(List_param$Report$S_x)
     Results$aggreg_obs[which(Results$counter == counter)] <- List_param$data.info$aggreg_obs
     Results$converge[which(Results$counter == counter)] <- List_param$converge
     Results$rho_S[which(Results$counter == counter)] <- cor(log(List_param$data.info$S_x),log(List_param$Report$S_x))
@@ -77,7 +81,6 @@ for(folder_i in folder_c){
     ## Intercept
     Results$intercept_true[which(Results$counter == counter)] <- List_param$data.info$intercept
     Results$intercept_est[which(Results$counter == counter)] <- List_param$Report$beta_j[1]
-    
     
     # SPAEF
     S_sim <- log(List_param$data.info$S_x)
@@ -119,7 +122,7 @@ Results_2$Model[which(Results_2$Estimation_model==3)] <- "Commercial model"
 #---------------------
 Results_conv <- Results_2
 Results_conv$one <- 1
-summaryBy(converge+one~
+doBy::summaryBy(converge+one~
             aggreg_obs+
             Model,
           data=Results_conv,
@@ -179,7 +182,7 @@ ggplot()+
   theme_bw()+
   theme(legend.title = element_blank(),
         aspect.ratio = 1)+
-  facet_wrap(.~simu_type)+
+  # facet_wrap(.~simu_type)+
   geom_hline(yintercept = 0.6)+
   ylim(0,2)
 
@@ -259,7 +262,8 @@ MSPE_S_plot <- ggplot()+
   theme(legend.title = element_blank(),
         # legend.position = "none",
         aspect.ratio = 1)+
-  facet_wrap(.~simu_type)+
+  # facet_wrap(.~simu_type)+
+  facet_wrap(.~n_zone)+
   ylab("MSPE")+xlab("")
 
 plot_grid(beta_plot,MSPE_S_plot,ncol=1)

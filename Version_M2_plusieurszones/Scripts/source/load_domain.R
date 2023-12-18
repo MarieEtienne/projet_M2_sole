@@ -14,9 +14,12 @@ if(domain_shapefile == "ORHAGO"){
   zone_sud <- sf::st_read(paste0(strata_file,"zone sud.shp"))
   
   ## Orhago polygon
-  survey_layer <- st_union(zone_centre_large,zone_centre_cote)
-  survey_layer <- st_union(survey_layer,zone_nord)
-  survey_layer <- st_union(survey_layer,zone_sud)
+  colnames(zone_centre_large) <- c("id","Surface","geometry")
+  colnames(zone_centre_cote) <- c("id","Surface","geometry")
+  colnames(zone_nord) <- c("id","Surface","geometry")
+  colnames(zone_sud) <- c("id","Surface","geometry")
+  
+  survey_layer <- st_union(rbind(zone_centre_large,zone_centre_cote,zone_nord,zone_sud))
   survey_layer_2 <- nngeo::st_remove_holes(survey_layer)
   survey_layer_3 <- sf::as_Spatial(survey_layer_2)
   crs(survey_layer_3) <- grid_projection
@@ -32,16 +35,17 @@ if(domain_shapefile == "ORHAGO"){
   raster_to_point <- rasterToPoints(grid)
   datapoint <- SpatialPointsDataFrame(coords=raster_to_point,
                                       data=data.frame(layer = 1:nrow(raster_to_point)),
-                                      proj4string=crs(grid_projection))
+                                      proj4string=CRS(grid_projection))
   
-  crs(datapoint) <- crs(study_domain_2) <- grid_projection
+  crs(datapoint) <- grid_projection
+  crs(study_domain_2) <- grid_projection
   datapoint_2 <- over(datapoint,study_domain_2)
   datapoint_2 <- cbind(datapoint_2,layer = datapoint@data$layer)
   datapoint_2 <- datapoint_2[which(!is.na(datapoint_2[,1])),]
   ## Add coordinates to gridpoint
   tmp <- cbind(datapoint@data, coordinates(datapoint))
   colnames(tmp) <- c(names(datapoint@data), "x", "y")
-  datapoint_3 <- inner_join(datapoint_2,tmp) %>%
+  datapoint_3 <- inner_join(as.data.frame(datapoint_2),tmp) %>%
     dplyr::select(layer,x,y)
   
   ## Add strata to datapoint

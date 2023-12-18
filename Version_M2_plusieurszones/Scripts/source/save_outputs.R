@@ -71,7 +71,9 @@ if(counter == 1){
                         N_est=sum(Report$S_x),
                         MSPE=sum((S_x-Report$S_x)^2)/n_cells,
                         beta1_true=beta1,
-                        beta1_est=Report$beta_j[2])
+                        beta1_est=Report$beta_j[2],
+                        n_zone=n_zone,
+                        q1=q1)
   Results$fixed <- NA
   Results$random <- NA
   
@@ -89,6 +91,9 @@ if(counter == 1){
   Results[counter,"MSPE"] <- sum((S_x-Report$S_x)^2)/n_cells
   Results[counter,"beta1_true"] <- beta1
   Results[counter,"beta1_est"] <- Report$beta_j[2]
+  Results[counter,"n_zone"] <- n_zone
+  Results[counter,"q1"] <- q1
+  
   
   if(Estimation_model_i==2){
     
