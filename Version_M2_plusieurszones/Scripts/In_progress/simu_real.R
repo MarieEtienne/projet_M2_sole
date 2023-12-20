@@ -1,9 +1,10 @@
 ## specific loops
-counter <- 1201
-simu_file <- paste0("/media/balglave/Elements/results/q1/")
+# simu_file <- paste0("/media/balglave/Elements/results/q1/")
+simu_file <- paste0("results/q1/")
 load(paste0(simu_file,"/Results.RData"))
+counter <- 1201
 
-i0 = 70
+i0 = 1
 
 for(q1 in c(-1,-3,-5)){
 # for(n_zone in c(1,3,5)){
