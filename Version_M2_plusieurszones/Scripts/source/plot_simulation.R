@@ -2,8 +2,40 @@
 ## Simulation plots
 ###################
 
-## Simulation boxplots
-#---------------------
+
+load(paste0(results_file,"results/n_zone/Results.RData"))
+Results_plot <- Results_2 %>%
+  filter(converge == 0) %>%
+  # filter(simu_type == "Unsampled Rectangles") %>%  # and the one that will be plotted
+  filter(Model %in% c("Integrated model","Scientific model"))
+
+# And those that will be plotted
+Results_plot$obs <- NA
+Results_plot$obs[which(Results_plot$aggreg_obs == T)] <- "COS model"
+Results_plot$obs[which(Results_plot$aggreg_obs == F)] <- "GeoCatch model"
+Results_plot$obs[which(Results_plot$Estimation_model == 2)] <- "Scientific model"
+Results_plot$obs <- factor(Results_plot$obs,levels = c("GeoCatch model","COS model","Scientific model"))
+
+# MSPE
+mspe_plot <- ggplot()+
+  geom_boxplot(data = Results_plot,
+               aes(x = obs,
+                   y = mspe,
+                   fill = as.factor(n_zone)))+
+  theme_bw()+
+  theme(legend.title = element_blank(),
+        aspect.ratio = 1,
+        axis.text.x = element_blank(),
+        axis.ticks.x = element_blank())+
+  xlab("")+ylab("MSPE")+
+  ylim(0,NA)
+
+
+#-------------------------------------------------------------------------------------------------------------------------
+
+
+## Simulation boxplots for comparison of models
+#----------------------------------------------
 
 load(paste0(results_file,"draft/paper_3/res/Results_full_multi_square.RData"))
 
@@ -112,145 +144,81 @@ ggsave("../../paper_reallocation/images/boxplot_1.png",height = 4,width = 8)
 # ggsave("../../paper_reallocation/images/boxplot_1_add.png",height = 8,width = 8)
 
 
-## Simulation maps
-#-----------------
+## Simulation prediction maps for comparison of models
+#-----------------------------------------------------
 
-load(file=paste0(results_file,"results/real_simu/simu.data.RData"))
-S_x <- simu.data$S_x
-index_i <- simu.data$index_i
-y_sci_i <- simu.data$y_sci_i
-y_i <- simu.data$y_i
-boats_i <- simu.data$boats_i
-cov_x <- simu.data$cov_x
-index_sci_i <- simu.data$index_sci_i
-
-load(file=paste0(results_file,"results/real_simu/no.realloc_int_df.RData"))
-res_no.realloc_int <- fit_IM_res
-load(file=paste0(results_file,"results/real_simu/sci_df.RData"))
-res_sci <- fit_IM_res
-load(file=paste0(results_file,"results/real_simu/no.realloc_com_df.RData"))
-res_no.realloc_com <- fit_IM_res
-load(file=paste0(results_file,"results/real_simu/realloc_int_df.RData"))
-res_realloc_int <- fit_IM_res
-load(file=paste0(results_file,"results/real_simu/realloc_com_df.RData"))
-res_realloc_com <- fit_IM_res
-
-samp_sci <- data.frame(cell = index_sci_i) %>%
-  dplyr::group_by(cell) %>%
-  dplyr::summarise(n_sci=n()) %>%
-  inner_join(loc_x[,c("cell","x","y")])
-
-samp_com <- data.frame(cell = index_i) %>%
-  dplyr::group_by(cell) %>%
-  dplyr::summarise(n_com=n()) %>%
-  inner_join(loc_x[,c("cell","x","y")])
-
-
-#######
-## Maps
-#######
-
-## Sampling locations/effort
-library(viridis)
-pal <- inferno(100)
-sampling_plot <- ggplot()+
-  geom_point(data=samp_com,aes(x=x,y=y,col=n_com),shape=15,size=2)+
-  geom_point(data=samp_sci,aes(x=x,y=y),col="red",size=1)+
-  # scale_color_gradientn(colours = pal) + 
-  scale_color_distiller(palette = "RdBu",limits=c(0,NA))+
-  ggtitle("Sample points",subtitle = "Red dots: scientific samples, scale color: commercial samples")+
-  theme_bw()+
-  theme(plot.title = element_text(hjust = 0.5),
-        plot.subtitle = element_text(hjust = 0.5,size=10))+
-  geom_sf(data = mapBase)+
-  coord_sf(xlim = c(-6,0), ylim = c(43,48+0.25), expand = FALSE)+
-  xlab("")+ylab("")
-
-# BrBG, PiYG, PRGn, PuOr, , RdGy, RdYlBu, RdYlGn, Spectral
-
-## Simulation
+## Simulated data
+load("draft/paper_3/res/list_input.RData")
+loc_x<-list_input$loc_x
+S_x<-list_input$S_x
 simu_df <- data.frame(loc_x,S_x=S_x)
+
+## Model outputs
+load("draft/paper_3/res/sci_df.RData")
+load("draft/paper_3/res/int_Yi_df.RData")
+load("draft/paper_3/res/int_Dj_df.RData")
+
+max_val <- max(simu_df$S_x/sum(simu_df$S_x),
+               sci_df$S_x/sum(sci_df$S_x),
+               int_Yi_df$S_x/sum(int_Yi_df$S_x),
+               com_Yi_df$S_x/sum(com_Yi_df$S_x),
+               int_Dj_df$S_x/sum(int_Dj_df$S_x),
+               com_Dj_df$S_x/sum(com_Dj_df$S_x))
+
 simu_plot <- ggplot(simu_df)+
-  geom_point(aes(x=x,y=y,col=S_x),shape=15,size=2)+
-  scale_color_distiller(palette = "Spectral",limits=c(0,NA))+
-  ggtitle("Simulation")+
+  geom_point(aes(x=x,y=y,col=S_x/sum(S_x)),shape=15,size=2)+
+  scale_color_distiller(palette = "Spectral",limits=c(0,max_val+0.01*max_val))+
+  ggtitle("Simulated latent field")+
   theme_bw()+
-  theme(plot.title = element_text(hjust = 0.5))+
+  theme(plot.title = element_text(hjust = 0.5,face = "bold"),
+        plot.subtitle = element_text(hjust = 0.5),
+        legend.title = element_blank())+
   geom_sf(data = mapBase)+
-  coord_sf(xlim = c(-6,0), ylim = c(43,48+0.25), expand = FALSE)+
+  coord_sf(xlim = c(-6,0), ylim = c(43,48), expand = FALSE)+
   xlab("")+ylab("")
 
-## Scientific
-sci_df <- data.frame(loc_x,S_x=res_sci$Report$S_x)
 sci_plot <- ggplot(sci_df)+
-  geom_point(aes(x=x,y=y,col=S_x),shape=15,size=1.5)+
-  scale_color_distiller(palette = "Spectral",limits=c(0,NA))+
+  geom_point(aes(x=x,y=y,col=S_x/sum(S_x)),shape=15,size=2)+
+  scale_color_distiller(palette = "Spectral",limits=c(0,max_val+0.01*max_val))+
   ggtitle("Scientific model")+
   theme_bw()+
-  theme(plot.title = element_text(hjust = 0.5))+
+  theme(plot.title = element_text(hjust = 0.5,face = "bold"),
+        plot.subtitle = element_text(hjust = 0.5),
+        legend.title = element_blank())+
   geom_sf(data = mapBase)+
-  coord_sf(xlim = c(-6,0), ylim = c(43,48+0.25), expand = FALSE)+
+  coord_sf(xlim = c(-6,0), ylim = c(43,48), expand = FALSE)+
   xlab("")+ylab("")
 
-## No reallocation - integrated
-no.realloc_int_df <- data.frame(loc_x,S_x=res_no.realloc_int$Report$S_x)
-no.realloc_int_plot <- ggplot(no.realloc_int_df)+
-  geom_point(aes(x=x,y=y,col=S_x),shape=15,size=1.5)+
-  scale_color_distiller(palette = "Spectral",limits=c(0,NA))+
-  ggtitle("Integrated model",
-          subtitle = "No reallocation in estimation - Likelihood: Yi")+
+int_Yi_plot <- ggplot(int_Yi_df)+
+  geom_point(aes(x=x,y=y,col=S_x/sum(S_x)),shape=15,size=2)+
+  scale_color_distiller(palette = "Spectral",limits=c(0,max_val+0.01*max_val))+
+  ggtitle("GeoCatch model")+ # integrated model
   theme_bw()+
-  theme(plot.title = element_text(hjust = 0.5),
-        plot.subtitle = element_text(hjust = 0.5,size=10))+
+  theme(plot.title = element_text(hjust = 0.5,face = "bold"),
+        plot.subtitle = element_text(hjust = 0.5),
+        legend.title = element_blank())+
   geom_sf(data = mapBase)+
-  coord_sf(xlim = c(-6,0), ylim = c(43,48+0.25), expand = FALSE)+
+  coord_sf(xlim = c(-6,0), ylim = c(43,48), expand = FALSE)+
   xlab("")+ylab("")
 
-## No reallocation - commercial
-no.realloc_com_df <- data.frame(loc_x,S_x=res_no.realloc_com$Report$S_x)
-no.realloc_com_plot <- ggplot(no.realloc_com_df)+
-  geom_point(aes(x=x,y=y,col=S_x),shape=15,size=1.5)+
-  scale_color_distiller(palette = "Spectral",limits=c(0,NA))+
-  ggtitle("Commercial model",
-          subtitle = "No reallocation in estimation - Likelihood: Yi")+
+int_Dj_plot <- ggplot(int_Dj_df)+
+  geom_point(aes(x=x,y=y,col=S_x/sum(S_x)),shape=15,size=2)+
+  scale_color_distiller(palette = "Spectral",limits=c(0,max_val+0.01*max_val))+
+  ggtitle("COS model")+ # ,subtitle = "integrated",
   theme_bw()+
-  theme(plot.title = element_text(hjust = 0.5),
-        plot.subtitle = element_text(hjust = 0.5,size=10))+
+  theme(plot.title = element_text(hjust = 0.5,face = "bold"),
+        plot.subtitle = element_text(hjust = 0.5),
+        legend.title = element_blank())+
   geom_sf(data = mapBase)+
-  coord_sf(xlim = c(-6,0), ylim = c(43,48+0.25), expand = FALSE)+
+  coord_sf(xlim = c(-6,0), ylim = c(43,48), expand = FALSE)+
   xlab("")+ylab("")
 
-## Reallocation - integrated
-realloc_int_df <- data.frame(loc_x,S_x=res_realloc_int$Report$S_x)
-realloc_int_plot <- ggplot(realloc_int_df)+
-  geom_point(aes(x=x,y=y,col=S_x),shape=15,size=1.5)+
-  scale_color_distiller(palette = "Spectral",limits=c(0,NA))+
-  ggtitle("Integrated model",
-          subtitle = "Reallocation in estimation - Likelihood: Dj")+
-  theme_bw()+
-  theme(plot.title = element_text(hjust = 0.5),
-        plot.subtitle = element_text(hjust = 0.5,size=10))+
-  geom_sf(data = mapBase)+
-  coord_sf(xlim = c(-6,0), ylim = c(43,48+0.25), expand = FALSE)+
-  xlab("")+ylab("")
+map_plot <- plot_grid(
+  simu_plot,sci_plot,
+  int_Yi_plot,int_Dj_plot,
+  nrow = 2,
+  ncol = 2,
+  align="hv",
+  labels = c("A","B","C","D"))
 
-## Reallocation - commercial
-realloc_com_df <- data.frame(loc_x,S_x=res_realloc_com$Report$S_x)
-realloc_com_plot <- ggplot(realloc_com_df)+
-  geom_point(aes(x=x,y=y,col=S_x),shape=15,size=1.5)+
-  scale_color_distiller(palette = "Spectral",limits=c(0,NA))+
-  ggtitle("Commercial model",
-          subtitle = "Reallocation in estimation - Likelihood: Dj")+
-  theme_bw()+
-  theme(plot.title = element_text(hjust = 0.5),
-        plot.subtitle = element_text(hjust = 0.5,size=10))+
-  geom_sf(data = mapBase)+
-  coord_sf(xlim = c(-6,0), ylim = c(43,48+0.25), expand = FALSE)+
-  xlab("")+ylab("")
-
-full_plot <- plot_grid(sampling_plot,simu_plot,sci_plot,
-                       NULL,no.realloc_int_plot,no.realloc_com_plot,
-                       NULL,realloc_int_plot,realloc_com_plot,
-                       ncol = 3,nrow = 3,align="hv")
-
-ggsave(file="images/real_simu/simu_real_maps.png",width = 15, height = 15)
+ggsave("../../paper_reallocation/images/Map_multi_square.png",width = 9, height = 9)

@@ -3,11 +3,14 @@
 ##################################################
 ## B. Alglave
 
+## Load packages
 library(cowplot)
 library(dplyr)
 library(ggplot2)
-library(latex2exp)
+library(gt)
+library(HistogramTools)
 library(INLA)
+library(latex2exp)
 library(nngeo)
 library(raster)
 library(rnaturalearth)
@@ -18,16 +21,19 @@ library(stringr)
 library(TMB)
 library(tidyr)
 
-set.seed(2) # 3
+set.seed(2)
 
+## Folder to switch
 folder_phd_codes <- "/media/balglave/Elements/backup_phd/phd_zfh_baptiste_alglave"
 folder_project <- "/home/balglave/Desktop/Research/projet_M2_sole/Version_M2_plusieurszones"
 
+
+##-----------------------------------------------------------------------------------
+##------------------------ Load raw data and spatial domain -------------------------
+##-----------------------------------------------------------------------------------
+
 setwd(folder_phd_codes)
 
-##--------------
-## Load raw data
-##--------------
 ## Map info
 domain_shapefile <- "ORHAGO" # "ORHAGO", "EVHOE"
 grid_projection <- "+proj=longlat +datum=WGS84"
@@ -150,29 +156,18 @@ source("Scripts/source/load_commercial_data.R")
 # source("Scripts/In_progress/figure_intro_manuscript.R")
 
 
-## Initialize loop
-#-----------------
-counter <- 1
-i0 <- 1
+##----------------------------------------------------------------------------------------------
+##-------------------- Simulation parameterization and model fitting ---------------------------
+##----------------------------------------------------------------------------------------------
 
-## Restart after crash
-restart_after_crash = F
-if(restart_after_crash == T){
-  
-  simu_file <- "results/severa_rect-2022-01-12_13_03_00_SimuUnsampledRect/"
-  load(file=paste0(simu_file,"Results.RData"))
-  counter <- max(Results$counter,na.rm=T) + 1
-  i0 <- max(Results$sim,na.rm=T) + 1
-  
-}
-
-##------------------------------------------------------------------------------------
-##-------------------- Simulate latent field on the domain ---------------------------
-##------------------------------------------------------------------------------------
+## Gaussian field function
 source("Scripts/function/sim_GF_Matern.R")
 
-## Simulation configuration
-#--------------------------
+## Mesh
+mesh <- inla.mesh.create( loc_x[,c('x','y')] )
+spde <- (inla.spde2.matern(mesh, alpha=2)$param.inla)[c("M0","M1","M2")]  # define sparse matrices for parametrisation of precision matrix
+n_cells <- nrow(loc_x)
+
 ## Latent field
 intercept <- 2 # intercept of the latent field
 beta1 <- 2 # effect of the covariate
@@ -183,7 +178,7 @@ range_delta <- 0.6 # range of random effect delta
 SD_delta <- 1 # marginal variance of random effect delta
 
 ## Commercial data
-q1 <- -3 # zero-inflation parameter
+q1 <- -1 # zero-inflation parameter
 SD_obs <- 1 # observation error
 
 n_seq_com <- 300 # number of declarations
@@ -201,190 +196,162 @@ Sigma_sci <- exp(-0.2) # observation error
 logSigma_sci <- log(Sigma_sci)
 n_samp_sci <- 100 # number of scientific points
 
-## specific loops
-counter <- 1
-simu_file <- paste0("/media/balglave/Elements/results/n_zone")
+## Data sources that feed the model
+Data_source <- c("Integrated","Scientific","Commercial")
 
-## Simulation loop
-for(n_zone in c(1,3,5)){
+
+
+## If fit real data
+##-----------------
+
+quadratic_cov <- F # allow for quadratic form in the effect of the covariate
+
+# Shape covariate data frame
+if(sampling == "from_tacsateflalo"){
+  if(quadratic_cov == T){
+    cov_x_2 <- cov_x
+    bathy_c <- cov_x[,"bathy"]
+    bathy_c[which(bathy_c < -200)] <- -110
+    bathy_c <- (bathy_c - mean(bathy_c))/sd(bathy_c)
+    cov_x_2$bathy <- bathy_c
+    cov_x_2$bathy2 <- (bathy_c)^2
+    # cov_x_2 <- cov_x_2[,c("bathy","bathy2")] # "bathy"
+    cov_x_2 <- cov_x_2[,c("substr_Sand_Coarse_substrate","substr_Rock","substr_Mud_sediment")]
+    cov_x_2 <- cov_x_2 %>%
+      mutate(substr_Sand_Coarse_substrate = ifelse(substr_Rock==1,1,substr_Sand_Coarse_substrate)) %>%
+      dplyr::select(-substr_Rock)
+  }else{
+    cov_x_2 <- cov_x[,c("substr_Sand_Coarse_substrate","substr_Rock","substr_Mud_sediment")]
+    cov_x_2 <- cov_x_2 %>%
+      mutate(substr_Sand_Coarse_substrate = ifelse(substr_Rock==1,1,substr_Sand_Coarse_substrate)) %>%
+      dplyr::select(-substr_Rock)
+  }
+}
+
+##-------------------------------------------------------------------
+##-------------------- Loop and file settings -----------------------
+##-------------------------------------------------------------------
+counter <- 1 # counter of simulation
+simu_file <- paste0("/media/balglave/Elements/results/n_zone/") # results file
+plot_outputs <- F # plot simulation outputs
+
+## Step estimation
+do_step.est <- F
+Obj_step.est <- NULL
+step.est <- F
+
+##------------------------------------------------------------------------
+##-------------------------- Simulation loop -----------------------------
+##------------------------------------------------------------------------
+for(i in i0:100){
   
-  for(i in i0:100){
+  set.seed( i ) # for figures : i = 2
+  
+  cov_x <- sim_GF_Matern(as.matrix(loc_x[,c("x","y")]), nu, range_cov, SD_cov^2)[[1]]$y
+  delta_x <- sim_GF_Matern(as.matrix(loc_x[,c("x","y")]), nu, range_delta, SD_delta^2)[[1]]$y
+  
+  S_x <- exp(intercept + cov_x %*% beta1 + delta_x)
+  vec <- cov_x %*% beta1
+  loc_x_2 <- cbind(loc_x,cov=cov_x,delta=delta_x,S_x=S_x)
+  
+  
+  #---------------------------------------------------------------------------------
+  ##-------------------------------- Simulate data ---------------------------------
+  #---------------------------------------------------------------------------------
+  
+  if(sampling == "simulate"){
     
-    set.seed( i ) # for figures : i = 2
+    source("Scripts/source/simulate_real.R")
+    ObsM <- F
+    y_ObsM_i <- NULL
+    index_ObsM_i <- NULL
     
-    cov_x <- sim_GF_Matern(as.matrix(loc_x[,c("x","y")]), nu, range_cov, SD_cov^2)[[1]]$y
-    delta_x <- sim_GF_Matern(as.matrix(loc_x[,c("x","y")]), nu, range_delta, SD_delta^2)[[1]]$y
-    
-    S_x <- exp(intercept + cov_x %*% beta1 + delta_x)
-    vec <- cov_x %*% beta1
-    loc_x_2 <- cbind(loc_x,cov=cov_x,delta=delta_x,S_x=S_x)
-    
-    # cov_plot <- ggplot(loc_x_2)+
-    #   geom_point(aes(x=x,y=y,col=cov_x))+
-    #   scale_color_distiller(palette = "Spectral")+
-    #   ggtitle("Covariate")
-    # 
-    # delta_plot <- ggplot(loc_x_2)+
-    #   geom_point(aes(x=x,y=y,col=delta_x))+
-    #   scale_color_distiller(palette = "Spectral")+
-    #   ggtitle("Random effect")
-    # 
-    # lf_plot <- ggplot(loc_x_2)+
-    #   geom_point(aes(x=x,y=y,col=S_x))+
-    #   scale_color_distiller(palette = "Spectral")+
-    #   ggtitle("Latent field")
-    # 
-    # plot_grid(cov_plot,delta_plot,lf_plot,nrow = 1)
-    
-    
-    #---------------------------------------------------------------------------------
-    ##-------------------------------- Simulate data ---------------------------------
-    #---------------------------------------------------------------------------------
-    
-    if(sampling == "simulate"){
-      
-      source("Scripts/source/simulate_real.R")
-      ObsM <- F
-      y_ObsM_i <- NULL
-      index_ObsM_i <- NULL
-      
-    }
-    
-    #-----------------------------------------------------------------------------------
-    ##----------------------------------- Fit Model ------------------------------------ 
-    #-----------------------------------------------------------------------------------
-    
-    logSigma_com <- log(0)+0.1 # to initialize 
-    b <- 0
-    SP_est <- 0 # Do not account for sampling process
-    b_est <- 0 # Do not account for preferential sampling
-    eta_est <- 0 # Do not account for sampling processes other than preferential sampling
-    lf_param <- "cov"
-    lf_param_num <- ifelse(lf_param=="cov",0,1)
-    obs_mod <- 2
-    consistency_check <- T
-    
-    ## Mesh
-    mesh <- inla.mesh.create( loc_x[,c('x','y')] )
-    spde <- (inla.spde2.matern(mesh, alpha=2)$param.inla)[c("M0","M1","M2")]  # define sparse matrices for parametrisation of precision matrix
-    n_cells <- nrow(loc_x)
-    Data_source <- c("Integrated","Scientific","Commercial")
-    Obj_step.est <- NULL
-    step.est <- F
-    quadratic_cov <- F
-    plot_outputs <- F
-    
-    if(sampling == "from_tacsateflalo"){
-      if(quadratic_cov == T){
-        cov_x_2 <- cov_x
-        bathy_c <- cov_x[,"bathy"]
-        bathy_c[which(bathy_c < -200)] <- -110
-        bathy_c <- (bathy_c - mean(bathy_c))/sd(bathy_c)
-        cov_x_2$bathy <- bathy_c
-        cov_x_2$bathy2 <- (bathy_c)^2
-        # cov_x_2 <- cov_x_2[,c("bathy","bathy2")] # "bathy"
-        cov_x_2 <- cov_x_2[,c("substr_Sand_Coarse_substrate","substr_Rock","substr_Mud_sediment")]
-        cov_x_2 <- cov_x_2 %>%
-          mutate(substr_Sand_Coarse_substrate = ifelse(substr_Rock==1,1,substr_Sand_Coarse_substrate)) %>%
-          dplyr::select(-substr_Rock)
-      }else{
-        cov_x_2 <- cov_x[,c("substr_Sand_Coarse_substrate","substr_Rock","substr_Mud_sediment")]
-        cov_x_2 <- cov_x_2 %>%
-          mutate(substr_Sand_Coarse_substrate = ifelse(substr_Rock==1,1,substr_Sand_Coarse_substrate)) %>%
-          dplyr::select(-substr_Rock)
-      }
-    }else if(sampling == "simulate"){
-      
-      cov_x_2 <- cov_x
-      
-    }
-    
-    for(aggreg_obs in c(T)){
-      
-    # for(aggreg_obs in c(F,T)){
-      
-      if(plot_outputs){
-        x11(width = 20,height = 15)
-        par(mfrow = c(3,4))
-      }
-      
-      for(Estimation_model_i in c(1,3)){
-        
-        print(paste0("sim: ",i," | counter: ",counter," | aggreg_obs :",aggreg_obs," | Estimation_model:", Estimation_model_i))
-        
-        # =T
-        # Estimation_model_i=1
-        do_step.est <- F
-        Params_step.est <- NULL
-        Map_step.est <- NULL
-        step.est <- 0
-        if(step.est==0 & do_step.est) aggreg_obs <- F
-        
-        ## Fit model
-        source("Scripts/function/fit_IM.R")
-        TmbFile = "Scripts/"
-        TMB::compile(paste0(TmbFile,"inst/executables/com_x_sci_data_14_scientific_commercial_simple.cpp"),"-O1 -g",DLLFLAGS="")
-        dyn.load( dynlib(paste0("Scripts/inst/executables/com_x_sci_data_14_scientific_commercial_simple") ) )
-        
-        fit_IM_res <- fit_IM(Estimation_model_i = Estimation_model_i, # = 1
-                             Samp_process = 0,
-                             EM = "fix_b",
-                             TmbFile = "Scripts/",
-                             ignore.uncertainty = F,
-                             c_com_x = c_com_x,
-                             y_com_i = y_i2,
-                             index_com_i = index_i,
-                             y_sci_i = y_sci_i,
-                             index_sci_i = index_sci_i,
-                             aggreg_obs=aggreg_obs,
-                             boats_number = boats_i,
-                             Cov_x = as.matrix(cov_x_2), # NULL, # 
-                             ref_level = ref_level,
-                             lf_param = "RE", # lf_param,
-                             spde=spde,
-                             mesh=mesh,
-                             n_cells=n_cells,
-                             cov_est = T,
-                             Params_step.est=Params_step.est,
-                             Map_step.est=Map_step.est,
-                             ObsM=F,
-                             y_ObsM_i=y_ObsM_i,
-                             index_ObsM_i=index_ObsM_i,
-                             sampling = sampling,
-                             landings = T,
-                             quadratic_cov = quadratic_cov)
-        
-        Report <- fit_IM_res$Report
-        Opt <- fit_IM_res$Opt
-        Obj <- fit_IM_res$Obj
-        SD <- fit_IM_res$SD
-        
-        source("Scripts/source/step_estimation.R")
-        
-        # if(Estimation_model_i == 1 & aggreg_obs == F & sampling == "simulate") save(file="results/real_simu/no.realloc_int_df.RData",data=fit_IM_res)
-        # if(Estimation_model_i == 2 & sampling == "simulate") save(file="results/real_simu/sci_df.RData",data=fit_IM_res)
-        # if(Estimation_model_i == 3 & aggreg_obs == F & sampling == "simulate") save(file="results/real_simu/no.realloc_com_df.RData",data=fit_IM_res)
-        # if(Estimation_model_i == 1 & aggreg_obs == T & sampling == "simulate") save(file="results/real_simu/realloc_int_df.RData",data=fit_IM_res)
-        # if(Estimation_model_i == 3 & aggreg_obs == T & sampling == "simulate") save(file="results/real_simu/realloc_com_df.RData",data=fit_IM_res)
-        
-        # if(Estimation_model_i == 1 & aggreg_obs == F & sampling == "from_tacsateflalo") save(file="results/case_study/no.realloc_int_df.RData",data=fit_IM_res)
-        # if(Estimation_model_i == 1 & aggreg_obs == T & sampling == "from_tacsateflalo") save(file="results/case_study/realloc_int_df.RData",data=fit_IM_res)
-        # if(Estimation_model_i == 2 & sampling == "from_tacsateflalo") save(file="results/case_study/sci_df.RData",data=fit_IM_res)
-        
-        source("Scripts/source/plot_outputs.R")
-        
-        if(sampling == "simulate"){
-          
-          source("Scripts/source/save_outputs.R")
-          
-        }
-        
-        counter <- counter + 1
-        
-      }
-    }
   }
   
+  #-----------------------------------------------------------------------------------
+  ##----------------------------------- Fit Model ------------------------------------ 
+  #-----------------------------------------------------------------------------------
+  if(sampling == "simulate"){
+    
+    cov_x_2 <- cov_x
+    
+  }
+  
+  for(aggreg_obs in c(F,T)){
+    
+    if(plot_outputs){
+      x11(width = 20,height = 15)
+      par(mfrow = c(3,4))
+    }
+    
+    
+    for(Estimation_model_i in c(1:3)){
+      
+      print(paste0("sim: ",i," | counter: ",counter," | aggreg_obs :",aggreg_obs," | Estimation_model:", Estimation_model_i))
+      
+      # Step estimation actualization
+      if(step.est==0 & do_step.est){
+        
+        Params_step.est <- NULL
+        Map_step.est <- NULL
+        aggreg_obs <- F
+        
+      }else if(step.est>0 & do_step.est){
+        
+        Params_step.est <- fit_IM_res$Params_step.est
+        Map_step.est <- fit_IM_res$Map_step.est
+        aggreg_obs <- F
+        
+      }
+      
+      # Fit model
+      fit_IM_res <- fit_IM(Estimation_model_i = Estimation_model_i, # = 1
+                           Samp_process = 0,
+                           EM = "fix_b",
+                           TmbFile = "Scripts/",
+                           ignore.uncertainty = F,
+                           c_com_x = c_com_x,
+                           y_com_i = y_i2,
+                           index_com_i = index_i,
+                           y_sci_i = y_sci_i,
+                           index_sci_i = index_sci_i,
+                           aggreg_obs=aggreg_obs,
+                           boats_number = boats_i,
+                           Cov_x = as.matrix(cov_x_2), # NULL, # 
+                           ref_level = ref_level,
+                           lf_param = "RE",
+                           spde=spde,
+                           mesh=mesh,
+                           n_cells=n_cells,
+                           cov_est = T,
+                           Params_step.est=Params_step.est,
+                           Map_step.est=Map_step.est,
+                           ObsM=F,
+                           y_ObsM_i=y_ObsM_i,
+                           index_ObsM_i=index_ObsM_i,
+                           sampling = sampling,
+                           landings = T,
+                           quadratic_cov = quadratic_cov)
+      
+      Report <- fit_IM_res$Report
+      Opt <- fit_IM_res$Opt
+      Obj <- fit_IM_res$Obj
+      SD <- fit_IM_res$SD
+      
+      source("Scripts/source/step_estimation.R")
+      
+      source("Scripts/source/plot_outputs.R")
+      
+      if(sampling == "simulate"){
+        
+        source("Scripts/source/save_outputs.R")
+        
+      }
+      
+      counter <- counter + 1
+      
+    }
+  }
 }
 
 

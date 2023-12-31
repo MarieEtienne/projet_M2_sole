@@ -3,7 +3,7 @@
 #################################
 ## B. Alglave
 
-if(Estimation_model_i == 1){
+if(Estimation_model_i == 1 & do_step.est){
   
   Obj_step.est <- Obj
   init_val <- Obj_step.est$env$last.par.best

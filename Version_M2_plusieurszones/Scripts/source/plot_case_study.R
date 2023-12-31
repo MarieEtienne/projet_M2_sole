@@ -12,7 +12,7 @@ no.realloc_plot <- ggplot(no.realloc_df)+
   scale_color_distiller(palette = "Spectral",limits=c(0,NA))+
   ggtitle("GeoCatch model")+
   theme_bw()+
-  theme(plot.title = element_text(hjust = 0.5),
+  theme(plot.title = element_text(hjust = 0.5,face = "bold"),
         plot.subtitle = element_text(hjust = 0.5))+
   geom_sf(data = mapBase)+
   coord_sf(xlim = c(-6,0), ylim = c(43,48+0.25), expand = FALSE)+
@@ -27,7 +27,7 @@ realloc_rest_plot <- ggplot(realloc_rest_df)+
   scale_color_distiller(palette = "Spectral",limits=c(0,NA))+
   ggtitle("COS model")+
   theme_bw()+
-  theme(plot.title = element_text(hjust = 0.5),
+  theme(plot.title = element_text(hjust = 0.5,face = "bold"),
         plot.subtitle = element_text(hjust = 0.5))+
   geom_sf(data = mapBase)+
   coord_sf(xlim = c(-6,0), ylim = c(43,48+0.25), expand = FALSE)+
@@ -42,7 +42,7 @@ sci_plot <- ggplot(sci_df)+
   scale_color_distiller(palette = "Spectral",limits=c(0,NA))+
   ggtitle("Scientific model")+
   theme_bw()+
-  theme(plot.title = element_text(hjust = 0.5),
+  theme(plot.title = element_text(hjust = 0.5,face = "bold"),
         plot.subtitle = element_text(hjust = 0.5))+
   geom_sf(data = mapBase)+
   coord_sf(xlim = c(-6,0), ylim = c(43,48+0.25), expand = FALSE)+
@@ -50,7 +50,7 @@ sci_plot <- ggplot(sci_df)+
 
 case_study_plot <- plot_grid(sci_plot,no.realloc_plot,realloc_rest_plot,ncol=3,align="hv")
 
-ggsave(file="images/case_study/case_study_maps.png",width = 9, height = 3)
+ggsave(file="../../paper_reallocation/images/case_study_maps.png",width = 12, height = 4)
 
 
 ## Parameters estimates

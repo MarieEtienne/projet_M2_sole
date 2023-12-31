@@ -18,7 +18,7 @@
 #   theme(panel.background = element_rect(fill = "skyblue"))+
 #   xlab("")+ylab("")
 
-load("/results/case_study/no.realloc_int_df.RData")
+load(paste0(results_file,"/results/case_study/no.realloc_int_df.RData"))
 # save(data=fit_IM_res,file="results/case_study/no.realloc_int_df.RData")
 
 no.realloc_df <- data.frame(loc_x,S_x=fit_IM_res$Report$S_x)
@@ -47,7 +47,7 @@ no.realloc_plot <- ggplot(no.realloc_df)+
 #   coord_sf(xlim = c(-6,0), ylim = c(43,48+0.25), expand = FALSE)+
 #   xlab("")+ylab("")
 
-load("results/case_study/realloc_int_df_rest.RData")
+load(paste0(results_file,"results/case_study/realloc_int_df_rest.RData"))
 # save(data=fit_IM_res,file="results/case_study/realloc_int_df_rest.RData")
 
 realloc_rest_df <- data.frame(loc_x,S_x=fit_IM_res$Report$S_x)

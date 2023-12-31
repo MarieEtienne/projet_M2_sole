@@ -284,7 +284,15 @@ if(compute_profile){
     mutate(lkl = "Dj")
 }
 
-
+if(save_data == F){
+  
+  load("draft/paper_3/res/sci_df.RData")
+  load("draft/paper_3/res/int_Yi_df.RData")
+  load("draft/paper_3/res/com_Yi_df.RData")
+  load("draft/paper_3/res/int_Dj_df.RData")
+  load("draft/paper_3/res/com_Dj_df.RData")
+  
+}
 
 ############
 ## Plot maps
@@ -305,7 +313,7 @@ data_plot <- ggplot()+
   geom_point(data=simu_df_2,aes(x=x,y=y,col=S_x/Ab),shape=15,size=2,alpha=0.125)+
   geom_point(data=simu_df_2[which(simu_df_2$ICESNAME %in% com.data_df$ICESNAME),],
              aes(x=x,y=y,col=S_x/Ab),shape=15,size=2)+
-  scale_color_distiller(palette = "Spectral",limits=c(0,max_val))+
+  scale_color_distiller(palette = "Spectral",limits=c(0,NA))+ # , limits=c(0,max_val+0.01*max_val))+
   # geom_point(data=com.data_df,aes(x=x,y=y),col="grey",shape=15,size=2,alpha=0.45)+
   geom_point(data=sci.data_df,aes(x=x,y=y),col="red",size=1)+
   theme_bw()+
@@ -326,7 +334,7 @@ simu_plot <- ggplot(simu_df)+
   theme_bw()+
   theme(plot.title = element_text(hjust = 0.5),
         plot.subtitle = element_text(hjust = 0.5),
-        legend.position = "none")+
+        legend.title = element_blank())+
   geom_sf(data = mapBase)+
   coord_sf(xlim = c(-6,0), ylim = c(43,48), expand = FALSE)+
   xlab("")+ylab("")
@@ -338,7 +346,7 @@ sci_plot <- ggplot(sci_df)+
   theme_bw()+
   theme(plot.title = element_text(hjust = 0.5),
         plot.subtitle = element_text(hjust = 0.5),
-        legend.position = "none")+
+        legend.title = element_blank())+
   geom_sf(data = mapBase)+
   coord_sf(xlim = c(-6,0), ylim = c(43,48), expand = FALSE)+
   xlab("")+ylab("")
@@ -346,23 +354,23 @@ sci_plot <- ggplot(sci_df)+
 int_Yi_plot <- ggplot(int_Yi_df)+
   geom_point(aes(x=x,y=y,col=S_x/sum(S_x)),shape=15,size=2)+
   scale_color_distiller(palette = "Spectral",limits=c(0,max_val+0.01*max_val))+
-  ggtitle("Integrated model - Yr")+
+  ggtitle("GeoCatch model")+ # integrated model
   theme_bw()+
   theme(plot.title = element_text(hjust = 0.5),
         plot.subtitle = element_text(hjust = 0.5),
-        legend.position = "none")+
+        legend.title = element_blank())+
   geom_sf(data = mapBase)+
   coord_sf(xlim = c(-6,0), ylim = c(43,48), expand = FALSE)+
   xlab("")+ylab("")
 
 com_Yi_plot <- ggplot(com_Yi_df)+
   geom_point(aes(x=x,y=y,col=S_x/sum(S_x)),shape=15,size=2)+
-  scale_color_distiller(palette = "Spectral",limits=c(0,max_val+0.01*max_val))+
-  ggtitle("Commercial model - Yr")+
+  scale_color_distiller(palette = "Spectral" ,limits=c(0,max_val+0.01*max_val))+
+  ggtitle("GeoCatch model")+ # commercial data
   theme_bw()+
   theme(plot.title = element_text(hjust = 0.5),
         plot.subtitle = element_text(hjust = 0.5),
-        legend.position = "none")+
+        legend.title = element_blank())+
   geom_sf(data = mapBase)+
   coord_sf(xlim = c(-6,0), ylim = c(43,48), expand = FALSE)+
   xlab("")+ylab("")
@@ -370,41 +378,41 @@ com_Yi_plot <- ggplot(com_Yi_df)+
 int_Dj_plot <- ggplot(int_Dj_df)+
   geom_point(aes(x=x,y=y,col=S_x/sum(S_x)),shape=15,size=2)+
   scale_color_distiller(palette = "Spectral",limits=c(0,max_val+0.01*max_val))+
-  ggtitle("Integrated model - Dk")+
+  ggtitle("COS model")+ # ,subtitle = "integrated",
   theme_bw()+
   theme(plot.title = element_text(hjust = 0.5),
         plot.subtitle = element_text(hjust = 0.5),
-        legend.position = "none")+
+        legend.title = element_blank())+
   geom_sf(data = mapBase)+
   coord_sf(xlim = c(-6,0), ylim = c(43,48), expand = FALSE)+
   xlab("")+ylab("")
 
 com_Dj_plot <- ggplot(com_Dj_df)+
   geom_point(aes(x=x,y=y,col=S_x/sum(S_x)),shape=15,size=2)+
-  scale_color_distiller(palette = "Spectral",limits=c(0,max_val+0.01*max_val))+
-  ggtitle("Commercial model - Dk")+
+  scale_color_distiller(palette = "Spectral",limits=c(0, max_val+0.01*max_val))+
+  ggtitle("COS model",subtitle = "only commercial")+
   theme_bw()+
   theme(plot.title = element_text(hjust = 0.5),
         plot.subtitle = element_text(hjust = 0.5),
-        legend.position = "none")+
+        legend.title = element_blank())+
   geom_sf(data = mapBase)+
   coord_sf(xlim = c(-6,0), ylim = c(43,48), expand = FALSE)+
   xlab("")+ylab("")
 
-legend <- as_ggplot(cowplot::get_legend(
+legend <- ggpubr::as_ggplot(cowplot::get_legend(
   com_Dj_plot+
     theme(legend.position="right",
           legend.title = element_blank()
     )))
 
-map_plot <- plot_grid(
-  data_plot,simu_plot,sci_plot,
-  legend,int_Yi_plot,com_Yi_plot,
-  NULL,int_Dj_plot,com_Dj_plot,
-  nrow = 3,
-  ncol = 3,
+map_plot <- plot_grid( # data_plot,
+  simu_plot,sci_plot,
+  int_Yi_plot,int_Dj_plot, #com_Yi_plot,
+  # NULL, # com_Dj_plot,
+  nrow = 2,
+  ncol = 2,
   align="hv",
-  labels = c("A","B","C","","D","E","","F","G")
+  labels = c("A","B","C","D")
 )
 
 ggsave("draft/paper_3/images/Map_multi_square.png",width = 12, height = 12)

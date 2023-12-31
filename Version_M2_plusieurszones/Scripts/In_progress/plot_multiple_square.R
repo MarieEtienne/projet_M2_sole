@@ -1,8 +1,6 @@
 #----------------------------------
 ## Load results for multiple square
 #----------------------------------
-library(HistogramTools)
-library(gt)
 
 
 folder_name <- "C:/R_projects/projet_M2_sole/Version_M2_plusieurszones/results/severa_rect-2022-01-11_17_16_00_SimuTest"
@@ -13,6 +11,8 @@ folder_c <- c("C:/R_projects/projet_M2_sole/Version_M2_plusieurszones/results/se
               "C:/R_projects/projet_M2_sole/Version_M2_plusieurszones/results/severa_rect-2022-01-13_11_14_00_SimuFullArea")
 
 folder_c <- c("/media/balglave/Elements/results/q1/")
+folder_c <- c("/media/balglave/Elements/backup_phd/projet_M2_sole/Version_M2_plusieurszones/results/n_zone/")
+
 
 for(folder_i in folder_c){
   
@@ -116,6 +116,8 @@ Results_2$Model[which(Results_2$Estimation_model==1)] <- "Integrated model"
 Results_2$Model[which(Results_2$Estimation_model==2)] <- "Scientific model"
 Results_2$Model[which(Results_2$Estimation_model==3)] <- "Commercial model"
 
+save(file = "/media/balglave/Elements/backup_phd/projet_M2_sole/Version_M2_plusieurszones/results/n_zone/Results_n_zone.RData", data = Results_2)
+
 
 #---------------------
 ## Convergence results
@@ -124,7 +126,8 @@ Results_conv <- Results_2
 Results_conv$one <- 1
 doBy::summaryBy(converge+one~
             aggreg_obs+
-            Model,
+            Model+
+              n_zone,
           data=Results_conv,
           FUN=sum) %>%
   dplyr::rename(lkl_level = aggreg_obs) %>%
