@@ -251,8 +251,12 @@ fit_IM <- function(Estimation_model_i = 1,
   
   if(!is.null(Params_step.est)){
     Params <- Params_step.est
+  }
+
+  if(!is.null(Map_step.est)){
     Map <- Map_step.est
   }
+  
   
   # If model accounting for reallocation
   # if(aggreg_obs == T & Estimation_model_i != 2 & sampling == "from_tacsateflalo"){
@@ -334,8 +338,7 @@ fit_IM <- function(Estimation_model_i = 1,
                 gradient=Obj$gr,
                 lower=Lower,
                 upper=Upper,
-                rel.tol = 1e-1,
-                control=list(trace=1, iter.max=2000, eval.max = 1000))
+                control = list(trace=1,iter.max=300)) # ,rel.tol=1.e-2,x.tol=1e-2
   
   Opt[["diagnostics"]] = data.frame( "Param"=names(Obj$par), "Lower"=-Inf, "Est"=Opt$par, "Upper"=Inf, "gradient"=Obj$gr(Opt$par) )
 
@@ -406,7 +409,9 @@ fit_IM <- function(Estimation_model_i = 1,
   # SD  --> very long with catchability and I got NANs
   if(Converge==0){
     Report = Obj$report()
-    SD = sdreport( Obj,ignore.parm.uncertainty = F,bias.correct = T)
+    SD = sdreport(Obj,
+                  ignore.parm.uncertainty = ignore.uncertainty,
+                  bias.correct = F)
 
   }else{SD = NULL}
   Opt[["run_time"]] = Sys.time()-Start_time

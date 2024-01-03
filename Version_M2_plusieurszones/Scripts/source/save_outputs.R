@@ -87,7 +87,7 @@ if(counter == 1){
   Results[counter,"n_ping_per_seq"] <- n_ping_per_seq
   Results[counter,"n_samp_sci"] <- n_samp_sci
   Results[counter,"N_true"] <- sum(S_x)
-  if(fit_IM_res$Converge==0) Results[counter,"N_est"] <- SD$unbiased$value["total_abundance"]
+  if(fit_IM_res$Converge==0) Results[counter,"N_est"] <- SD$value["total_abundance"] # SD$unbiased$value["total_abundance"]
   Results[counter,"MSPE"] <- sum((S_x-Report$S_x)^2)/n_cells
   Results[counter,"beta1_true"] <- beta1
   Results[counter,"beta1_est"] <- Report$beta_j[2]

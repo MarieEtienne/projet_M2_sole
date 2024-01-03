@@ -2,8 +2,9 @@
 ## Simulation plots
 ###################
 
-
-load(paste0(results_file,"results/n_zone/Results.RData"))
+## N zone simulations
+#--------------------
+load(paste0(results_file,"results/n_zone/Results_n_zone.RData"))
 Results_plot <- Results_2 %>%
   filter(converge == 0) %>%
   # filter(simu_type == "Unsampled Rectangles") %>%  # and the one that will be plotted
@@ -29,6 +30,61 @@ mspe_plot <- ggplot()+
         axis.ticks.x = element_blank())+
   xlab("")+ylab("MSPE")+
   ylim(0,NA)
+
+
+# Covariate effect
+beta_plot <- ggplot()+
+  geom_boxplot(data = Results_plot,
+               aes(x = obs,
+                   y = beta1_est,
+                   fill = as.factor(n_zone)))+
+  theme_bw()+
+  theme(legend.title = element_blank(),
+        aspect.ratio = 1)+
+  xlab("")+ylab("MSPE")+
+  ylim(0,NA)
+
+
+## zero inflation simulations
+#----------------------------
+load(paste0(results_file,"results/n_zone/Results_n_zone.RData"))
+Results_plot <- Results_2 %>%
+  # filter(converge == 0) %>%
+  # filter(simu_type == "Unsampled Rectangles") %>%  # and the one that will be plotted
+  filter(Model %in% c("Integrated model","Scientific model"))
+
+# And those that will be plotted
+Results_plot$obs <- NA
+Results_plot$obs[which(Results_plot$aggreg_obs == T)] <- "COS model"
+Results_plot$obs[which(Results_plot$aggreg_obs == F)] <- "GeoCatch model"
+Results_plot$obs[which(Results_plot$Estimation_model == 2)] <- "Scientific model"
+Results_plot$obs <- factor(Results_plot$obs,levels = c("GeoCatch model","COS model","Scientific model"))
+
+# MSPE
+mspe_plot <- ggplot()+
+  geom_boxplot(data = Results_plot,
+               aes(x = obs,
+                   y = mspe,
+                   fill = as.factor(q1)))+
+  theme_bw()+
+  theme(legend.title = element_blank(),
+        aspect.ratio = 1)+
+  xlab("")+ylab("MSPE")+
+  ylim(0,NA)
+
+
+# Covariate effect
+beta_plot <- ggplot()+
+  geom_boxplot(data = Results_plot,
+               aes(x = obs,
+                   y = beta1_est,
+                   fill = as.factor(q1)))+
+  theme_bw()+
+  theme(legend.title = element_blank(),
+        aspect.ratio = 1)+
+  xlab("")+ylab("MSPE")+
+  ylim(0,NA)
+
 
 
 #-------------------------------------------------------------------------------------------------------------------------

@@ -163,6 +163,13 @@ source("Scripts/source/load_commercial_data.R")
 ## Gaussian field function
 source("Scripts/function/sim_GF_Matern.R")
 
+## Fitting function
+source("Scripts/function/fit_IM.R")
+TmbFile = "Scripts/"
+TMB::compile(paste0(TmbFile,"inst/executables/com_x_sci_data_14_scientific_commercial_simple.cpp"),"-O1 -g",DLLFLAGS="")
+dyn.load( dynlib(paste0("Scripts/inst/executables/com_x_sci_data_14_scientific_commercial_simple") ) )
+consistency_check <- F
+
 ## Mesh
 mesh <- inla.mesh.create( loc_x[,c('x','y')] )
 spde <- (inla.spde2.matern(mesh, alpha=2)$param.inla)[c("M0","M1","M2")]  # define sparse matrices for parametrisation of precision matrix
@@ -231,14 +238,29 @@ if(sampling == "from_tacsateflalo"){
 ##-------------------------------------------------------------------
 ##-------------------- Loop and file settings -----------------------
 ##-------------------------------------------------------------------
+i0 <- 1 # simulation starting value
 counter <- 1 # counter of simulation
-simu_file <- paste0("/media/balglave/Elements/results/n_zone/") # results file
+simu_file <- paste0("/media/balglave/Elements/results/q1/") # results file
 plot_outputs <- F # plot simulation outputs
 
 ## Step estimation
 do_step.est <- F
 Obj_step.est <- NULL
+Params_step.est <- NULL
+Map_step.est <- NULL
 step.est <- F
+initialize_params <- T
+
+## Restart after crash
+restart_after_crash = F
+if(restart_after_crash == T){
+  
+  simu_file <- "results/severa_rect-2022-01-12_13_03_00_SimuUnsampledRect/"
+  load(file=paste0(simu_file,"Results.RData"))
+  counter <- max(Results$counter,na.rm=T) + 1
+  i0 <- max(Results$sim,na.rm=T) + 1
+  
+}
 
 ##------------------------------------------------------------------------
 ##-------------------------- Simulation loop -----------------------------
@@ -301,6 +323,24 @@ for(i in i0:100){
         Params_step.est <- fit_IM_res$Params_step.est
         Map_step.est <- fit_IM_res$Map_step.est
         aggreg_obs <- F
+        
+      }
+      
+      if(initialize_params){
+        
+        Params_step.est = list("beta_j"=c(intercept,beta1), 
+                               "beta_k"=0, # intercept of fishing intensity
+                               "par_b"=0, # link between abundance and sampling intensity
+                               "logSigma_com"=log(SD_obs),
+                               "logSigma_sci"=logSigma_sci,
+                               "q1_sci"=0,
+                               "q1_com"=q1,
+                               "k_com" = 1,
+                               "k_sci" = 1,
+                               "deltainput_x"=rep(0,mesh$n),
+                               "logtau"=c(0),
+                               "logkappa"=c(log(sqrt(8)/range_delta)))
+        
         
       }
       
