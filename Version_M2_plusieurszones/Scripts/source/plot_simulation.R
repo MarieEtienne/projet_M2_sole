@@ -2,94 +2,6 @@
 ## Simulation plots
 ###################
 
-## N zone simulations
-#--------------------
-load(paste0(results_file,"results/n_zone/Results_n_zone.RData"))
-Results_plot <- Results_2 %>%
-  filter(converge == 0) %>%
-  # filter(simu_type == "Unsampled Rectangles") %>%  # and the one that will be plotted
-  filter(Model %in% c("Integrated model","Scientific model"))
-
-# And those that will be plotted
-Results_plot$obs <- NA
-Results_plot$obs[which(Results_plot$aggreg_obs == T)] <- "COS model"
-Results_plot$obs[which(Results_plot$aggreg_obs == F)] <- "GeoCatch model"
-Results_plot$obs[which(Results_plot$Estimation_model == 2)] <- "Scientific model"
-Results_plot$obs <- factor(Results_plot$obs,levels = c("GeoCatch model","COS model","Scientific model"))
-
-# MSPE
-mspe_plot <- ggplot()+
-  geom_boxplot(data = Results_plot,
-               aes(x = obs,
-                   y = mspe,
-                   fill = as.factor(n_zone)))+
-  theme_bw()+
-  theme(legend.title = element_blank(),
-        aspect.ratio = 1,
-        axis.text.x = element_blank(),
-        axis.ticks.x = element_blank())+
-  xlab("")+ylab("MSPE")+
-  ylim(0,NA)
-
-
-# Covariate effect
-beta_plot <- ggplot()+
-  geom_boxplot(data = Results_plot,
-               aes(x = obs,
-                   y = beta1_est,
-                   fill = as.factor(n_zone)))+
-  theme_bw()+
-  theme(legend.title = element_blank(),
-        aspect.ratio = 1)+
-  xlab("")+ylab("MSPE")+
-  ylim(0,NA)
-
-
-## zero inflation simulations
-#----------------------------
-load(paste0(results_file,"results/n_zone/Results_n_zone.RData"))
-Results_plot <- Results_2 %>%
-  # filter(converge == 0) %>%
-  # filter(simu_type == "Unsampled Rectangles") %>%  # and the one that will be plotted
-  filter(Model %in% c("Integrated model","Scientific model"))
-
-# And those that will be plotted
-Results_plot$obs <- NA
-Results_plot$obs[which(Results_plot$aggreg_obs == T)] <- "COS model"
-Results_plot$obs[which(Results_plot$aggreg_obs == F)] <- "GeoCatch model"
-Results_plot$obs[which(Results_plot$Estimation_model == 2)] <- "Scientific model"
-Results_plot$obs <- factor(Results_plot$obs,levels = c("GeoCatch model","COS model","Scientific model"))
-
-# MSPE
-mspe_plot <- ggplot()+
-  geom_boxplot(data = Results_plot,
-               aes(x = obs,
-                   y = mspe,
-                   fill = as.factor(q1)))+
-  theme_bw()+
-  theme(legend.title = element_blank(),
-        aspect.ratio = 1)+
-  xlab("")+ylab("MSPE")+
-  ylim(0,NA)
-
-
-# Covariate effect
-beta_plot <- ggplot()+
-  geom_boxplot(data = Results_plot,
-               aes(x = obs,
-                   y = beta1_est,
-                   fill = as.factor(q1)))+
-  theme_bw()+
-  theme(legend.title = element_blank(),
-        aspect.ratio = 1)+
-  xlab("")+ylab("MSPE")+
-  ylim(0,NA)
-
-
-
-#-------------------------------------------------------------------------------------------------------------------------
-
-
 ## Simulation boxplots for comparison of models
 #----------------------------------------------
 
@@ -103,10 +15,13 @@ Results_plot <- Results_2 %>%
 
 # And those that will be plotted
 Results_plot$obs <- NA
-Results_plot$obs[which(Results_plot$aggreg_obs == T)] <- "COS model"
-Results_plot$obs[which(Results_plot$aggreg_obs == F)] <- "GeoCatch model"
+Results_plot$obs[which(Results_plot$aggreg_obs == T)] <- "Joint approach"
+Results_plot$obs[which(Results_plot$aggreg_obs == F)] <- "Two-step approach"
 Results_plot$obs[which(Results_plot$Estimation_model == 2)] <- "Scientific model"
-Results_plot$obs <- factor(Results_plot$obs,levels = c("GeoCatch model","COS model","Scientific model"))
+Results_plot$obs <- factor(Results_plot$obs,levels = c("Two-step approach","Joint approach", "Scientific model"))
+
+Results_sci_plot <- Results_plot %>% 
+  filter(obs == "Scientific model")
 
 # MSPE
 mspe_plot <- ggplot()+
@@ -136,7 +51,7 @@ beta_plot <- ggplot()+
         axis.ticks.x = element_blank(),
         legend.position = "none")+
   geom_hline(yintercept = 2,color="red",linetype="dashed")+
-  xlab("")+ylab(TeX("$\\beta \\, _{S}$"))
+  xlab("")+ylab(TeX("$\\beta$"))
 
 # Range values
 range_plot <- ggplot()+
@@ -167,7 +82,7 @@ variance_plot <- ggplot()+
         legend.position = "none")+
   geom_hline(yintercept = 1,color="red",linetype="dashed")+
   xlab("")+
-  scale_fill_manual(breaks = c("Yri","Dj","Scientific model"), 
+  scale_fill_manual(breaks = c("Two-step approach","Joint approach","Scientific model"), 
                     values=c("#F8766D", "#00BA38", "#619CFF"))+
   ylim(0,NA)
 
@@ -185,14 +100,14 @@ q1_plot <- ggplot()+
         legend.position = "none")+
   geom_hline(yintercept = -1,color="red",linetype="dashed")+
   xlab("")+
-  scale_fill_manual(breaks = c("Yri","Dj","Scientific model"), 
+  scale_fill_manual(breaks = c("Two-step approach","Joint approach","Scientific model"), 
                     values=c("#F8766D", "#00BA38", "#619CFF"))
 
 legend <- ggpubr::as_ggplot(ggpubr::get_legend(mspe_plot,position="right"))
 
-boxplot_1 <- plot_grid(mspe_plot,beta_plot,legend,align = "hv",ncol = 3)
+boxplot_1 <- plot_grid(mspe_plot,NULL,beta_plot,legend,align = "hv",nrow = 1,rel_widths = c(0.3,0.1,0.3,0.3))
 
-ggsave("../../paper_reallocation/images/boxplot_1.png",height = 4,width = 8)
+ggsave("../../paper_reallocation/images/boxplot_1.png",height = 4*1.25,width = 8*1.25)
 
 # boxplot_1_add <- plot_grid(mspe_plot,beta_plot,legend,
 #                        range_plot,variance_plot,q1_plot,align = "hv",ncol = 3)
@@ -217,9 +132,7 @@ load("draft/paper_3/res/int_Dj_df.RData")
 max_val <- max(simu_df$S_x/sum(simu_df$S_x),
                sci_df$S_x/sum(sci_df$S_x),
                int_Yi_df$S_x/sum(int_Yi_df$S_x),
-               com_Yi_df$S_x/sum(com_Yi_df$S_x),
-               int_Dj_df$S_x/sum(int_Dj_df$S_x),
-               com_Dj_df$S_x/sum(com_Dj_df$S_x))
+               int_Dj_df$S_x/sum(int_Dj_df$S_x))
 
 simu_plot <- ggplot(simu_df)+
   geom_point(aes(x=x,y=y,col=S_x/sum(S_x)),shape=15,size=2)+
@@ -248,7 +161,7 @@ sci_plot <- ggplot(sci_df)+
 int_Yi_plot <- ggplot(int_Yi_df)+
   geom_point(aes(x=x,y=y,col=S_x/sum(S_x)),shape=15,size=2)+
   scale_color_distiller(palette = "Spectral",limits=c(0,max_val+0.01*max_val))+
-  ggtitle("GeoCatch model")+ # integrated model
+  ggtitle("Two-step approach")+ # integrated model
   theme_bw()+
   theme(plot.title = element_text(hjust = 0.5,face = "bold"),
         plot.subtitle = element_text(hjust = 0.5),
@@ -260,7 +173,7 @@ int_Yi_plot <- ggplot(int_Yi_df)+
 int_Dj_plot <- ggplot(int_Dj_df)+
   geom_point(aes(x=x,y=y,col=S_x/sum(S_x)),shape=15,size=2)+
   scale_color_distiller(palette = "Spectral",limits=c(0,max_val+0.01*max_val))+
-  ggtitle("COS model")+ # ,subtitle = "integrated",
+  ggtitle("Joint approach")+ # ,subtitle = "integrated",
   theme_bw()+
   theme(plot.title = element_text(hjust = 0.5,face = "bold"),
         plot.subtitle = element_text(hjust = 0.5),
@@ -278,3 +191,207 @@ map_plot <- plot_grid(
   labels = c("A","B","C","D"))
 
 ggsave("../../paper_reallocation/images/Map_multi_square.png",width = 9, height = 9)
+
+
+## N zone simulations
+#--------------------
+load(paste0(results_file,"results/n_zone/Results_n_zone.RData"))
+Results_plot <- Results_2 %>%
+  filter(converge == 0) %>%
+  # filter(simu_type == "Unsampled Rectangles") %>%  # and the one that will be plotted
+  filter(Model %in% c("Integrated model","Scientific model"))
+
+# And those that will be plotted
+Results_plot$obs <- NA
+Results_plot$obs[which(Results_plot$aggreg_obs == T)] <- "Joint approach"
+Results_plot$obs[which(Results_plot$aggreg_obs == F)] <- "Two-step approach"
+Results_plot$obs[which(Results_plot$Estimation_model == 2)] <- "Scientific model"
+Results_plot$obs <- factor(Results_plot$obs,levels = c("Two-step approach","Joint approach","Scientific model"))
+
+Results_plot <- full_join(Results_plot,Results_sci_plot)
+Results_plot$n_zone[which(is.na(Results_plot$n_zone))] <- " "
+
+Results_plot$n_zone <- factor(Results_plot$n_zone,levels = c("1","3","5"," "))
+
+
+# MSPE
+mspe_nzone_plot <- ggplot()+
+  geom_boxplot(data = Results_plot,
+               aes(x = as.factor(n_zone),
+                   y = mspe,
+                   fill = obs))+
+  scale_fill_manual(breaks = c("Two-step approach","Joint approach","Scientific model"), 
+                    values=c("#F8766D", "#00BA38", "#619CFF"))+
+  theme_bw()+
+  theme(legend.title = element_blank(),
+        aspect.ratio = 1,
+        legend.position = "none",plot.title = element_text(hjust = 0.5,face = "bold"))+
+  xlab("")+ylab("MSPE")+
+  ylim(0,NA)+
+  ggtitle("Several zone scenarios",subtitle = " ")
+
+
+# Covariate effect
+beta_nzone_plot <- ggplot()+
+  geom_boxplot(data = Results_plot,
+               aes(x = as.factor(n_zone),
+                   y = beta1_est,
+                   fill = obs))+
+  scale_fill_manual(breaks = c("Two-step approach","Joint approach","Scientific model"), 
+                    values=c("#F8766D", "#00BA38", "#619CFF"))+
+  theme_bw()+
+  theme(legend.title = element_blank(),
+        aspect.ratio = 1,
+        legend.position = "none")+
+  xlab("")+ylab(TeX("\\beta"))+
+  ylim(0,NA)+
+  geom_hline(yintercept = 2,color="red",linetype="dashed")
+
+
+## zero inflation simulations
+#----------------------------
+load(paste0(results_file,"results/q1/Results_q1.RData"))
+Results_plot <- Results_2 %>%
+  filter(converge == 0) %>%
+  # filter(simu_type == "Unsampled Rectangles") %>%  # and the one that will be plotted
+  filter(Model %in% c("Integrated model","Scientific model"))
+
+# And those that will be plotted
+Results_plot$obs <- NA
+Results_plot$obs[which(Results_plot$aggreg_obs == T)] <- "Joint approach"
+Results_plot$obs[which(Results_plot$aggreg_obs == F)] <- "Two-step approach"
+Results_plot$obs[which(Results_plot$Estimation_model == 2)] <- "Scientific model"
+Results_plot$obs <- factor(Results_plot$obs,levels = c("Two-step approach","Joint approach","Scientific model"))
+
+
+# Add proportion of zero in data frame
+# probability of getting a zero: exp(-exp(xi)*exp(intercept))
+# xi=0 : nearly 0% of zero
+# xi=-1 : 7% of zero
+# xi=-2 : 37% of zero
+# xi=-3 : 70% of zero
+
+
+Results_plot$zero_prop <- NA
+Results_plot$zero_prop[which(Results_plot$q1 == 0)] <- "0 %"
+Results_plot$zero_prop[which(Results_plot$q1 == -1)] <- "7 %"
+Results_plot$zero_prop[which(Results_plot$q1 == -2)] <- "37 %"
+Results_plot$zero_prop[which(Results_plot$q1 == -3)] <- "70 %"
+
+Results_plot <- full_join(Results_plot,Results_sci_plot)
+Results_plot$zero_prop[which(is.na(Results_plot$zero_prop))] <- " "
+
+Results_plot$zero_prop <- factor(Results_plot$zero_prop,levels = c("0 %","7 %","37 %","70 %"," "))
+
+# MSPE
+mspe_0s_plot <- ggplot()+
+  geom_boxplot(data = Results_plot,
+               aes(x = zero_prop,
+                   y = mspe,
+                   fill = obs))+
+  scale_fill_manual(breaks = c("Two-step approach","Joint approach","Scientific model"), 
+                    values=c("#F8766D", "#00BA38", "#619CFF"))+
+  theme_bw()+
+  theme(legend.title = element_blank(),
+        aspect.ratio = 1,
+        legend.position = "none",
+        plot.title = element_text(hjust = 0.5,face = "bold"))+
+  xlab("")+ylab("MSPE")+
+  ylim(0,NA)+
+  ggtitle("Zero-inflation scenarios",subtitle = " ")
+
+
+# Covariate effect
+beta_0s_plot <- ggplot()+
+  geom_boxplot(data = Results_plot,
+               aes(x = zero_prop,
+                   y = beta1_est,
+                   fill = obs))+
+  scale_fill_manual(breaks = c("Two-step approach","Joint approach","Scientific model"), 
+                    values=c("#F8766D", "#00BA38", "#619CFF"))+
+  theme_bw()+
+  theme(legend.title = element_blank(),
+        aspect.ratio = 1,
+        legend.position = "none")+
+  xlab("")+ylab(TeX("\\beta"))+
+  ylim(0,NA)+
+  geom_hline(yintercept = 2,color="red",linetype="dashed")
+
+# Proportion of zeros
+prop0_plot <- ggplot()+
+  geom_boxplot(data = Results_2,
+               aes(x = as.factor(q1),
+                   y = prop_zero,
+                   fill = obs))+
+  scale_fill_manual(breaks = c("Two-step approach","Joint approach","Scientific model"), 
+                    values=c("#F8766D", "#00BA38", "#619CFF"))+
+  theme_bw()+
+  theme(legend.title = element_blank(),
+        aspect.ratio = 1)+
+  xlab("")+ylab("MSPE")+
+  ylim(0,NA)
+
+add_scenratios_plot <- cowplot::plot_grid(mspe_nzone_plot,mspe_0s_plot,
+                                          beta_nzone_plot,beta_0s_plot,ncol=2,align = "hv")
+
+legend <- ggpubr::as_ggplot(ggpubr::get_legend(mspe_nzone_plot+
+                                                 theme(legend.position = "right",
+                                                       legend.text = element_text(size = 12)),position="right"))
+
+add_scenratios_plot <- cowplot::plot_grid(add_scenratios_plot,legend,ncol=1,rel_heights = c(0.9,0.1))
+
+ggsave("../../paper_reallocation/images/boxplot_2.png",height = 8,width = 8)
+
+## Table of copnvergence
+Results_conv <- Results_2
+Results_conv$one <- 1
+
+# add columns
+Results_conv$obs <- NA
+Results_conv$obs[which(Results_conv$aggreg_obs == T)] <- "Joint approach"
+Results_conv$obs[which(Results_conv$aggreg_obs == F)] <- "Two-step approach"
+Results_conv$obs[which(Results_conv$Estimation_model == 2)] <- "Scientific model"
+Results_conv$obs <- factor(Results_conv$obs,levels = c("Two-step approach","Joint approach","Scientific model"))
+
+Results_conv$zero_prop <- NA
+Results_conv$zero_prop[which(Results_conv$q1 == 0)] <- "0 %"
+Results_conv$zero_prop[which(Results_conv$q1 == -1)] <- "7 %"
+Results_conv$zero_prop[which(Results_conv$q1 == -2)] <- "37 %"
+Results_conv$zero_prop[which(Results_conv$q1 == -3)] <- "70 %"
+
+Results_conv$zero_prop <- factor(Results_conv$zero_prop,levels = c("0 %","7 %","37 %","70 %"))
+
+table_df <- doBy::summaryBy(converge+one~
+                  obs+
+                  zero_prop,
+                data=Results_conv,
+                FUN=sum) %>%
+  mutate(perc_convergence = round((1 - converge.sum / one.sum)*100,digits = 3)) %>%
+  dplyr::select(-converge.sum,-one.sum)
+
+table_df %>%
+  gt() %>%
+  tab_options(
+    summary_row.background.color = "#ACEACE80",
+    grand_summary_row.background.color = "#990000",
+    row_group.background.color = "#FFEFDB80",
+    heading.background.color = "#EFFBFC",
+    column_labels.background.color = "#EFFBFC",
+    stub.background.color = "#EFFBFC",
+    table.font.color = "#323232",
+    table_body.hlines.color = "#989898",
+    table_body.border.top.color = "#989898",
+    heading.border.bottom.color = "#989898",
+    row_group.border.top.color = "#989898",
+    row_group.border.bottom.style = "none",
+    stub.border.style = "dashed",
+    stub.border.color = "#989898",
+    stub.border.width = "1px",
+    summary_row.border.color = "#989898",
+    table.width = "80%",
+    column_labels.font.weight = "bold"
+  )
+
+knitr::kable(
+  table_df,"latex")
+

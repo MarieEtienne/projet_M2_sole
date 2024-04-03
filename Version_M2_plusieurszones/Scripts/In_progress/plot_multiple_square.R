@@ -45,6 +45,7 @@ for(folder_i in folder_c){
   Results$intercept_true <- NA
   Results$q1_true <- NA
   Results$q1_est <- NA
+  Results$prop_zero <- NA
   
   simu_type <- "nothing_special"
   if(str_detect(folder_i,"UnsampledRect")) simu_type <- "Unsampled Rectangles"
@@ -52,6 +53,10 @@ for(folder_i in folder_c){
   
   # Run over List_param
   for(counter in Results$counter){
+    
+    sum_y_i <- aggregate(x = List_param$data.info$y_i,
+                         by = list(unique.values = List_param$data.info$boats_i),
+                         FUN = sum)[,2]
     
     print(paste0("simu_type: ", simu_type," | counter: ",counter))
     load(paste0(folder_i,"/List_param_",counter,".RData"))
@@ -63,6 +68,7 @@ for(folder_i in folder_c){
     Results$mspe[which(Results$counter == counter)] <- sum((log(List_param$data.info$S_x) - log(List_param$Report$S_x))^2) / n_cells
     Results$N_est.2[which(Results$counter == counter)] <- sum(List_param$Report$S_x / exp(List_param$Report$beta_j[1]))
     Results$N_true.2[which(Results$counter == counter)] <- sum(List_param$data.info$S_x / exp(List_param$data.info$intercept))
+    Results$prop_zero[which(Results$counter == counter)] <- length(which(sum_y_i==0)) / length(sum_y_i)
     
     if(List_param$converge == 0) Results$MargeSD[which(Results$counter == counter)] <- 1 / sqrt(4*pi) / exp(List_param$SD$par.fixed["logtau"]) / exp(List_param$SD$par.fixed["logkappa"])
     # if(List_param$converge == 0) Results$SD_MargeSD[which(Results$counter == counter)] <- List_param$SD$sd[which(names(List_param$SD$value) %in% "MargSD")]

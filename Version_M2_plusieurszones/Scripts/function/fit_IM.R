@@ -215,7 +215,7 @@ fit_IM <- function(Estimation_model_i = 1,
   
   
   # no linkeage between sampling process and biomass field
-  if( EM=="fix_b" ) Map[["par_b"]] <- factor(rep(NA,length(Params$par_b)))
+  if( EM=="fix_b" ) Map[["par_b"]] <- factor(rep(NA,length(Paramsfit$par_b)))
   
   if( Samp_process == 0){
     Params[["par_b"]] <- NULL
@@ -407,13 +407,11 @@ fit_IM <- function(Estimation_model_i = 1,
   #-------------------------
   
   # SD  --> very long with catchability and I got NANs
-  if(Converge==0){
-    Report = Obj$report()
-    SD = sdreport(Obj,
-                  ignore.parm.uncertainty = ignore.uncertainty,
-                  bias.correct = F)
-
-  }else{SD = NULL}
+  Report = Obj$report()
+  SD = sdreport(Obj,
+                ignore.parm.uncertainty = ignore.uncertainty,
+                bias.correct = F)
+  
   Opt[["run_time"]] = Sys.time()-Start_time
   
   res <- list(SD = SD, Opt = Opt, Obj = Obj, Report = Report,  Converge = Converge,Data = Data, Params = Params, Map = Map)

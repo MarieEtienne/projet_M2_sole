@@ -345,7 +345,7 @@ simu_commercial_scientific <- function(Results,
   ############
   
   # Loop on alternative configuration models
-  for(Estimation_model in Data_source[3]){ # On ne regarde que le modèle commercial
+  for(Estimation_model in Data_source){ # On ne regarde que le modèle commercial
     
     Estimation_model_i <- which(Data_source == Estimation_model)
     cat(paste("counter ",counter," | Simulation ",i, " | b ",b ," | EM ",EM," | Estimation_model ",Estimation_model," | n_samp_com ",n_samp_com,"\n"))
@@ -355,6 +355,7 @@ simu_commercial_scientific <- function(Results,
     ############
     mesh <- inla.mesh.create( loc_x[,c('x','y')] )
     spde <- (inla.spde2.matern(mesh, alpha=2)$param.inla)[c("M0","M1","M2")]  # define sparse matrices for parametrisation of precision matrix
+    
     fit_IM_res <- fit_IM(Estimation_model_i,
                          Samp_process,
                          EM,
@@ -369,7 +370,7 @@ simu_commercial_scientific <- function(Results,
                          boats_number,
                          Cov_x =  as.matrix(Cov_x[,1]),
                          ref_level = NULL,
-                         lf_param = "cov", # lf_param,
+                         lf_param = lf_param, # lf_param,
                          spde=spde,
                          mesh=mesh,
                          n_cells=n_cells,
@@ -382,6 +383,47 @@ simu_commercial_scientific <- function(Results,
                          sampling = sampling,
                          landings = T,
                          quadratic_cov = F)
+    
+    if(Estimation_model %in% Data_source[1]) fit_im_int = fit_IM_res
+    
+    if(Estimation_model %in% Data_source[2]){
+      
+      ## Consistency check
+      #-------------------
+      ## Integrated model
+      obj_int <- fit_im_int$Obj
+      SD_int <- fit_im_int$SD
+      obj_int$fn()
+      pl_int <- as.list(SD_int,"Est")
+      
+      ## Scientific model
+      obj_sci <- fit_IM_res$Obj
+      SD_sci <- fit_IM_res$SD
+      obj_sci$fn()
+      pl_sci <- as.list(SD_sci,"Est")
+      par_sci <- SD_sci$par.fixed
+      f_sci <- as.numeric(obj_sci$fn(par_sci))
+      
+      ## Fixed
+      par_int <- SD_int$par.fixed
+      par_int <- par_int[which(names(par_int) %in% names(par_sci))]
+      f_int <- as.numeric(obj_sci$fn(par_int))
+      def_free <- sum(par_sci != 0)
+      fixed <- 1 - pchisq( 2 * (f_int-f_sci), df=def_free )
+
+      ## random
+      par_sci.all <- obj_sci$env$last.par.best
+      par_int.all <- obj_int$env$last.par.best
+      par_int.all <- par_int.all[which(names(par_int.all) %in% names(par_sci.all))]
+      f_sci.all <- obj_sci$env$f(par_sci.all) # Best evaluated parameters
+      f_int.all <- obj_sci$env$f(par_int.all)
+      def_free.all <- def_free + length(obj_sci$env$random)
+      random <- 1 - pchisq( 2 * (f_int.all-f_sci.all), df=def_free.all )
+      
+      Results[counter,"p-val-fixed"] <- fixed
+      Results[counter,"p-val-random"] <- random
+      
+    }
     
     
     SD <- fit_IM_res$SD
@@ -400,7 +442,7 @@ simu_commercial_scientific <- function(Results,
     #######################
     
     if(Converge == 0){
-      Results[counter,"N_est"]=SD$unbiased$value['total_abundance']
+      # Results[counter,"N_est"]=SD$unbiased$value['total_abundance']
       Results[counter,"SD_N"]=SD$sd[which(names(SD$value)=="total_abundance")]
     }
     
@@ -453,6 +495,8 @@ simu_commercial_scientific <- function(Results,
                                 n_nodes=n_nodes)
     
     
+    
+    
     # Full outputs list
     # List_param : données d’entrée + données de sortie
     # Les valeurs du champ latent pour chaque simulation sont disponibles dans 
@@ -485,40 +529,40 @@ simu_commercial_scientific <- function(Results,
       Results[counter,"b_est"]=Report$par_b
     }
     
-    if(Estimation_model == "scientific_commercial" | Estimation_model == "scientific_commercial_q_est"){
-      Results[counter,"b_true"]= b
-      Results[counter,"Sigma_com"]=Report$Sigma_com
-      Results[counter,"Sigma_sci"]=Report$Sigma_sci
-      Results[counter,"Bias_Sigma_com"]=Report$Sigma_com - exp(logSigma_com)
-      Results[counter,"Bias_Sigma_sci"]=Report$Sigma_sci - exp(logSigma_sci)
-      Results[counter,"Sigma_com_true"]=exp(logSigma_com)
-      Results[counter,"Sigma_sci_true"]=exp(logSigma_sci)
-      # Results[counter,"sci_sampling"]=sci_sampling
-      Results[counter,"n_samp_com"]=n_samp_com
-      Results[counter,"n_samp_sci"]=n_samp_sci
-      
-      
-    }else if(Estimation_model == "scientific_only"){
-      Results[counter,"Sigma_sci"]=Report$Sigma_sci
-      Results[counter,"Bias_Sigma_sci"]=Report$Sigma_sci - exp(logSigma_sci)
-      Results[counter,"Sigma_sci_true"]=exp(logSigma_sci)
-      # Results[counter,"sci_sampling"]=sci_sampling
-      Results[counter,"n_samp_sci"]=n_samp_sci
-      
-      
-    }else if(Estimation_model == "commercial_only"){
-      Results[counter,"b_true"]= b
-      # Results[counter,"Sigma_com"]=Report$Sigma_com
-      # Results[counter,"Bias_Sigma_com"]=Report$Sigma_com - exp(logSigma_com)
-      # Results[counter,"Sigma_com_true"]=exp(logSigma_com)
-      Results[counter,"n_samp_com"]=n_samp_com
-      
-    }
-    
-    if (Estimation_model == "scientific_commercial_q_est"){
-      Results[counter,"k"]=Report$k
-      
-    }
+    # if(Estimation_model == "scientific_commercial" | Estimation_model == "scientific_commercial_q_est"){
+    #   Results[counter,"b_true"]= b
+    #   Results[counter,"Sigma_com"]=Report$Sigma_com
+    #   Results[counter,"Sigma_sci"]=Report$Sigma_sci
+    #   Results[counter,"Bias_Sigma_com"]=Report$Sigma_com - exp(logSigma_com)
+    #   Results[counter,"Bias_Sigma_sci"]=Report$Sigma_sci - exp(logSigma_sci)
+    #   Results[counter,"Sigma_com_true"]=exp(logSigma_com)
+    #   Results[counter,"Sigma_sci_true"]=exp(logSigma_sci)
+    #   # Results[counter,"sci_sampling"]=sci_sampling
+    #   Results[counter,"n_samp_com"]=n_samp_com
+    #   Results[counter,"n_samp_sci"]=n_samp_sci
+    #   
+    #   
+    # }else if(Estimation_model == "scientific_only"){
+    #   Results[counter,"Sigma_sci"]=Report$Sigma_sci
+    #   Results[counter,"Bias_Sigma_sci"]=Report$Sigma_sci - exp(logSigma_sci)
+    #   Results[counter,"Sigma_sci_true"]=exp(logSigma_sci)
+    #   # Results[counter,"sci_sampling"]=sci_sampling
+    #   Results[counter,"n_samp_sci"]=n_samp_sci
+    #   
+    #   
+    # }else if(Estimation_model == "commercial_only"){
+    #   Results[counter,"b_true"]= b
+    #   # Results[counter,"Sigma_com"]=Report$Sigma_com
+    #   # Results[counter,"Bias_Sigma_com"]=Report$Sigma_com - exp(logSigma_com)
+    #   # Results[counter,"Sigma_com_true"]=exp(logSigma_com)
+    #   Results[counter,"n_samp_com"]=n_samp_com
+    #   
+    # }
+    # 
+    # if (Estimation_model == "scientific_commercial_q_est"){
+    #   Results[counter,"k"]=Report$k
+    #   
+    # }
     
     Results[counter, "x"] = x
     Results[counter, "reallocation"] = k

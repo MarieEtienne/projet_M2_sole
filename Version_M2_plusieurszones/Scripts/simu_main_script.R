@@ -28,7 +28,7 @@ x_parallel1 <- clusterEvalQ(cl,{
   library(stringr)
   library(spatstat)
   library(raster)
-
+  library(ggplot2)
   # folder name for codes and data
   # r_folder <- "/home1/datahome/balglave/projet_M2_sole/Version_M2_plusieurszones"
   # data.res_folder <- "/home1/datawork/balglave/reallocation"
@@ -37,8 +37,8 @@ x_parallel1 <- clusterEvalQ(cl,{
   
   if(run_datarmor) setwd(data.res_folder)
   
-  load("results/exploratory_analysis/reallocation/nb_sequence_vs_nb_pings.RData")
-  load("results/exploratory_analysis/reallocation/simulation_scenarios.RData")
+  # load("results/exploratory_analysis/reallocation/nb_sequence_vs_nb_pings.RData")
+  # load("results/exploratory_analysis/reallocation/simulation_scenarios.RData")
   
   # file name for savinf outputs
   Start_time.tot = round(Sys.time(), units = "mins")
@@ -245,7 +245,7 @@ x_parallel1 <- clusterEvalQ(cl,{
   
   ## Results dataframe
   n_cov = 5
-  colnames_Results <- c("counter","sim","b_true","Data_source","type_b","Alpha","b_est","ObsMod","Sigma_com_true","Sigma_sci_true","Sigma_com","Sigma_sci","n_samp_com","n_samp_sci","N_true","N_est","SD_N","Convergence","LogLik","MSPE_S","k", "x","reallocation","aggreg_obs")
+  colnames_Results <- c("counter","sim","b_true","Data_source","type_b","Alpha","b_est","ObsMod","Sigma_com_true","Sigma_sci_true","Sigma_com","Sigma_sci","n_samp_com","n_samp_sci","N_true","N_est","SD_N","Convergence","LogLik","MSPE_S","k", "x","reallocation","aggreg_obs","p-val-fixed","p-val-random")
   
   Results = data.frame(matrix(NA,1,length(colnames_Results)))
   colnames(Results)=colnames_Results
@@ -388,191 +388,3 @@ dyn.unload( dynlib(paste0(TmbFile,"inst/executables/com_x_sci_data_14_scientific
 
 # Close cluster
 stopCluster(cl)
-
-
-# #-------------------------------------------------------------
-# #------------------------ Plot results -----------------------
-# #-------------------------------------------------------------
-# 
-# # D'abord on définit comment accéder aux résultats de la simulation qui nous intéresse
-# path_base = "~/ACO/3A/Projet_ingenieur/Projet_soles/GitHub_Baptiste/projet_M2_sole/Version_M2_plusieurszones/results/"
-# simu_file = "com_x_sci_data_14_scientific_commercial_simple-2021-01-26_12_22_12_SimuComplete/"
-# 
-# 
-# # On va commencer par générer les différentes map
-# # Ces maps seront stockées dans le dossier results_map
-# 
-# # 1er niveau de boucle : on repete chaque simulation n_sim fois pour avoir de la variabilité
-# for(i in i0:10){
-#   # 2ème niveau de boucle : on teste chaque valeur de b
-#   # On mute ce niveau de boucle car finalement on va varier les b à l'intérieur de la fonction generation_map
-#   # for (b in b_set){
-#     # 3ème niveau de boucle : on teste avec réallocation et sans réallocation
-#     # On mute ce niveau de boucle car finalement on va varier les k à l'intérieur de la fonction generation_map
-#     # for (k in reallocation){
-#       # 4ème niveau de boucle : on teste tous les couples P*Z
-#       for (x in 1:length(PZ)){
-#         generation_map(path_base, simu_file, i, b_set, reallocation, x)
-#       }
-#     # }
-#   # }
-# }
-# 
-# 
-# # Maintenant, on va créer les différents graphes représentant les métriques de performance
-# # 1er niveau de boucle : on va générer 3 graphes par couple PZ, donc par x
-# # 1er graphe : biais de l'abondance
-# # 2ème graphe : biais de b
-# # 3ème graphe : MSPE
-# for (couplePZ in 1:(length(PZ)-1)){ # On fait tous les cas sauf le dernier, qui est la situation de reference
-#   generation_metriques(path_base, simu_file, couplePZ, b_set)
-# }
-# 
-# 
-# 
-# # On genere 3 listes :
-# # 1. Liste des biais de b :
-# # Elle contient 6 tableaux : b = 0, 1, 3 et k = 0, 1
-# # Chaque tableau contient le biais median de b pour les 9 situations ZP
-# # 2. Liste des biais de N :
-# # Idem
-# # 3. Liste des MSPE :
-# # Idem
-# 
-# 
-# ## On crée les listes
-# 
-# # On crée la liste des biais de b
-# 
-# biaisb_b0_k0 = matrix(ncol = 3, nrow = 3)
-# biaisb_b0_k0 = as.data.frame(biaisb_b0_k0)
-# colnames(biaisb_b0_k0) = sequencesdepeche_vect[-4] # Les colonnes correspondent aux differentes valeurs de P
-# rownames(biaisb_b0_k0) = zonespersequence_vect[-4] # Les colonnes correspondent aux differentes valeurs de Z
-# 
-# biaisb_b1_k0 = matrix(ncol = 3, nrow = 3)
-# biaisb_b1_k0 = as.data.frame(biaisb_b1_k0)
-# colnames(biaisb_b1_k0) = sequencesdepeche_vect[-4]
-# rownames(biaisb_b1_k0) = zonespersequence_vect[-4]
-# 
-# biaisb_b3_k0 = matrix(ncol = 3, nrow = 3)
-# biaisb_b3_k0 = as.data.frame(biaisb_b3_k0)
-# colnames(biaisb_b3_k0) = sequencesdepeche_vect[-4]
-# rownames(biaisb_b3_k0) = zonespersequence_vect[-4]
-# 
-# biaisb_b0_k1 = matrix(ncol = 3, nrow = 3)
-# biaisb_b0_k1 = as.data.frame(biaisb_b0_k1)
-# colnames(biaisb_b0_k1) = sequencesdepeche_vect[-4]
-# rownames(biaisb_b0_k1) = zonespersequence_vect[-4]
-# 
-# biaisb_b1_k1 = matrix(ncol = 3, nrow = 3)
-# biaisb_b1_k1 = as.data.frame(biaisb_b1_k1)
-# colnames(biaisb_b1_k1) = sequencesdepeche_vect[-4]
-# rownames(biaisb_b1_k1) = zonespersequence_vect[-4]
-# 
-# biaisb_b3_k1 = matrix(ncol = 3, nrow = 3)
-# biaisb_b3_k1 = as.data.frame(biaisb_b3_k1)
-# colnames(biaisb_b3_k1) = sequencesdepeche_vect[-4]
-# rownames(biaisb_b3_k1) = zonespersequence_vect[-4]
-# 
-# biaisb = list(biaisb_b0_k0, biaisb_b1_k0, biaisb_b3_k0,
-#               biaisb_b0_k1, biaisb_b1_k1, biaisb_b3_k1)
-# 
-# # On crée la liste des biais de N
-# 
-# biaisN_b0_k0 = matrix(ncol = 3, nrow = 3)
-# biaisN_b0_k0 = as.data.frame(biaisN_b0_k0)
-# colnames(biaisN_b0_k0) = sequencesdepeche_vect[-4] # Les colonnes correspondent aux differentes valeurs de P
-# rownames(biaisN_b0_k0) = zonespersequence_vect[-4] # Les colonnes correspondent aux differentes valeurs de Z
-# 
-# biaisN_b1_k0 = matrix(ncol = 3, nrow = 3)
-# biaisN_b1_k0 = as.data.frame(biaisN_b1_k0)
-# colnames(biaisN_b1_k0) = sequencesdepeche_vect[-4]
-# rownames(biaisN_b1_k0) = zonespersequence_vect[-4]
-# 
-# biaisN_b3_k0 = matrix(ncol = 3, nrow = 3)
-# biaisN_b3_k0 = as.data.frame(biaisN_b3_k0)
-# colnames(biaisN_b3_k0) = sequencesdepeche_vect[-4]
-# rownames(biaisN_b3_k0) = zonespersequence_vect[-4]
-# 
-# biaisN_b0_k1 = matrix(ncol = 3, nrow = 3)
-# biaisN_b0_k1 = as.data.frame(biaisN_b0_k1)
-# colnames(biaisN_b0_k1) = sequencesdepeche_vect[-4]
-# rownames(biaisN_b0_k1) = zonespersequence_vect[-4]
-# 
-# biaisN_b1_k1 = matrix(ncol = 3, nrow = 3)
-# biaisN_b1_k1 = as.data.frame(biaisN_b1_k1)
-# colnames(biaisN_b1_k1) = sequencesdepeche_vect[-4]
-# rownames(biaisN_b1_k1) = zonespersequence_vect[-4]
-# 
-# biaisN_b3_k1 = matrix(ncol = 3, nrow = 3)
-# biaisN_b3_k1 = as.data.frame(biaisN_b3_k1)
-# colnames(biaisN_b3_k1) = sequencesdepeche_vect[-4]
-# rownames(biaisN_b3_k1) = zonespersequence_vect[-4]
-# 
-# biaisN = list(biaisN_b0_k0, biaisN_b1_k0, biaisN_b3_k0,
-#               biaisN_b0_k1, biaisN_b1_k1, biaisN_b3_k1)
-# 
-# # On crée la liste des MSPE
-# 
-# MSPE_b0_k0 = matrix(ncol = 3, nrow = 3)
-# MSPE_b0_k0 = as.data.frame(MSPE_b0_k0)
-# colnames(MSPE_b0_k0) = sequencesdepeche_vect[-4] # Les colonnes correspondent aux differentes valeurs de P
-# rownames(MSPE_b0_k0) = zonespersequence_vect[-4] # Les colonnes correspondent aux differentes valeurs de Z
-# 
-# MSPE_b1_k0 = matrix(ncol = 3, nrow = 3)
-# MSPE_b1_k0 = as.data.frame(MSPE_b1_k0)
-# colnames(MSPE_b1_k0) = sequencesdepeche_vect[-4]
-# rownames(MSPE_b1_k0) = zonespersequence_vect[-4]
-# 
-# MSPE_b3_k0 = matrix(ncol = 3, nrow = 3)
-# MSPE_b3_k0 = as.data.frame(MSPE_b3_k0)
-# colnames(MSPE_b3_k0) = sequencesdepeche_vect[-4]
-# rownames(MSPE_b3_k0) = zonespersequence_vect[-4]
-# 
-# MSPE_b0_k1 = matrix(ncol = 3, nrow = 3)
-# MSPE_b0_k1 = as.data.frame(MSPE_b0_k1)
-# colnames(MSPE_b0_k1) = sequencesdepeche_vect[-4]
-# rownames(MSPE_b0_k1) = zonespersequence_vect[-4]
-# 
-# MSPE_b1_k1 = matrix(ncol = 3, nrow = 3)
-# MSPE_b1_k1 = as.data.frame(MSPE_b1_k1)
-# colnames(MSPE_b1_k1) = sequencesdepeche_vect[-4]
-# rownames(MSPE_b1_k1) = zonespersequence_vect[-4]
-# 
-# MSPE_b3_k1 = matrix(ncol = 3, nrow = 3)
-# MSPE_b3_k1 = as.data.frame(MSPE_b3_k1)
-# colnames(MSPE_b3_k1) = sequencesdepeche_vect[-4]
-# rownames(MSPE_b3_k1) = zonespersequence_vect[-4]
-# 
-# MSPE = list(MSPE_b0_k0, MSPE_b1_k0, MSPE_b3_k0,
-#             MSPE_b0_k1, MSPE_b1_k1, MSPE_b3_k1)
-# 
-# 
-# ## On remplit les différents tableaux
-# 
-# for (table in (1:6)){
-#   if (table == 1){
-#     b = b_set[1]
-#     k = reallocation[1]
-#   } else if (table == 2){
-#     b = b_set[2]
-#     k = reallocation[1]
-#   } else if (table == 3) {
-#     b = b_set[3]
-#     k = reallocation[1]
-#   } else if (table == 4){
-#     b = b_set[1]
-#     k = reallocation[2]
-#   } else if (table == 5){
-#     b = b_set[2]
-#     k = reallocation[2]
-#   } else {
-#     b = b_set[3]
-#     k = reallocation[2]
-#   }
-#   
-#   res = indicateurs(path_base, simu_file, table, b, k, biaisb, biaisN, MSPE)
-#   biaisb = res[[1]]
-#   biaisN = res[[2]]
-#   MSPE = res[[3]]
-# }

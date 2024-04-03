@@ -359,6 +359,7 @@ for(i in i0:100){
                            boats_number = boats_i,
                            Cov_x = as.matrix(cov_x_2), # NULL, # 
                            ref_level = ref_level,
+                           landings = T,
                            lf_param = "RE",
                            spde=spde,
                            mesh=mesh,
@@ -370,7 +371,6 @@ for(i in i0:100){
                            y_ObsM_i=y_ObsM_i,
                            index_ObsM_i=index_ObsM_i,
                            sampling = sampling,
-                           landings = T,
                            quadratic_cov = quadratic_cov)
       
       Report <- fit_IM_res$Report
