@@ -17,11 +17,11 @@ Results_plot <- Results_2 %>%
 Results_plot$obs <- NA
 Results_plot$obs[which(Results_plot$aggreg_obs == T)] <- "Joint approach"
 Results_plot$obs[which(Results_plot$aggreg_obs == F)] <- "Two-step approach"
-Results_plot$obs[which(Results_plot$Estimation_model == 2)] <- "Scientific model"
-Results_plot$obs <- factor(Results_plot$obs,levels = c("Two-step approach","Joint approach", "Scientific model"))
+Results_plot$obs[which(Results_plot$Estimation_model == 2)] <- "Point-level model"
+Results_plot$obs <- factor(Results_plot$obs,levels = c("Two-step approach","Joint approach", "Point-level model"))
 
 Results_sci_plot <- Results_plot %>% 
-  filter(obs == "Scientific model")
+  filter(obs == "Point-level model")
 
 # MSPE
 mspe_plot <- ggplot()+
@@ -82,7 +82,7 @@ variance_plot <- ggplot()+
         legend.position = "none")+
   geom_hline(yintercept = 1,color="red",linetype="dashed")+
   xlab("")+
-  scale_fill_manual(breaks = c("Two-step approach","Joint approach","Scientific model"), 
+  scale_fill_manual(breaks = c("Two-step approach","Joint approach","Point-level model"), 
                     values=c("#F8766D", "#00BA38", "#619CFF"))+
   ylim(0,NA)
 
@@ -100,7 +100,7 @@ q1_plot <- ggplot()+
         legend.position = "none")+
   geom_hline(yintercept = -1,color="red",linetype="dashed")+
   xlab("")+
-  scale_fill_manual(breaks = c("Two-step approach","Joint approach","Scientific model"), 
+  scale_fill_manual(breaks = c("Two-step approach","Joint approach","Point-level model"), 
                     values=c("#F8766D", "#00BA38", "#619CFF"))
 
 legend <- ggpubr::as_ggplot(ggpubr::get_legend(mspe_plot,position="right"))
@@ -124,15 +124,68 @@ loc_x<-list_input$loc_x
 S_x<-list_input$S_x
 simu_df <- data.frame(loc_x,S_x=S_x)
 
+# rectangles
+ICES_rect <- st_read("/media/balglave/Elements/backup_phd/phd_zfh_baptiste_alglave/data/raw/shapefile/ices_rect_stats/ICES_Statistical_Rectangles_Eco.shp")
+st_crs(ICES_rect) <- grid_projection
+ICES_rect_2 <- ICES_rect %>%
+  filter(Ecoregion == "Bay of Biscay and the Iberian Coast")
+
 ## Model outputs
 load("draft/paper_3/res/sci_df.RData")
 load("draft/paper_3/res/int_Yi_df.RData")
 load("draft/paper_3/res/int_Dj_df.RData")
+load("draft/paper_3/res/com_Yi_df.RData")
+load("draft/paper_3/res/list_input.RData")
+
+loc_x<-list_input$loc_x
+S_x<-list_input$S_x
+c_com_x<-list_input$c_com_x
+y_i2<-list_input$y_i2
+index_i<-list_input$index_i
+y_sci_i<-list_input$y_sci_i
+index_sci_i<-list_input$index_sci_i
+boats_i<-list_input$boats_i
+cov_x_2<-list_input$cov_x_2
+ref_level<-list_input$ref_level
+spde<-list_input$spde
+mesh<-list_input$mesh
+n_cells<-list_input$n_cells
+sampling<-list_input$sampling
+
+## Simulated data
+sci.data_df <- data.frame(cell = index_sci_i,
+                          y_sci = y_sci_i) %>%
+  inner_join(loc_x[,c("x","y","cell","ICESNAME")])
+
+com.data_df <- data.frame(cell = index_i,
+                          y_com = y_i2) %>%
+  inner_join(loc_x[,c("x","y","cell","ICESNAME")]) %>%
+  group_by(x,y,cell,ICESNAME) %>%
+  dplyr::summarise(n=n())
 
 max_val <- max(simu_df$S_x/sum(simu_df$S_x),
                sci_df$S_x/sum(sci_df$S_x),
                int_Yi_df$S_x/sum(int_Yi_df$S_x),
                int_Dj_df$S_x/sum(int_Dj_df$S_x))
+
+data_plot <- ggplot()+
+  geom_point(data=simu_df,aes(x=x,y=y,col=S_x),shape=15,size=2,alpha=0.25)+
+  geom_point(data=simu_df[which(simu_df$ICESNAME %in% com.data_df$ICESNAME),],
+             aes(x=x,y=y,col=S_x),shape=15,size=2)+
+  scale_color_distiller(palette = "Spectral",limits=c(0,NA))+ # , limits=c(0,max_val+0.01*max_val))+
+  geom_point(data=sci.data_df,aes(x=x,y=y),col="red",size=1)+
+  theme_bw()+
+  theme(plot.title = element_text(hjust = 0.5),
+        plot.subtitle = element_text(hjust = 0.5),
+        legend.title = element_blank()
+  )+
+  geom_sf(data=ICES_rect_2,alpha=0)+
+  geom_sf(data = mapBase)+
+  coord_sf(xlim = c(-6,0), ylim = c(43,48), expand = FALSE)+
+  xlab("")+ylab("")
+
+ggsave("../../paper_reallocation/images/data_plot.png",width = 6, height = 6)
+
 
 simu_plot <- ggplot(simu_df)+
   geom_point(aes(x=x,y=y,col=S_x/sum(S_x)),shape=15,size=2)+
@@ -149,7 +202,7 @@ simu_plot <- ggplot(simu_df)+
 sci_plot <- ggplot(sci_df)+
   geom_point(aes(x=x,y=y,col=S_x/sum(S_x)),shape=15,size=2)+
   scale_color_distiller(palette = "Spectral",limits=c(0,max_val+0.01*max_val))+
-  ggtitle("Scientific model")+
+  ggtitle("Point-level model")+
   theme_bw()+
   theme(plot.title = element_text(hjust = 0.5,face = "bold"),
         plot.subtitle = element_text(hjust = 0.5),
@@ -199,14 +252,14 @@ load(paste0(results_file,"results/n_zone/Results_n_zone.RData"))
 Results_plot <- Results_2 %>%
   filter(converge == 0) %>%
   # filter(simu_type == "Unsampled Rectangles") %>%  # and the one that will be plotted
-  filter(Model %in% c("Integrated model","Scientific model"))
+  filter(Model %in% c("Integrated model","Point-level model"))
 
 # And those that will be plotted
 Results_plot$obs <- NA
 Results_plot$obs[which(Results_plot$aggreg_obs == T)] <- "Joint approach"
 Results_plot$obs[which(Results_plot$aggreg_obs == F)] <- "Two-step approach"
-Results_plot$obs[which(Results_plot$Estimation_model == 2)] <- "Scientific model"
-Results_plot$obs <- factor(Results_plot$obs,levels = c("Two-step approach","Joint approach","Scientific model"))
+Results_plot$obs[which(Results_plot$Estimation_model == 2)] <- "Point-level model"
+Results_plot$obs <- factor(Results_plot$obs,levels = c("Two-step approach","Joint approach","Point-level model"))
 
 Results_plot <- full_join(Results_plot,Results_sci_plot)
 Results_plot$n_zone[which(is.na(Results_plot$n_zone))] <- " "
@@ -220,7 +273,7 @@ mspe_nzone_plot <- ggplot()+
                aes(x = as.factor(n_zone),
                    y = mspe,
                    fill = obs))+
-  scale_fill_manual(breaks = c("Two-step approach","Joint approach","Scientific model"), 
+  scale_fill_manual(breaks = c("Two-step approach","Joint approach","Point-level model"), 
                     values=c("#F8766D", "#00BA38", "#619CFF"))+
   theme_bw()+
   theme(legend.title = element_blank(),
@@ -237,7 +290,7 @@ beta_nzone_plot <- ggplot()+
                aes(x = as.factor(n_zone),
                    y = beta1_est,
                    fill = obs))+
-  scale_fill_manual(breaks = c("Two-step approach","Joint approach","Scientific model"), 
+  scale_fill_manual(breaks = c("Two-step approach","Joint approach","Point-level model"), 
                     values=c("#F8766D", "#00BA38", "#619CFF"))+
   theme_bw()+
   theme(legend.title = element_blank(),
@@ -254,14 +307,14 @@ load(paste0(results_file,"results/q1/Results_q1.RData"))
 Results_plot <- Results_2 %>%
   filter(converge == 0) %>%
   # filter(simu_type == "Unsampled Rectangles") %>%  # and the one that will be plotted
-  filter(Model %in% c("Integrated model","Scientific model"))
+  filter(Model %in% c("Integrated model","Point-level model"))
 
 # And those that will be plotted
 Results_plot$obs <- NA
 Results_plot$obs[which(Results_plot$aggreg_obs == T)] <- "Joint approach"
 Results_plot$obs[which(Results_plot$aggreg_obs == F)] <- "Two-step approach"
-Results_plot$obs[which(Results_plot$Estimation_model == 2)] <- "Scientific model"
-Results_plot$obs <- factor(Results_plot$obs,levels = c("Two-step approach","Joint approach","Scientific model"))
+Results_plot$obs[which(Results_plot$Estimation_model == 2)] <- "Point-level model"
+Results_plot$obs <- factor(Results_plot$obs,levels = c("Two-step approach","Joint approach","Point-level model"))
 
 
 # Add proportion of zero in data frame
@@ -289,7 +342,7 @@ mspe_0s_plot <- ggplot()+
                aes(x = zero_prop,
                    y = mspe,
                    fill = obs))+
-  scale_fill_manual(breaks = c("Two-step approach","Joint approach","Scientific model"), 
+  scale_fill_manual(breaks = c("Two-step approach","Joint approach","Point-level model"), 
                     values=c("#F8766D", "#00BA38", "#619CFF"))+
   theme_bw()+
   theme(legend.title = element_blank(),
@@ -307,7 +360,7 @@ beta_0s_plot <- ggplot()+
                aes(x = zero_prop,
                    y = beta1_est,
                    fill = obs))+
-  scale_fill_manual(breaks = c("Two-step approach","Joint approach","Scientific model"), 
+  scale_fill_manual(breaks = c("Two-step approach","Joint approach","Point-level model"), 
                     values=c("#F8766D", "#00BA38", "#619CFF"))+
   theme_bw()+
   theme(legend.title = element_blank(),
@@ -323,7 +376,7 @@ prop0_plot <- ggplot()+
                aes(x = as.factor(q1),
                    y = prop_zero,
                    fill = obs))+
-  scale_fill_manual(breaks = c("Two-step approach","Joint approach","Scientific model"), 
+  scale_fill_manual(breaks = c("Two-step approach","Joint approach","Point-level model"), 
                     values=c("#F8766D", "#00BA38", "#619CFF"))+
   theme_bw()+
   theme(legend.title = element_blank(),
@@ -350,8 +403,8 @@ Results_conv$one <- 1
 Results_conv$obs <- NA
 Results_conv$obs[which(Results_conv$aggreg_obs == T)] <- "Joint approach"
 Results_conv$obs[which(Results_conv$aggreg_obs == F)] <- "Two-step approach"
-Results_conv$obs[which(Results_conv$Estimation_model == 2)] <- "Scientific model"
-Results_conv$obs <- factor(Results_conv$obs,levels = c("Two-step approach","Joint approach","Scientific model"))
+Results_conv$obs[which(Results_conv$Estimation_model == 2)] <- "Point-level model"
+Results_conv$obs <- factor(Results_conv$obs,levels = c("Two-step approach","Joint approach","Point-level model"))
 
 Results_conv$zero_prop <- NA
 Results_conv$zero_prop[which(Results_conv$q1 == 0)] <- "0 %"

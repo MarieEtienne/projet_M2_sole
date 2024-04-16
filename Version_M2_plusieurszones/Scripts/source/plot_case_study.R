@@ -40,7 +40,7 @@ sci_df <- data.frame(loc_x,S_x=fit_IM_res$Report$S_x)
 sci_plot <- ggplot(sci_df)+
   geom_point(aes(x=x,y=y,col=S_x),shape=15,size=2)+
   scale_color_distiller(palette = "Spectral",limits=c(0,NA))+
-  ggtitle("Scientific model")+
+  ggtitle("Point-level model")+
   theme_bw()+
   theme(plot.title = element_text(hjust = 0.5,face = "bold"),
         plot.subtitle = element_text(hjust = 0.5))+
@@ -112,10 +112,10 @@ est_par_df_full_2$par_names <- factor(est_par_df_full_2$par_names,levels = rev(c
 
 est_par_df_full_2$lkl[which(est_par_df_full_2$lkl == "Yi")] <- "Two-step approach"
 est_par_df_full_2$lkl[which(est_par_df_full_2$lkl == "Dj - r.est")] <- "Joint approach"
-est_par_df_full_2$lkl[which(est_par_df_full_2$lkl == "Scientific")] <- "Scientific model"
+est_par_df_full_2$lkl[which(est_par_df_full_2$lkl == "Scientific")] <- "Point-level model"
 
 est_par_df_full_3 <- est_par_df_full_2
-est_par_df_full_3$lkl <- factor(est_par_df_full_3$lkl,levels = c("Two-step approach","Joint approach","Scientific model"))
+est_par_df_full_3$lkl <- factor(est_par_df_full_3$lkl,levels = c("Two-step approach","Joint approach","Point-level model"))
 
 est_par_df_full_4 <- est_par_df_full_3 %>% 
   filter(par_names != "substr_Sand_Coarse_substrate")
@@ -136,11 +136,11 @@ par_plot <- ggplot(est_par_df_full_4, aes(y=par_val, x=par_names))+
   theme(legend.title = element_blank(),
         legend.position = "bottom",
         aspect.ratio = 1)+
-  scale_x_discrete(labels = c("k_com"=TeX("$k \\, _{com}$"),
-                              "Sigma_com"=TeX("$\\sigma \\, ^2 _{com}$"),
-                              "q1_com"=TeX("$\\xi \\, _{com}$"),
-                              "Sigma_sci"=TeX("$\\sigma \\, ^2 _{sci}$"),
-                              "q1_sci"=TeX("$\\xi \\, _{sci}$"),
+  scale_x_discrete(labels = c("k_com"=TeX("$k \\, _{areal}$"),
+                              "Sigma_com"=TeX("$\\sigma \\, ^2 _{areal}$"),
+                              "q1_com"=TeX("$\\xi \\, _{areal}$"),
+                              "Sigma_sci"=TeX("$\\sigma \\, ^2 _{point}$"),
+                              "q1_sci"=TeX("$\\xi \\, _{point}$"),
                               "MargSD"="Marginale variance",
                               "substr_Mud_sediment"=TeX("$\\beta \\, _S$"),
                               "intercept"=TeX("$\\mu \\,$")))+
