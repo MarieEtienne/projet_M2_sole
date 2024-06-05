@@ -4,16 +4,17 @@
 
 ## Spatial maps
 #--------------
-load(paste0(results_file,"/results/case_study/no.realloc_int_df.RData"))
+load(paste0(results_file,"results/case_study/no.realloc_int_df.RData"))
 
 no.realloc_df <- data.frame(loc_x,S_x=fit_IM_res$Report$S_x)
 no.realloc_plot <- ggplot(no.realloc_df)+
-  geom_point(aes(x=x,y=y,col=S_x),shape=15,size=2)+
-  scale_color_distiller(palette = "Spectral",limits=c(0,NA))+
+  geom_point(aes(x=x,y=y,col=log(S_x)),shape=15,size=2)+
+  scale_color_distiller(palette = "Spectral",limits=c(NA,3))+
   ggtitle("Two-step approach")+
   theme_bw()+
   theme(plot.title = element_text(hjust = 0.5,face = "bold"),
-        plot.subtitle = element_text(hjust = 0.5))+
+        plot.subtitle = element_text(hjust = 0.5),
+        legend.position = "none")+
   geom_sf(data = mapBase)+
   coord_sf(xlim = c(-6,0), ylim = c(43,48+0.25), expand = FALSE)+
   xlab("")+ylab("")
@@ -23,9 +24,9 @@ load(paste0(results_file,"results/case_study/realloc_int_df_rest.RData"))
 
 realloc_rest_df <- data.frame(loc_x,S_x=fit_IM_res$Report$S_x)
 realloc_rest_plot <- ggplot(realloc_rest_df)+
-  geom_point(aes(x=x,y=y,col=S_x),shape=15,size=2)+
-  scale_color_distiller(palette = "Spectral",limits=c(0,NA))+
-  ggtitle("Joint approach")+
+  geom_point(aes(x=x,y=y,col=log(S_x)),shape=15,size=2)+
+  scale_color_distiller(palette = "Spectral",limits=c(NA,3))+
+  ggtitle("Joint COS model")+
   theme_bw()+
   theme(plot.title = element_text(hjust = 0.5,face = "bold"),
         plot.subtitle = element_text(hjust = 0.5))+
@@ -38,19 +39,20 @@ load(paste0(results_file,"results/case_study/sci_df.RData"))
 
 sci_df <- data.frame(loc_x,S_x=fit_IM_res$Report$S_x)
 sci_plot <- ggplot(sci_df)+
-  geom_point(aes(x=x,y=y,col=S_x),shape=15,size=2)+
-  scale_color_distiller(palette = "Spectral",limits=c(0,NA))+
+  geom_point(aes(x=x,y=y,col=log(S_x)),shape=15,size=2)+
+  scale_color_distiller(palette = "Spectral",limits=c(NA,3))+
   ggtitle("Point-level model")+
   theme_bw()+
   theme(plot.title = element_text(hjust = 0.5,face = "bold"),
-        plot.subtitle = element_text(hjust = 0.5))+
+        plot.subtitle = element_text(hjust = 0.5),
+        legend.position = "none")+
   geom_sf(data = mapBase)+
   coord_sf(xlim = c(-6,0), ylim = c(43,48+0.25), expand = FALSE)+
   xlab("")+ylab("")
 
 case_study_plot <- plot_grid(sci_plot,no.realloc_plot,realloc_rest_plot,ncol=3,align="hv")
 
-ggsave(file="../../paper_reallocation/images/case_study_maps.png",width = 12, height = 4)
+ggsave(file="../../paper_reallocation/images/case_study_maps.png",width = 11, height = 4)
 
 
 ## Parameters estimates
@@ -111,11 +113,11 @@ est_par_df_full_2$Model <- factor(est_par_df_full_2$Model,levels = c("Scientific
 est_par_df_full_2$par_names <- factor(est_par_df_full_2$par_names,levels = rev(c("intercept",colnames(fit_IM_res$Data$Cov_xj),"MargSD","Range","q1_sci","Sigma_sci","q1_com","Sigma_com",ref_capt)))
 
 est_par_df_full_2$lkl[which(est_par_df_full_2$lkl == "Yi")] <- "Two-step approach"
-est_par_df_full_2$lkl[which(est_par_df_full_2$lkl == "Dj - r.est")] <- "Joint approach"
+est_par_df_full_2$lkl[which(est_par_df_full_2$lkl == "Dj - r.est")] <- "Joint COS model"
 est_par_df_full_2$lkl[which(est_par_df_full_2$lkl == "Scientific")] <- "Point-level model"
 
 est_par_df_full_3 <- est_par_df_full_2
-est_par_df_full_3$lkl <- factor(est_par_df_full_3$lkl,levels = c("Two-step approach","Joint approach","Point-level model"))
+est_par_df_full_3$lkl <- factor(est_par_df_full_3$lkl,levels = c("Two-step approach","Joint COS model","Point-level model"))
 
 est_par_df_full_4 <- est_par_df_full_3 %>% 
   filter(par_names != "substr_Sand_Coarse_substrate")
@@ -137,13 +139,13 @@ par_plot <- ggplot(est_par_df_full_4, aes(y=par_val, x=par_names))+
         legend.position = "bottom",
         aspect.ratio = 1)+
   scale_x_discrete(labels = c("k_com"=TeX("$k \\, _{areal}$"),
-                              "Sigma_com"=TeX("$\\sigma \\, ^2 _{areal}$"),
+                              "Sigma_com"=TeX("$\\sigma\\, _{areal}$"),
                               "q1_com"=TeX("$\\xi \\, _{areal}$"),
-                              "Sigma_sci"=TeX("$\\sigma \\, ^2 _{point}$"),
+                              "Sigma_sci"=TeX("$\\sigma \\, _{point}$"),
                               "q1_sci"=TeX("$\\xi \\, _{point}$"),
                               "MargSD"="Marginale variance",
-                              "substr_Mud_sediment"=TeX("$\\beta \\, _S$"),
+                              "substr_Mud_sediment"=TeX("$\\beta$"),
                               "intercept"=TeX("$\\mu \\,$")))+
   coord_flip()
 
-ggsave(file="../../paper_reallocation/images/par_plot.png",width = 10 / 1.15, height = 5 / 1.15)
+ggsave(file="../../paper_reallocation/images/par_plot.png",width = 7 / 1.15, height = 5 / 1.15)

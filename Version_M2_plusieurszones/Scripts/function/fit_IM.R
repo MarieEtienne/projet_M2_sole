@@ -215,7 +215,7 @@ fit_IM <- function(Estimation_model_i = 1,
   
   
   # no linkeage between sampling process and biomass field
-  if( EM=="fix_b" ) Map[["par_b"]] <- factor(rep(NA,length(Paramsfit$par_b)))
+  if( EM=="fix_b" ) Map[["par_b"]] <- factor(rep(NA,length(Params$par_b)))
   
   if( Samp_process == 0){
     Params[["par_b"]] <- NULL

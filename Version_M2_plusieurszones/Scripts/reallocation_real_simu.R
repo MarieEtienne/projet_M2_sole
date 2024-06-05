@@ -37,7 +37,8 @@ setwd(folder_phd_codes)
 ## Map info
 domain_shapefile <- "ORHAGO" # "ORHAGO", "EVHOE"
 grid_projection <- "+proj=longlat +datum=WGS84"
-mapBase <- ne_countries(scale = "medium", returnclass = "sf")
+mapBase <- ne_countries(scale = "large", returnclass = "sf") %>% 
+  filter(admin %in% c("France","Spain"))
 grid_xmin <- -6 # Coordinates of study area
 grid_xmax <- 0
 grid_ymin <- 42
@@ -171,7 +172,7 @@ dyn.load( dynlib(paste0("Scripts/inst/executables/com_x_sci_data_14_scientific_c
 consistency_check <- F
 
 ## Mesh
-mesh <- inla.mesh.create( loc_x[,c('x','y')] )
+mesh <- inla.mesh.create(loc = as.matrix( loc_x[,c('x','y')] ))
 spde <- (inla.spde2.matern(mesh, alpha=2)$param.inla)[c("M0","M1","M2")]  # define sparse matrices for parametrisation of precision matrix
 n_cells <- nrow(loc_x)
 
@@ -185,7 +186,7 @@ range_delta <- 0.6 # range of random effect delta
 SD_delta <- 1 # marginal variance of random effect delta
 
 ## Commercial data
-q1 <- -1 # zero-inflation parameter
+q1 <- 0 # zero-inflation parameter
 SD_obs <- 1 # observation error
 
 n_seq_com <- 300 # number of declarations
@@ -299,7 +300,10 @@ for(i in i0:100){
     
   }
   
-  for(aggreg_obs in c(F,T)){
+  
+  for(Estimation_model_i in c(1:3)){
+    
+    for(aggreg_obs in c(F,T)){
     
     if(plot_outputs){
       x11(width = 20,height = 15)
@@ -307,7 +311,6 @@ for(i in i0:100){
     }
     
     
-    for(Estimation_model_i in c(1:3)){
       
       print(paste0("sim: ",i," | counter: ",counter," | aggreg_obs :",aggreg_obs," | Estimation_model:", Estimation_model_i))
       
@@ -407,3 +410,57 @@ source("Scripts/source/plot_simulation.R")
 
 ## Case study plots
 source("Scripts/source/plot_case_study.R")
+
+if(Estimation_model_i == 2){S_x_sci <- fit_IM_res$Report$S_x;fit_IM_res_sci <- fit_IM_res}
+if(Estimation_model_i == 1 & aggreg_obs == F){S_x_pred <- fit_IM_res$Report$S_x;fit_IM_res_Two_step <- fit_IM_res}
+if(Estimation_model_i == 1 & aggreg_obs == T){S_x_pred_2 <- fit_IM_res$Report$S_x;fit_IM_res_COS <- fit_IM_res}
+test1 <- data.frame(loc_x[,c("layer","x","y")],
+                    S_x = S_x,
+                    S_x_sci = S_x_sci,
+                    S_x_TwoStep = S_x_pred,
+                    S_x_COS = S_x_pred_2)  %>% 
+   pivot_longer(S_x:S_x_COS) %>% 
+  rename(model = name) %>% 
+  mutate(model = ifelse(model == "S_x","Simulation",model)) %>% 
+  mutate(model = ifelse(model == "S_x_sci","Scientific model",model)) %>% 
+  mutate(model = ifelse(model == "S_x_TwoStep","Two-step approach",model)) %>% 
+  mutate(model = ifelse(model == "S_x_COS","Joint COS model",model))
+test1$model <- factor(test1$model,c("Simulation","Scientific model","Two-step approach","Joint COS model"))
+
+
+ggplot(test1)+
+  geom_point(aes(x = x, y = y, col = value),size=0.5)+
+  scale_color_distiller(palette = "Spectral")+
+  geom_sf(data=mapBase)+
+  facet_wrap(.~ model)+
+  theme_classic()+
+  theme(panel.background = element_rect(fill = "lightblue",
+                                        colour = "lightblue",
+                                        size = 0.5, linetype = "solid"))+
+  coord_sf(xlim = c(-6,0), ylim = c(43,48+0.25), expand = FALSE)
+  
+test2 <- data.frame(loc_x[,c("layer","x","y")],
+                   rel_bias_sci = (S_x_sci - S_x)/S_x,
+                   rel_bias_COS = (S_x_pred_2 - S_x)/S_x,
+                   rel_bias_Twostep = (S_x_pred - S_x)/S_x) %>% 
+  pivot_longer(rel_bias_sci:rel_bias_Twostep) %>% 
+  rename(model = name) %>% 
+  mutate(model = ifelse(model == "rel_bias_sci","Scientific model",model)) %>% 
+  mutate(model = ifelse(model == "rel_bias_Twostep","Two-step approach",model)) %>% 
+  mutate(model = ifelse(model == "rel_bias_COS","Joint COS model",model))
+test2$model <- factor(test2$model,c("Scientific model","Two-step approach","Joint COS model"))
+
+ggplot(test2)+
+  geom_point(aes(x = x, y = y, col =  value))+
+  scale_color_gradient2(low = "blue",
+                        midpoint = 0,
+                        mid = "white",
+                        high = "red",
+                        space="Lab")+
+  facet_wrap(.~ model)+
+  geom_sf(data=mapBase)+
+  theme(panel.background = element_rect(fill = "lightblue",
+                                        colour = "lightblue",
+                                        size = 0.5, linetype = "solid"))+
+  coord_sf(xlim = c(-6,0), ylim = c(43,48+0.25), expand = FALSE)
+

@@ -15,10 +15,17 @@ Results_plot <- Results_2 %>%
 
 # And those that will be plotted
 Results_plot$obs <- NA
-Results_plot$obs[which(Results_plot$aggreg_obs == T)] <- "Joint approach"
+Results_plot$obs[which(Results_plot$aggreg_obs == T)] <- "Joint COS model"
 Results_plot$obs[which(Results_plot$aggreg_obs == F)] <- "Two-step approach"
 Results_plot$obs[which(Results_plot$Estimation_model == 2)] <- "Point-level model"
-Results_plot$obs <- factor(Results_plot$obs,levels = c("Two-step approach","Joint approach", "Point-level model"))
+Results_plot$obs <- factor(Results_plot$obs,levels = c("Two-step approach","Joint COS model", "Point-level model"))
+
+# 
+Results_2$obs <- NA
+Results_2$obs[which(Results_2$aggreg_obs == T)] <- "Joint COS model"
+Results_2$obs[which(Results_2$aggreg_obs == F)] <- "Two-step approach"
+Results_2$obs[which(Results_2$Estimation_model == 2)] <- "Point-level model"
+Results_2$obs <- factor(Results_2$obs,levels = c("Two-step approach","Joint COS model", "Point-level model"))
 
 Results_sci_plot <- Results_plot %>% 
   filter(obs == "Point-level model")
@@ -28,7 +35,7 @@ mspe_plot <- ggplot()+
   geom_boxplot(data = Results_plot,
                aes(x = obs,
                    y = mspe,
-                   fill = obs))+
+                   fill = obs),outliers = F)+
   theme_bw()+
   theme(legend.title = element_blank(),
         aspect.ratio = 1,
@@ -43,7 +50,7 @@ beta_plot <- ggplot()+
   geom_boxplot(data = Results_plot,
                aes(x = obs,
                    y = beta1_est,
-                   fill = obs))+
+                   fill = obs),outliers = F)+
   theme_bw()+
   theme(legend.title = element_blank(),
         aspect.ratio = 1,
@@ -58,7 +65,7 @@ range_plot <- ggplot()+
   geom_boxplot(data = Results_plot,
                aes(x = obs,
                    y = Range,
-                   fill = obs))+
+                   fill = obs),outliers = F)+
   theme_bw()+
   theme(legend.title = element_blank(),
         aspect.ratio = 1,
@@ -69,11 +76,12 @@ range_plot <- ggplot()+
   xlab("")+ylim(0,2.5)
 
 # Variance values
+Results_2$obs <- factor(Results_2$obs,levels = c("Two-step approach","Joint COS model"))
 variance_plot <- ggplot()+
-  geom_boxplot(data = Results_plot,
+  geom_boxplot(data = Results_2 %>% filter(!is.na(obs)),
                aes(x = obs,
                    y = sigma_com_est,
-                   fill = obs))+
+                   fill = obs),outliers = F)+
   theme_bw()+
   theme(legend.title = element_blank(),
         aspect.ratio = 1,
@@ -82,16 +90,17 @@ variance_plot <- ggplot()+
         legend.position = "none")+
   geom_hline(yintercept = 1,color="red",linetype="dashed")+
   xlab("")+
-  scale_fill_manual(breaks = c("Two-step approach","Joint approach","Point-level model"), 
-                    values=c("#F8766D", "#00BA38", "#619CFF"))+
-  ylim(0,NA)
+  scale_fill_manual(breaks = c("Two-step approach","Joint COS model"), 
+                    values=c("#F8766D", "#00BA38"))+
+  ylim(0,2)+
+  xlab("")+ylab(TeX("$\\sigma$"))
 
 # zero-inflation parameter
 q1_plot <- ggplot()+
-  geom_boxplot(data = Results_plot,
+  geom_boxplot(data = Results_2 %>% filter(!is.na(obs)),
                aes(x = obs,
                    y = q1_com_est,
-                   fill = obs))+
+                   fill = obs),outliers = F)+
   theme_bw()+
   theme(legend.title = element_blank(),
         aspect.ratio = 1,
@@ -100,14 +109,22 @@ q1_plot <- ggplot()+
         legend.position = "none")+
   geom_hline(yintercept = -1,color="red",linetype="dashed")+
   xlab("")+
-  scale_fill_manual(breaks = c("Two-step approach","Joint approach","Point-level model"), 
-                    values=c("#F8766D", "#00BA38", "#619CFF"))
+  scale_fill_manual(breaks = c("Two-step approach","Joint COS model"), 
+                    values=c("#F8766D", "#00BA38"))+
+  xlab("")+ylab(TeX("$\\xi$"))
 
 legend <- ggpubr::as_ggplot(ggpubr::get_legend(mspe_plot,position="right"))
 
 boxplot_1 <- plot_grid(mspe_plot,NULL,beta_plot,legend,align = "hv",nrow = 1,rel_widths = c(0.3,0.1,0.3,0.3))
 
 ggsave("../../paper_reallocation/images/boxplot_1.png",height = 4*1.25,width = 8*1.25)
+
+legend2 <- ggpubr::as_ggplot(ggpubr::get_legend(variance_plot,position="right"))
+
+boxplot_3 <- plot_grid(variance_plot,NULL,q1_plot,legend2,nrow = 1,rel_widths = c(1,0.1,1,0.6))
+
+ggsave("../../paper_reallocation/images/boxplot_3.png",height = 4,width = 8)
+
 
 # boxplot_1_add <- plot_grid(mspe_plot,beta_plot,legend,
 #                        range_plot,variance_plot,q1_plot,align = "hv",ncol = 3)
@@ -163,13 +180,13 @@ com.data_df <- data.frame(cell = index_i,
   group_by(x,y,cell,ICESNAME) %>%
   dplyr::summarise(n=n())
 
-max_val <- max(simu_df$S_x/sum(simu_df$S_x),
-               sci_df$S_x/sum(sci_df$S_x),
-               int_Yi_df$S_x/sum(int_Yi_df$S_x),
-               int_Dj_df$S_x/sum(int_Dj_df$S_x))
+max_val <- log(max(simu_df$S_x,
+               sci_df$S_x,
+               int_Yi_df$S_x,
+               int_Dj_df$S_x))
 
 data_plot <- ggplot()+
-  geom_point(data=simu_df,aes(x=x,y=y,col=S_x),shape=15,size=2,alpha=0.25)+
+  geom_point(data=simu_df,aes(x=x,y=y,col=log(S_x)),shape=15,size=2,alpha=0.25)+
   geom_point(data=simu_df[which(simu_df$ICESNAME %in% com.data_df$ICESNAME),],
              aes(x=x,y=y,col=S_x),shape=15,size=2)+
   scale_color_distiller(palette = "Spectral",limits=c(0,NA))+ # , limits=c(0,max_val+0.01*max_val))+
@@ -188,7 +205,7 @@ ggsave("../../paper_reallocation/images/data_plot.png",width = 6, height = 6)
 
 
 simu_plot <- ggplot(simu_df)+
-  geom_point(aes(x=x,y=y,col=S_x/sum(S_x)),shape=15,size=2)+
+  geom_point(aes(x=x,y=y,col=log(S_x)),shape=15,size=2)+
   scale_color_distiller(palette = "Spectral",limits=c(0,max_val+0.01*max_val))+
   ggtitle("Simulated latent field")+
   theme_bw()+
@@ -200,7 +217,7 @@ simu_plot <- ggplot(simu_df)+
   xlab("")+ylab("")
 
 sci_plot <- ggplot(sci_df)+
-  geom_point(aes(x=x,y=y,col=S_x/sum(S_x)),shape=15,size=2)+
+  geom_point(aes(x=x,y=y,col=log(S_x)),shape=15,size=2)+
   scale_color_distiller(palette = "Spectral",limits=c(0,max_val+0.01*max_val))+
   ggtitle("Point-level model")+
   theme_bw()+
@@ -212,7 +229,7 @@ sci_plot <- ggplot(sci_df)+
   xlab("")+ylab("")
 
 int_Yi_plot <- ggplot(int_Yi_df)+
-  geom_point(aes(x=x,y=y,col=S_x/sum(S_x)),shape=15,size=2)+
+  geom_point(aes(x=x,y=y,col=log(S_x)),shape=15,size=2)+
   scale_color_distiller(palette = "Spectral",limits=c(0,max_val+0.01*max_val))+
   ggtitle("Two-step approach")+ # integrated model
   theme_bw()+
@@ -224,9 +241,9 @@ int_Yi_plot <- ggplot(int_Yi_df)+
   xlab("")+ylab("")
 
 int_Dj_plot <- ggplot(int_Dj_df)+
-  geom_point(aes(x=x,y=y,col=S_x/sum(S_x)),shape=15,size=2)+
+  geom_point(aes(x=x,y=y,col=log(S_x)),shape=15,size=2)+
   scale_color_distiller(palette = "Spectral",limits=c(0,max_val+0.01*max_val))+
-  ggtitle("Joint approach")+ # ,subtitle = "integrated",
+  ggtitle("Joint COS model")+ # ,subtitle = "integrated",
   theme_bw()+
   theme(plot.title = element_text(hjust = 0.5,face = "bold"),
         plot.subtitle = element_text(hjust = 0.5),
@@ -256,10 +273,10 @@ Results_plot <- Results_2 %>%
 
 # And those that will be plotted
 Results_plot$obs <- NA
-Results_plot$obs[which(Results_plot$aggreg_obs == T)] <- "Joint approach"
+Results_plot$obs[which(Results_plot$aggreg_obs == T)] <- "Joint COS model"
 Results_plot$obs[which(Results_plot$aggreg_obs == F)] <- "Two-step approach"
 Results_plot$obs[which(Results_plot$Estimation_model == 2)] <- "Point-level model"
-Results_plot$obs <- factor(Results_plot$obs,levels = c("Two-step approach","Joint approach","Point-level model"))
+Results_plot$obs <- factor(Results_plot$obs,levels = c("Two-step approach","Joint COS model","Point-level model"))
 
 Results_plot <- full_join(Results_plot,Results_sci_plot)
 Results_plot$n_zone[which(is.na(Results_plot$n_zone))] <- " "
@@ -272,8 +289,8 @@ mspe_nzone_plot <- ggplot()+
   geom_boxplot(data = Results_plot,
                aes(x = as.factor(n_zone),
                    y = mspe,
-                   fill = obs))+
-  scale_fill_manual(breaks = c("Two-step approach","Joint approach","Point-level model"), 
+                   fill = obs),outliers = F)+
+  scale_fill_manual(breaks = c("Two-step approach","Joint COS model","Point-level model"), 
                     values=c("#F8766D", "#00BA38", "#619CFF"))+
   theme_bw()+
   theme(legend.title = element_blank(),
@@ -289,8 +306,8 @@ beta_nzone_plot <- ggplot()+
   geom_boxplot(data = Results_plot,
                aes(x = as.factor(n_zone),
                    y = beta1_est,
-                   fill = obs))+
-  scale_fill_manual(breaks = c("Two-step approach","Joint approach","Point-level model"), 
+                   fill = obs),outliers = F)+
+  scale_fill_manual(breaks = c("Two-step approach","Joint COS model","Point-level model"), 
                     values=c("#F8766D", "#00BA38", "#619CFF"))+
   theme_bw()+
   theme(legend.title = element_blank(),
@@ -311,10 +328,10 @@ Results_plot <- Results_2 %>%
 
 # And those that will be plotted
 Results_plot$obs <- NA
-Results_plot$obs[which(Results_plot$aggreg_obs == T)] <- "Joint approach"
+Results_plot$obs[which(Results_plot$aggreg_obs == T)] <- "Joint COS model"
 Results_plot$obs[which(Results_plot$aggreg_obs == F)] <- "Two-step approach"
 Results_plot$obs[which(Results_plot$Estimation_model == 2)] <- "Point-level model"
-Results_plot$obs <- factor(Results_plot$obs,levels = c("Two-step approach","Joint approach","Point-level model"))
+Results_plot$obs <- factor(Results_plot$obs,levels = c("Two-step approach","Joint COS model","Point-level model"))
 
 
 # Add proportion of zero in data frame
@@ -341,8 +358,8 @@ mspe_0s_plot <- ggplot()+
   geom_boxplot(data = Results_plot,
                aes(x = zero_prop,
                    y = mspe,
-                   fill = obs))+
-  scale_fill_manual(breaks = c("Two-step approach","Joint approach","Point-level model"), 
+                   fill = obs),outliers = F)+
+  scale_fill_manual(breaks = c("Two-step approach","Joint COS model","Point-level model"), 
                     values=c("#F8766D", "#00BA38", "#619CFF"))+
   theme_bw()+
   theme(legend.title = element_blank(),
@@ -359,8 +376,8 @@ beta_0s_plot <- ggplot()+
   geom_boxplot(data = Results_plot,
                aes(x = zero_prop,
                    y = beta1_est,
-                   fill = obs))+
-  scale_fill_manual(breaks = c("Two-step approach","Joint approach","Point-level model"), 
+                   fill = obs),outliers = F)+
+  scale_fill_manual(breaks = c("Two-step approach","Joint COS model","Point-level model"), 
                     values=c("#F8766D", "#00BA38", "#619CFF"))+
   theme_bw()+
   theme(legend.title = element_blank(),
@@ -375,8 +392,8 @@ prop0_plot <- ggplot()+
   geom_boxplot(data = Results_2,
                aes(x = as.factor(q1),
                    y = prop_zero,
-                   fill = obs))+
-  scale_fill_manual(breaks = c("Two-step approach","Joint approach","Point-level model"), 
+                   fill = obs),outliers = F)+
+  scale_fill_manual(breaks = c("Two-step approach","Joint COS model","Point-level model"), 
                     values=c("#F8766D", "#00BA38", "#619CFF"))+
   theme_bw()+
   theme(legend.title = element_blank(),
@@ -401,10 +418,10 @@ Results_conv$one <- 1
 
 # add columns
 Results_conv$obs <- NA
-Results_conv$obs[which(Results_conv$aggreg_obs == T)] <- "Joint approach"
+Results_conv$obs[which(Results_conv$aggreg_obs == T)] <- "Joint COS model"
 Results_conv$obs[which(Results_conv$aggreg_obs == F)] <- "Two-step approach"
 Results_conv$obs[which(Results_conv$Estimation_model == 2)] <- "Point-level model"
-Results_conv$obs <- factor(Results_conv$obs,levels = c("Two-step approach","Joint approach","Point-level model"))
+Results_conv$obs <- factor(Results_conv$obs,levels = c("Two-step approach","Joint COS model","Point-level model"))
 
 Results_conv$zero_prop <- NA
 Results_conv$zero_prop[which(Results_conv$q1 == 0)] <- "0 %"

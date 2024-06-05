@@ -54,12 +54,12 @@ for(folder_i in folder_c){
   # Run over List_param
   for(counter in Results$counter){
     
+    load(paste0(folder_i,"/List_param_",counter,".RData"))
     sum_y_i <- aggregate(x = List_param$data.info$y_i,
                          by = list(unique.values = List_param$data.info$boats_i),
                          FUN = sum)[,2]
     
     print(paste0("simu_type: ", simu_type," | counter: ",counter))
-    load(paste0(folder_i,"/List_param_",counter,".RData"))
     n_cells <- length(List_param$Report$S_x)
     Results$aggreg_obs[which(Results$counter == counter)] <- List_param$data.info$aggreg_obs
     Results$converge[which(Results$counter == counter)] <- List_param$converge
